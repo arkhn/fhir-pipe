@@ -1,0 +1,307 @@
+import json
+import yaml
+import re
+from os import listdir
+from os.path import isfile, join
+
+from arkhn import scripts
+from arkhn.parser import checks
+
+path = "DataTypes/"
+
+
+def _is_empty(value):
+    return value is None or value == 'NaN' or value == ''
+
+
+def get_table_name(name):
+    return name.split('.')[1]
+
+
+def get_table_col_name(name):
+    if len(name.split('.')) != 3:
+        raise TypeError('Name is not valid, should be <owner>.<table>.<col>.')
+    return '.'.join(name.split('.')[1:])
+
+
+def remove_owner(name):
+    """
+    Input:
+        "(?:<owner>.)<table>.<col>"
+    Return:
+        "<table><col>
+    """
+    if len(name.split('.')) == 3:
+        return get_table_col_name(name)
+    else:
+        return name
+
+
+def parse_name_type(name_type):
+    """
+    Input:
+        keyname<(list::)type>
+    Return:
+        keyname, type, is_list
+    """
+    r = re.compile(r'^([^\<]*)(?:\<(.*)\>)?')
+    name, node_type = r.findall(name_type)[0]
+
+    is_list = node_type.startswith('list')
+    if len(node_type.split('::')) > 1:
+        node_type = node_type.split('::')[1]
+    elif is_list:
+        node_type = None
+    return name, node_type, is_list
+
+
+def is_node_type_templatable(type_name):
+    """
+    Check that the node_type is compatible with templating
+    """
+    datatypes = [
+        filename.split('.')[0]
+        for filename in listdir(path)
+        if isfile(join(path, filename))
+    ]
+    return type_name in datatypes
+
+
+def build_sql_query(resource, info):
+    """
+    Take a Resource (eg Patient) scheme in input
+    Output a sql query to fill this resource
+    """
+    # Get the info about the columns and joins to query
+    d = dfs_find_sql_cols_joins(resource)
+    # Format the sql arguments
+    col_names = d['cols']
+    table_name = get_table_name(info['source_table'])
+    joins = parse_joins(d['joins'])
+    sql_query = 'SELECT {} FROM {} {};'.format(
+        ', '.join(col_names),
+        table_name,
+        ' '.join([
+            'LEFT JOIN {} ON {}'.format(join_table, join_bind)
+            for join_table, join_bind in joins
+        ])
+    )
+    return sql_query
+
+
+def parse_joins(joins):
+    """
+    Transform a join info into SQL fragments.
+    Input:
+        "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"
+    Return:
+        (
+            "<join_table>",
+            "<table>.<col> = <join_table>.<join_col>"
+        )
+    """
+    joins_elems = dict()
+    for join in joins:
+        # split the "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"
+        join_parts = join.split('=')
+        # Get <join_table>
+        join_table = get_table_name(join_parts[1])
+        # Get "<table>.<col> = <join_table>.<join_col>"
+        join_bind = get_table_col_name(join_parts[0]) + ' = ' + get_table_col_name(join_parts[1])
+        joins_elems[join_table] = [join_table, join_bind]
+    return list(joins_elems.values())
+
+
+def load_template(data_type, template_id):
+    """
+    Return the dict template of a resource with id template_id
+    """
+    with open(path + data_type + '.yml', 'r') as stream:
+        try:
+            data = yaml.load(stream)
+            template = data[data_type][template_id]
+            return template
+        except yaml.YAMLError as exc:
+            print(exc)
+    return None
+
+
+def dfs_find_sql_cols_joins(tree, node_type=None):
+    """
+        Run through the dict/tree of a Resource (and the references to templates)
+        To find:
+        - All columns name to select
+        - All joins necessary to collect the data
+    """
+    if isinstance(tree, dict):
+        return find_cols_joins_in_object(tree, node_type)
+    elif isinstance(tree, list) and len(tree) > 0:
+        response = {'cols': [], 'joins': []}
+        for t in tree:
+            d = find_cols_joins_in_object(t, node_type)
+            response['cols'] += d['cols']
+            response['joins'] += d['joins']
+        return response
+    else:
+        return {'cols': [], 'joins': []}
+
+
+def find_cols_joins_in_object(tree, node_type):
+    children = tree.keys()
+    joins = []
+    # If there is a join
+    if '_join' in tree.keys():
+        join_info = tree['_join']
+        assert join_info['_type'] == 'OneToOne'
+        # Add the join
+        join = join_info['_args']
+        joins = _list(join)
+
+    # If there is a template
+    if '_template_id' in tree.keys():
+        # Load the referenced template
+        template_ids = tree['_template_id']
+        assert is_node_type_templatable(node_type), "Can't have a template for type {}".format(node_type)
+        template_ids = _list(template_ids)
+        template_cols = []
+        template_joins = []
+        for template_id in template_ids:
+            template = load_template(node_type, template_id)
+            template_d = dfs_find_sql_cols_joins(template, node_type)
+            template_cols += template_d['cols']
+            template_joins += template_d['joins']
+        return {'cols': [] + template_cols, 'joins': joins + template_joins}
+    # Else if there are columns and scripts defined
+    elif '_col' in tree.keys() and '_script' in tree.keys():
+        col = tree['_col']
+        cols = _list(col)
+        cols = [remove_owner(col) for col in cols]
+        return {'cols': cols, 'joins': joins}
+    # Else, we have no join and no col referenced: just a json node (ex: name.given)
+    else:
+        cols = []
+        joins = []
+        for child in children:
+            name, node_type, is_list = parse_name_type(child)
+            d = dfs_find_sql_cols_joins(tree[child], node_type)
+            child_cols = d['cols']
+            child_joins = d['joins']
+            cols += child_cols
+            joins += child_joins
+        return {'cols': cols, 'joins': joins}
+
+
+def _list(obj):
+    """
+    Cast into a list if not a list already
+    """
+    if isinstance(obj, list):
+        return obj
+    else:
+        return [obj]
+
+
+def _unlist(list_obj):
+    """
+    Return first obj if list with a single elem, else return list
+    """
+    return list_obj[0] if len(list_obj) == 1 else list_obj
+
+
+def get_script_arity(cols, scripts):
+    """
+    Return the number of arguments per script
+    """
+    if isinstance(cols, str or isinstance(scripts, str)):
+        return 1
+    if len(cols) == len(scripts):
+        return [get_script_arity(col, script) for col, script in zip(cols, scripts)]
+    elif len(scripts) == 1:
+        return len(cols)
+    else:
+        raise TypeError("Cant match {} cols with {} scripts".format(len(cols), len(scripts)))
+
+
+def dfs_create_fhir(tree, row, node_type=None):
+    """
+    For each instance of a Resource,
+    Run again through the dict/tree of a Resource (and the references to templates)
+    And build a similar dict, where we replace all occurrences of _col with the result of the query,
+    Processed by the appropriate _script.
+    Return a dict which is in the partial fhir format.
+    """
+    if isinstance(tree, dict):
+        children = tree.keys()
+
+        # If there is a template for the join
+        if '_template_id' in tree.keys():
+            # Load the referenced template
+            template_ids = _list(tree['_template_id'])
+            response = []
+            for template_id in template_ids:
+                template = load_template(node_type, template_id)
+                resp = dfs_create_fhir(template, row, node_type)
+                response.append(resp)
+            return _unlist(response)
+        # Else if there are columns and scripts defined
+        elif '_col' in tree.keys() and '_script' in tree.keys():
+            script_names = _list(tree['_script'])
+            col_names = _list(tree['_col'])
+            script_arities = _list(get_script_arity(col_names, script_names))
+            values = []
+            for name, arity in zip(script_names, script_arities):
+                # Row.pop(0) pops out the first element in row
+                args = []
+                for i in range(arity):
+                    args.append(row.pop(0))
+                value = scripts.get_script(name)(*args)
+                checks.assert_has_sql_type(node_type, value)
+                values.append(value)
+            return _unlist(values)
+        # Else, we have no join and no col referenced: just a json node (ex: name.given)
+        else:
+            d = dict()
+            for child in children:
+                name, node_type, is_list = parse_name_type(child)
+                d[name] = dfs_create_fhir(tree[child], row, node_type)
+                # Put in a list if required by typing and not already a list
+                if is_list:
+                    d[name] = _list(d[name])
+            return d
+    elif isinstance(tree, list):
+        return [dfs_create_fhir(t, row, node_type) for t in tree]
+    else:
+        return tree
+
+
+def clean_fhir(tree):
+    if isinstance(tree, dict):
+        weight = 0
+        clean_tree = {}
+        for k, t in tree.items():
+            clean_t, w = clean_fhir(t)
+            if w > 0:
+                clean_tree[k] = clean_t
+                weight += w
+        return clean_tree, weight
+
+    elif isinstance(tree, list):
+        weight = 0
+        clean_tree = []
+        for t in tree:
+            clean_t, w = clean_fhir(t)
+            if w > 0:
+                clean_tree.append(clean_t)
+                weight += w
+        return clean_tree, weight
+    else:
+        if _is_empty(tree):
+            return tree, 0
+        else:
+            return tree, 1
+
+
+def write_to_file(rows, filename):
+    with open(filename, 'w+') as f:
+        for row in rows:
+            f.write('{}\n'.format(json.dumps(row)))
