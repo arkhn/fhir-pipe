@@ -1,3 +1,5 @@
+[![Website arkhn.org](https://img.shields.io/website-up-down-green-red/https/arkhn.org.svg)](http://arkhn.org/)
+
 # Fhir-pipe: a smart standardization pipeline
 
 Fhir-pipe helps extracting data from SQL database and mapping it into the standardized health format [FHIR](https://www.hl7.org/fhir/), using given mapping rules.
