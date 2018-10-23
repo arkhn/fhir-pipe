@@ -1,6 +1,7 @@
 import json
 import yaml
 import re
+import logging
 from os import listdir
 from os.path import isfile, join
 
@@ -15,7 +16,13 @@ def _is_empty(value):
 
 
 def get_table_name(name):
-    return name.split('.')[1]
+    elems = name.split('.')
+    if len(elems) == 3:
+        return name.split('.')[1]
+    elif len(elems) == 2:
+        return name.split('.')[0]
+    else:
+        return None
 
 
 def get_table_col_name(name):
@@ -29,12 +36,26 @@ def remove_owner(name):
     Input:
         "(?:<owner>.)<table>.<col>"
     Return:
-        "<table><col>
+        "<table>.<col>"
     """
     if len(name.split('.')) == 3:
         return get_table_col_name(name)
     else:
         return name
+
+
+def add_table_name(col, table):
+    """
+    Input:
+        "<col>", table
+    Return:
+        "<table>.<col>"
+    """
+    if len(col.split('.')) == 1:
+        return '{}.{}'.format(table, col)
+    else:
+        logging.warning('Useless add_table_name for {}'.format(col))
+        return col
 
 
 def parse_name_type(name_type):
@@ -72,12 +93,13 @@ def build_sql_query(resource, info):
     Take a Resource (eg Patient) scheme in input
     Output a sql query to fill this resource
     """
+    table_name = get_table_name(info['source_table'] + '.*')
+
     # Get the info about the columns and joins to query
-    d = dfs_find_sql_cols_joins(resource)
+    d = dfs_find_sql_cols_joins(resource, source_table=table_name)
     # Format the sql arguments
     col_names = d['cols']
-    table_name = get_table_name(info['source_table'])
-    joins = parse_joins(d['joins'])
+    joins, dependency_graph = parse_joins(d['joins'])
     sql_query = 'SELECT {} FROM {} {};'.format(
         ', '.join(col_names),
         table_name,
@@ -86,30 +108,104 @@ def build_sql_query(resource, info):
             for join_table, join_bind in joins
         ])
     )
-    return sql_query
+    squash_rules = []
+    print(squash_rules_tables)
+    for rule in squash_rules_tables:
+        one_table, many_table = rule
+        one_cols, many_cols = [], []
+        for i, col in enumerate(col_names):
+            table = get_table_name(col)
+            if table == one_table:
+                one_cols.append(i)
+            elif table == many_table:
+                many_cols.append(i)
+        squash_rules.append((one_cols, many_cols))
+
+    join_graph = []
+    print(squash_rules_tables)
+    for rule in squash_rules_tables:
+        one_table, many_table = rule
+        one_cols, many_cols = [], []
+        for i, col in enumerate(col_names):
+            table = get_table_name(col)
+            if table == one_table:
+                one_cols.append(i)
+            elif table == many_table:
+                many_cols.append(i)
+        squash_rules.append((one_cols, many_cols))
+    return sql_query, squash_rules
+
+
+class Table():
+    def __init__(self):
+        self.one_to_one = []
+        self.one_to_many = []
+
+    def connect(self, table, join_type):
+        if join_type == 'OneToOne':
+            self.one_to_one.append(table)
+        elif join_type == 'OneToMany':
+            self.one_to_many.append(table)
+        else:
+            raise TypeError('Join type is not valid:', join_type)
+
+    def connected(self, table):
+        return table in (self.one_to_one + self.one_to_many)
+
+
+class DependencyGraph():
+    def __init__(self):
+        self.nodes = {}
+
+    def has(self, table):
+        return table in self.nodes
+
+    def add(self, table):
+        node = Table(table)
+        self.nodes[table] = node
+
+    def get(self, table):
+        if not self.has(self, table):
+            self.add(self, table)
+        return self.nodes[table]
 
 
 def parse_joins(joins):
     """
     Transform a join info into SQL fragments.
+    For OneToMany joins, list the joins: for example if you
+    join people with bank accounts on guy.id = account.owner_id, you want at the end to
+    have for a single guy to have a single instance with an attribute accounts. So you
+    need to remember to group all accounts for a single guy.
     Input:
-        "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"
+        (<type_of_join>, "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>")
     Return:
         (
             "<join_table>",
             "<table>.<col> = <join_table>.<join_col>"
-        )
+        ),
+        ((table_guy, table_accounts), etc)
     """
+    print(joins)
     joins_elems = dict()
+    joins_to_many = []
+    graph = DependencyGraph()
     for join in joins:
+        join_type, join_args = join
         # split the "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"
-        join_parts = join.split('=')
+        join_parts = join_args.split('=')
         # Get <join_table>
         join_table = get_table_name(join_parts[1])
         # Get "<table>.<col> = <join_table>.<join_col>"
         join_bind = get_table_col_name(join_parts[0]) + ' = ' + get_table_col_name(join_parts[1])
         joins_elems[join_table] = [join_table, join_bind]
-    return list(joins_elems.values())
+
+        # Add the join in the join_graph
+        source_table = get_table_name(join_parts[0])
+        source_node = graph.get(source_table)
+        join_node = graph.get(join_table)
+        source_node.connect(join_node, join_type)
+    return list(joins_elems.values()), graph
 
 
 def load_template(data_type, template_id):
@@ -126,7 +222,7 @@ def load_template(data_type, template_id):
     return None
 
 
-def dfs_find_sql_cols_joins(tree, node_type=None):
+def dfs_find_sql_cols_joins(tree, node_type=None, source_table=None):
     """
         Run through the dict/tree of a Resource (and the references to templates)
         To find:
@@ -134,11 +230,11 @@ def dfs_find_sql_cols_joins(tree, node_type=None):
         - All joins necessary to collect the data
     """
     if isinstance(tree, dict):
-        return find_cols_joins_in_object(tree, node_type)
+        return find_cols_joins_in_object(tree, node_type, source_table)
     elif isinstance(tree, list) and len(tree) > 0:
         response = {'cols': [], 'joins': []}
         for t in tree:
-            d = find_cols_joins_in_object(t, node_type)
+            d = find_cols_joins_in_object(t, node_type, source_table)
             response['cols'] += d['cols']
             response['joins'] += d['joins']
         return response
@@ -146,15 +242,14 @@ def dfs_find_sql_cols_joins(tree, node_type=None):
         return {'cols': [], 'joins': []}
 
 
-def find_cols_joins_in_object(tree, node_type):
+def find_cols_joins_in_object(tree, node_type, source_table):
     children = tree.keys()
     joins = []
     # If there is a join
     if '_join' in tree.keys():
         join_info = tree['_join']
-        assert join_info['_type'] == 'OneToOne'
         # Add the join
-        join = join_info['_args']
+        join = (join_info['_type'], _unlist(join_info['_args']))
         joins = _list(join)
 
     # If there is a template
@@ -176,6 +271,8 @@ def find_cols_joins_in_object(tree, node_type):
         col = tree['_col']
         cols = _list(col)
         cols = [remove_owner(col) for col in cols]
+        if source_table is not None:
+            cols = [add_table_name(col, source_table) for col in cols]
         return {'cols': cols, 'joins': joins}
     # Else, we have no join and no col referenced: just a json node (ex: name.given)
     else:
@@ -183,7 +280,7 @@ def find_cols_joins_in_object(tree, node_type):
         joins = []
         for child in children:
             name, node_type, is_list = parse_name_type(child)
-            d = dfs_find_sql_cols_joins(tree[child], node_type)
+            d = dfs_find_sql_cols_joins(tree[child], node_type, source_table)
             child_cols = d['cols']
             child_joins = d['joins']
             cols += child_cols
@@ -235,13 +332,24 @@ def dfs_create_fhir(tree, row, node_type=None):
 
         # If there is a template for the join
         if '_template_id' in tree.keys():
+            print('_template_id', tree['_template_id'])
             # Load the referenced template
             template_ids = _list(tree['_template_id'])
+
             response = []
-            for template_id in template_ids:
-                template = load_template(node_type, template_id)
-                resp = dfs_create_fhir(template, row, node_type)
-                response.append(resp)
+            if len(row) > 0 and isinstance(row[0], list):
+                join_rows = row.pop(0)
+                # t_row is assumed to be [['a1', 'b1', ...],['a2', 'b2', ...]]
+                for join_row in join_rows:
+                    for template_id in template_ids:
+                        template = load_template(node_type, template_id)
+                        resp = dfs_create_fhir(template, join_row, node_type)
+                        response.append(resp)
+            else:
+                for template_id in template_ids:
+                    template = load_template(node_type, template_id)
+                    resp = dfs_create_fhir(template, row, node_type)
+                    response.append(resp)
             return _unlist(response)
         # Else if there are columns and scripts defined
         elif '_col' in tree.keys() and '_script' in tree.keys():
@@ -269,7 +377,17 @@ def dfs_create_fhir(tree, row, node_type=None):
                     d[name] = _list(d[name])
             return d
     elif isinstance(tree, list):
-        return [dfs_create_fhir(t, row, node_type) for t in tree]
+        if len(row) > 0 and isinstance(row[0], list):
+            print('LIST FOUND')
+            print(row[0])
+            join_rows = row.pop(0)
+            response = []
+            for join_row in join_rows:
+                print('>> ', len(join_row))
+                response.append([dfs_create_fhir(t, join_row, node_type) for t in tree])
+            return response
+        else:
+            return [dfs_create_fhir(t, row, node_type) for t in tree]
     else:
         return tree
 
