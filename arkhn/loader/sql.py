@@ -40,54 +40,47 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
 
     for child_rule in child_rules:
         rows = apply_joins(rows, child_rule, cols)
-        print('****')
-        for row in rows:
-            print(row)
 
-    hash_dict = {}
-    print('pivot cols', parent_cols + cols)
+    # The dict is used to store for each unique element of pivot column, all the
+    # many_cols to put together. Note that pivot.before (many) and pivot.after is used
+    # to keep the order of the elems in rows, which is crucial for `dfs_create_fhir`
+    new_row_dict = {}
     for row in rows:
+        # a sanity check
         assert all([e in range(len(row)) for e in cols])
-        one_cols, many_cols = parent_cols + cols, leave(range(len(row)), parent_cols + cols)
+        # As we work on the whole row, we add the parent left parts transmitted recursively
+        pivot_cols, many_cols = parent_cols + cols, leave(range(len(row)), parent_cols + cols)
         # Build an identifier for the 'left' part of the join
-        hash_key = hash(''.join(take(row, one_cols)))
-        if hash_key not in hash_dict:
-            if len(many_cols) > 0:
-                hash_dict[hash_key] = {
-                    'one': {
-                        'before': take(row, range(many_cols[0])),
-                        'after':  take(row, range(many_cols[-1]+1, len(row)))
-                    },
-                    'many': []
-                }
-            else:
-                hash_dict[hash_key] = {
-                    'one': {
-                        'before': list(row),
-                        'after': []
-                    },
-                    'many': []
-                }
+        hash_key = hash(''.join(take(row, pivot_cols)))
+        if hash_key not in new_row_dict:
+            # Add the key if needed
+            new_row_dict[hash_key] = {
+                'pivot': {
+                    'before': take(row, range(many_cols[0])) if len(many_cols) > 0 else list(row),
+                    'after':  take(row, range(many_cols[-1]+1, len(row))) if len(many_cols) > 0 else []
+                },
+                'many': []
+            }
+        # Add a many part to squash
         if len(many_cols) > 0:
-            hash_dict[hash_key]['many'].append(take(row, many_cols))
+            new_row_dict[hash_key]['many'].append(take(row, many_cols))
 
+    print(new_row_dict)
     # Reformat
-    print(hash_dict)
-    # Imagine you have rows like this (O = One, M = Many, x = other)
-    # O O O O x M M M x x
+    # Imagine you have rows like this (P = Pivot, M = Many)
+    # P P P P P  M M M  P P
     # After reformating you will have this kind of structure:
-    # O O O O x [[M M M], x x
+    # P P P P P [[M M M] P P
     #            [M M M]]
 
     new_rows = []
-    for hash_key, item in hash_dict.items():
-        new_row = item['one']['before']
+    for hash_key, item in new_row_dict.items():
+        new_row = item['pivot']['before']
         new_row += [item['many']] if len(item['many']) > 0 else []
-        new_row += item['one']['after']
+        new_row += item['pivot']['after']
         new_rows.append(new_row)
 
     return new_rows
-
 
 
 def take(l, indices):

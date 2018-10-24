@@ -91,7 +91,8 @@ def is_node_type_templatable(type_name):
 def build_sql_query(resource, info):
     """
     Take a Resource (eg Patient) scheme in input
-    Output a sql query to fill this resource
+    Output a sql query to fill this resource, and rules
+    to combine (or squash) rows that embed a OneToMany relation
     """
     table_name = get_table_name(info['source_table'] + '.*')
 
@@ -156,7 +157,11 @@ def build_squash_rule(node, graph, table_col_idx):
     return [unifying_col_idx, child_rules]
 
 
-class Table():
+class Table:
+    """
+    Node in the graph of dependency. Represents a table, and attributes
+    one_to_one, one_to_many link to other nodes / tables.
+    """
     def __init__(self, table_name):
         self.name = table_name
         self.one_to_one = []
@@ -171,6 +176,11 @@ class Table():
         return string
 
     def connect(self, table, join_type):
+        """
+        Declare a join
+        :param table: end table of the join
+        :param join_type: type of join
+        """
         if join_type == 'OneToOne':
             if table not in self.one_to_one:
                 self.one_to_one.append(table)
@@ -184,7 +194,10 @@ class Table():
         return table in (self.one_to_one + self.one_to_many)
 
 
-class DependencyGraph():
+class DependencyGraph:
+    """
+    Graph of dependency to show all joins between tables
+    """
     def __init__(self):
         self.nodes = {}
 
@@ -203,19 +216,15 @@ class DependencyGraph():
 
 def parse_joins(joins):
     """
-    Transform a join info into SQL fragments.
-    For OneToMany joins, list the joins: for example if you
-    join people with bank accounts on guy.id = account.owner_id, you want at the end to
-    have for a single guy to have a single instance with an attribute accounts. So you
-    need to remember to group all accounts for a single guy.
+    Transform a join info into SQL fragments and build the graph of join dependency
     Input:
-        (<type_of_join>, "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>")
+        [(<type_of_join>, "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"), ... ]
     Return:
-        (
+        [(
             "<join_table>",
             "<table>.<col> = <join_table>.<join_col>"
-        ),
-        ((table_guy, table_accounts), etc)
+        ), ... ],
+        graph of dependency
     """
     joins_elems = dict()
     graph = DependencyGraph()
@@ -365,19 +374,10 @@ def dfs_create_fhir(tree, row, node_type=None):
             template_ids = _list(tree['_template_id'])
 
             response = []
-            if len(row) > 0 and isinstance(row[0], list):
-                join_rows = row.pop(0)
-                # t_row is assumed to be [['a1', 'b1', ...],['a2', 'b2', ...]]
-                for join_row in join_rows:
-                    for template_id in template_ids:
-                        template = load_template(node_type, template_id)
-                        resp = dfs_create_fhir(template, join_row, node_type)
-                        response.append(resp)
-            else:
-                for template_id in template_ids:
-                    template = load_template(node_type, template_id)
-                    resp = dfs_create_fhir(template, row, node_type)
-                    response.append(resp)
+            for template_id in template_ids:
+                template = load_template(node_type, template_id)
+                resp = dfs_create_fhir(template, row, node_type)
+                response.append(resp)
             return _unlist(response)
         # Else if there are columns and scripts defined
         elif '_col' in tree.keys() and '_script' in tree.keys():
@@ -405,6 +405,9 @@ def dfs_create_fhir(tree, row, node_type=None):
                     d[name] = _list(d[name])
             return d
     elif isinstance(tree, list):
+        # If the element to pop(0) is a list, as we're expected a list, we make the guess
+        # that both list match and we iterate over this data list to fill the fhir list
+        # Note that we have no proof that they match exactly: this could fail.
         if len(row) > 0 and isinstance(row[0], list):
             join_rows = row.pop(0)
             response = []
@@ -418,6 +421,11 @@ def dfs_create_fhir(tree, row, node_type=None):
 
 
 def clean_fhir(tree):
+    """
+    Remove all empty leaves of the fhir object (None, empty list, or nested empty things)
+    :param tree: dirty fhir object
+    :return: clean fhir object
+    """
     if isinstance(tree, dict):
         weight = 0
         clean_tree = {}
