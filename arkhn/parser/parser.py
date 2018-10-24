@@ -108,44 +108,75 @@ def build_sql_query(resource, info):
             for join_table, join_bind in joins
         ])
     )
-    squash_rules = []
-    print(squash_rules_tables)
-    for rule in squash_rules_tables:
-        one_table, many_table = rule
-        one_cols, many_cols = [], []
-        for i, col in enumerate(col_names):
-            table = get_table_name(col)
-            if table == one_table:
-                one_cols.append(i)
-            elif table == many_table:
-                many_cols.append(i)
-        squash_rules.append((one_cols, many_cols))
+    # Reference for each table the columns which belongs to it.
+    table_col_idx = {}
+    for i, col in enumerate(col_names):
+        table = get_table_name(col)
+        if table not in table_col_idx:
+            table_col_idx[table] = []
+        table_col_idx[table].append(i)
 
-    join_graph = []
-    print(squash_rules_tables)
-    for rule in squash_rules_tables:
-        one_table, many_table = rule
-        one_cols, many_cols = [], []
-        for i, col in enumerate(col_names):
-            table = get_table_name(col)
-            if table == one_table:
-                one_cols.append(i)
-            elif table == many_table:
-                many_cols.append(i)
-        squash_rules.append((one_cols, many_cols))
-    return sql_query, squash_rules
+    head_node = dependency_graph.get(table_name)
+    squash_rules = build_squash_rule(head_node, dependency_graph, table_col_idx)
+
+    return sql_query, squash_rules, dependency_graph
+
+
+def build_squash_rule(node, graph, table_col_idx):
+    """
+    Using the dependency graph of the joins on the tables, regroup (using the id)
+    the columns which should be squashed
+    :param node: the node of the source table
+    :param graph: the dependency graph with all the joins
+    :param table_col_idx: a dict [table_name]: list of idx of cols in the SQL response which
+      come from this table
+    :return: [
+        (idx cols for source_table),
+        [
+            (idx cols for join OneToMany n1, []),
+            (idx cols for join OneToMany n2, []),
+            ...
+        ]
+    ]
+    """
+    # We refer the col indices of the table and all tables joined by a OneToOne
+    unifying_col_idx = table_col_idx[node.name]
+    for join_node in node.one_to_one:
+        print(node.name, '---', join_node.name)
+        join_cols, join_child_rules = build_squash_rule(join_node, graph, table_col_idx)
+        unifying_col_idx += join_cols
+        if len(join_child_rules) > 0:
+            print('ERROR', join_child_rules, 'not handled')
+    unifying_col_idx = tuple(sorted(unifying_col_idx))
+    # Now build the col indices for each table binded with a OneToMany
+    child_rules = []
+    for join_node in node.one_to_many:
+        print(node.name, '-<=', join_node.name)
+        child_rules.append(build_squash_rule(join_node, graph, table_col_idx))
+    return [unifying_col_idx, child_rules]
 
 
 class Table():
-    def __init__(self):
+    def __init__(self, table_name):
+        self.name = table_name
         self.one_to_one = []
         self.one_to_many = []
 
+    def __repr__(self):
+        string = '[{} O2O:({}) O2M:({})]'.format(
+            self.name,
+            ','.join([j.name for j in self.one_to_one]),
+            ','.join([j.name for j in self.one_to_many])
+        )
+        return string
+
     def connect(self, table, join_type):
         if join_type == 'OneToOne':
-            self.one_to_one.append(table)
+            if table not in self.one_to_one:
+                self.one_to_one.append(table)
         elif join_type == 'OneToMany':
-            self.one_to_many.append(table)
+            if table not in self.one_to_many:
+                self.one_to_many.append(table)
         else:
             raise TypeError('Join type is not valid:', join_type)
 
@@ -165,8 +196,8 @@ class DependencyGraph():
         self.nodes[table] = node
 
     def get(self, table):
-        if not self.has(self, table):
-            self.add(self, table)
+        if not self.has(table):
+            self.add(table)
         return self.nodes[table]
 
 
@@ -186,9 +217,7 @@ def parse_joins(joins):
         ),
         ((table_guy, table_accounts), etc)
     """
-    print(joins)
     joins_elems = dict()
-    joins_to_many = []
     graph = DependencyGraph()
     for join in joins:
         join_type, join_args = join
@@ -332,7 +361,6 @@ def dfs_create_fhir(tree, row, node_type=None):
 
         # If there is a template for the join
         if '_template_id' in tree.keys():
-            print('_template_id', tree['_template_id'])
             # Load the referenced template
             template_ids = _list(tree['_template_id'])
 
@@ -378,12 +406,9 @@ def dfs_create_fhir(tree, row, node_type=None):
             return d
     elif isinstance(tree, list):
         if len(row) > 0 and isinstance(row[0], list):
-            print('LIST FOUND')
-            print(row[0])
             join_rows = row.pop(0)
             response = []
             for join_row in join_rows:
-                print('>> ', len(join_row))
                 response.append([dfs_create_fhir(t, join_row, node_type) for t in tree])
             return response
         else:
