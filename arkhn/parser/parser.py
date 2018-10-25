@@ -65,7 +65,7 @@ def parse_name_type(name_type):
     Return:
         keyname, type, is_list
     """
-    r = re.compile(r'^([^\<]*)(?:\<(.*)\>)?')
+    r = re.compile(r'^([^<]*)(?:<(.*)>)?')
     name, node_type = r.findall(name_type)[0]
 
     is_list = node_type.startswith('list')
@@ -412,7 +412,7 @@ def dfs_create_fhir(tree, row, node_type=None):
             join_rows = row.pop(0)
             response = []
             for join_row in join_rows:
-                response.append([dfs_create_fhir(t, join_row, node_type) for t in tree])
+                response.append(_unlist([dfs_create_fhir(t, join_row, node_type) for t in tree]))
             return response
         else:
             return [dfs_create_fhir(t, row, node_type) for t in tree]
