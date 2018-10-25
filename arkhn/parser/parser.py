@@ -8,7 +8,8 @@ from os.path import isfile, join
 from arkhn import scripts
 from arkhn.parser import checks
 
-path = "DataTypes/"
+
+path = '../fhir-mapping/{}/templates/'
 
 
 def _is_empty(value):
@@ -76,28 +77,32 @@ def parse_name_type(name_type):
     return name, node_type, is_list
 
 
-def is_node_type_templatable(type_name):
+def is_node_type_templatable(project, type_name):
     """
     Check that the node_type is compatible with templating
     """
+    full_path = path.format(project)
     datatypes = [
         filename.split('.')[0]
-        for filename in listdir(path)
-        if isfile(join(path, filename))
+        for filename in listdir(full_path)
+        if isfile(join(full_path, filename))
     ]
     return type_name in datatypes
 
 
-def build_sql_query(resource, info):
+def build_sql_query(project, resource, info):
     """
     Take a Resource (eg Patient) scheme in input
     Output a sql query to fill this resource, and rules
     to combine (or squash) rows that embed a OneToMany relation
+    :param project: Name of the mapping project (eg CW)
+    :param resource: Name of the FHIR resource to fill
+    :param info: a dict with the source_table and optionally more
     """
     table_name = get_table_name(info['source_table'] + '.*')
 
     # Get the info about the columns and joins to query
-    d = dfs_find_sql_cols_joins(resource, source_table=table_name)
+    d = dfs_find_sql_cols_joins(resource, source_table=table_name, project=project)
     # Format the sql arguments
     col_names = d['cols']
     joins, dependency_graph = parse_joins(d['joins'])
@@ -246,11 +251,12 @@ def parse_joins(joins):
     return list(joins_elems.values()), graph
 
 
-def load_template(data_type, template_id):
+def load_template(project, data_type, template_id):
     """
     Return the dict template of a resource with id template_id
     """
-    with open(path + data_type + '.yml', 'r') as stream:
+    full_path = path.format(project)
+    with open(full_path + data_type + '.yml', 'r') as stream:
         try:
             data = yaml.load(stream)
             template = data[data_type][template_id]
@@ -260,19 +266,20 @@ def load_template(data_type, template_id):
     return None
 
 
-def dfs_find_sql_cols_joins(tree, node_type=None, source_table=None):
+def dfs_find_sql_cols_joins(tree, node_type=None, source_table=None, project='CW'):
     """
         Run through the dict/tree of a Resource (and the references to templates)
         To find:
         - All columns name to select
         - All joins necessary to collect the data
+        :param project:
     """
     if isinstance(tree, dict):
-        return find_cols_joins_in_object(tree, node_type, source_table)
+        return find_cols_joins_in_object(tree, node_type, source_table, project)
     elif isinstance(tree, list) and len(tree) > 0:
         response = {'cols': [], 'joins': []}
         for t in tree:
-            d = find_cols_joins_in_object(t, node_type, source_table)
+            d = find_cols_joins_in_object(t, node_type, source_table, project)
             response['cols'] += d['cols']
             response['joins'] += d['joins']
         return response
@@ -280,7 +287,7 @@ def dfs_find_sql_cols_joins(tree, node_type=None, source_table=None):
         return {'cols': [], 'joins': []}
 
 
-def find_cols_joins_in_object(tree, node_type, source_table):
+def find_cols_joins_in_object(tree, node_type, source_table, project):
     children = tree.keys()
     joins = []
     # If there is a join
@@ -294,13 +301,13 @@ def find_cols_joins_in_object(tree, node_type, source_table):
     if '_template_id' in tree.keys():
         # Load the referenced template
         template_ids = tree['_template_id']
-        assert is_node_type_templatable(node_type), "Can't have a template for type {}".format(node_type)
+        assert is_node_type_templatable(project, node_type), "Can't have a template for type {}".format(node_type)
         template_ids = _list(template_ids)
         template_cols = []
         template_joins = []
         for template_id in template_ids:
-            template = load_template(node_type, template_id)
-            template_d = dfs_find_sql_cols_joins(template, node_type)
+            template = load_template(project, node_type, template_id)
+            template_d = dfs_find_sql_cols_joins(template, node_type, project=project)
             template_cols += template_d['cols']
             template_joins += template_d['joins']
         return {'cols': [] + template_cols, 'joins': joins + template_joins}
@@ -318,7 +325,7 @@ def find_cols_joins_in_object(tree, node_type, source_table):
         joins = []
         for child in children:
             name, node_type, is_list = parse_name_type(child)
-            d = dfs_find_sql_cols_joins(tree[child], node_type, source_table)
+            d = dfs_find_sql_cols_joins(tree[child], node_type, source_table, project=project)
             child_cols = d['cols']
             child_joins = d['joins']
             cols += child_cols
