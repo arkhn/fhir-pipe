@@ -63,7 +63,8 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
         if len(many_cols) > 0:
             new_row_dict[hash_key]['many'].append(take(row, many_cols))
 
-    print(new_row_dict)
+    # print(new_row_dict)
+
     # Reformat
     # Imagine you have rows like this (P = Pivot, M = Many)
     # P P P P P  M M M  P P

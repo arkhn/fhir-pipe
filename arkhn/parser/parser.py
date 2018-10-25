@@ -364,7 +364,7 @@ def get_script_arity(cols, scripts):
         raise TypeError("Cant match {} cols with {} scripts".format(len(cols), len(scripts)))
 
 
-def dfs_create_fhir(tree, row, node_type=None):
+def dfs_create_fhir(project, tree, row, node_type=None):
     """
     For each instance of a Resource,
     Run again through the dict/tree of a Resource (and the references to templates)
@@ -382,8 +382,8 @@ def dfs_create_fhir(tree, row, node_type=None):
 
             response = []
             for template_id in template_ids:
-                template = load_template(node_type, template_id)
-                resp = dfs_create_fhir(template, row, node_type)
+                template = load_template(project, node_type, template_id)
+                resp = dfs_create_fhir(project, template, row, node_type)
                 response.append(resp)
             return _unlist(response)
         # Else if there are columns and scripts defined
@@ -406,7 +406,7 @@ def dfs_create_fhir(tree, row, node_type=None):
             d = dict()
             for child in children:
                 name, node_type, is_list = parse_name_type(child)
-                d[name] = dfs_create_fhir(tree[child], row, node_type)
+                d[name] = dfs_create_fhir(project, tree[child], row, node_type)
                 # Put in a list if required by typing and not already a list
                 if is_list:
                     d[name] = _list(d[name])
@@ -419,10 +419,10 @@ def dfs_create_fhir(tree, row, node_type=None):
             join_rows = row.pop(0)
             response = []
             for join_row in join_rows:
-                response.append(_unlist([dfs_create_fhir(t, join_row, node_type) for t in tree]))
+                response.append(_unlist([dfs_create_fhir(project, t, join_row, node_type) for t in tree]))
             return response
         else:
-            return [dfs_create_fhir(t, row, node_type) for t in tree]
+            return [dfs_create_fhir(project, t, row, node_type) for t in tree]
     else:
         return tree
 
