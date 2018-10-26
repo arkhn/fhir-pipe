@@ -9,7 +9,7 @@ from arkhn import scripts
 from arkhn.parser import checks
 
 
-path = '../fhir-mapping/{}/templates/'
+path = '../../fhir-mapping/{}/templates/'
 
 
 def _is_empty(value):
