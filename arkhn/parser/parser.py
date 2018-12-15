@@ -250,16 +250,26 @@ def parse_joins(joins):
         source_node.connect(join_node, join_type)
     return list(joins_elems.values()), graph
 
+# Cache all templates
+templates_cache = {}
+
 
 def load_template(project, data_type, template_id):
     """
     Return the dict template of a resource with id template_id
     """
     full_path = path.format(project)
-    with open(full_path + data_type + '.yml', 'r') as stream:
+    file_path = full_path + data_type + '.yml'
+
+    ref_id = '{}>{}'.format(file_path, template_id)
+    if ref_id in templates_cache:
+        return templates_cache[ref_id].copy()
+
+    with open(file_path, 'r') as stream:
         try:
             data = yaml.load(stream)
             template = data[data_type][template_id]
+            templates_cache[ref_id] = template.copy()
             return template
         except yaml.YAMLError as exc:
             print(exc)
