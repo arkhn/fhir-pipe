@@ -22,6 +22,32 @@ def get_connection(connection_type):
     return lib.connect(*args, **kwargs)
 
 
+def batch_run(query, batch_size, offset=0, connection=None):
+    """
+    Run a query batch per batch
+    :param query: the query to batch
+    :param batch_size: the size of the batch
+    :param offset: initial offset used when restarting a job
+    :param connection: a connection if any already active
+    :return: an iterator which computes and returns the results per batch
+    """
+    call_next_batch = True
+    batch_idx = 0
+    while call_next_batch:
+        batch_query = query +\
+                      ' OFFSET {} ROWS FETCH NEXT {} ROWS ONLY'.format(
+                          offset,
+                          batch_size
+                      )
+        batch = run(batch_query, connection)
+
+        call_next_batch = len(batch) >= batch_size
+        offset += batch_size
+        batch_idx += 1
+
+        yield batch_idx, offset, batch
+
+
 def run(query, connection=None):
     """
     Run a sql query after opening a sql connexion
