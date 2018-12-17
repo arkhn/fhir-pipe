@@ -21,7 +21,7 @@ def _is_empty(value):
 def get_table_name(name):
     elems = name.split('.')
     if len(elems) == 3:
-        return name.split('.')[1]
+        return '.'.join(name.split('.')[:2])
     elif len(elems) == 2:
         return name.split('.')[0]
     else:
@@ -31,7 +31,7 @@ def get_table_name(name):
 def get_table_col_name(name):
     if len(name.split('.')) != 3:
         raise TypeError('Name is not valid, should be <owner>.<table>.<col>.')
-    return '.'.join(name.split('.')[1:])
+    return '.'.join(name.split('.')[:])
 
 
 def remove_owner(name):
@@ -108,7 +108,7 @@ def build_sql_query(project, resource, info):
     # Format the sql arguments
     col_names = d['cols']
     joins, dependency_graph = parse_joins(d['joins'])
-    sql_query = 'SELECT {} FROM {} {};'.format(
+    sql_query = 'SELECT {} FROM {} {}'.format(
         ', '.join(col_names),
         table_name,
         ' '.join([

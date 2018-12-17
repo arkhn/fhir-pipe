@@ -107,6 +107,13 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
 
 
 def take(l, indices):
+    """
+    Given a list l, return the elements whose indices are in indices
+    Example:
+        take(['a', 'b', 'c', 'd']), [0, 2]
+        Returns
+        ['a', 'c']
+    """
     took = []
     for i, e in enumerate(l):
         if i in indices:
@@ -115,6 +122,13 @@ def take(l, indices):
 
 
 def leave(l, indices):
+    """
+    Given a list l, return the elements whose indices are in indices
+    Example:
+        leave(['a', 'b', 'c', 'd']), [0, 2]
+        Returns
+        ['b', 'd']
+    """
     took = []
     for i, e in enumerate(l):
         if i not in indices:
