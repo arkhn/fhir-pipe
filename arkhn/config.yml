@@ -1,0 +1,14 @@
+sql:
+    default: 'postgre'
+    postgre:
+        lib: 'psycopg2'
+        args: []
+        kwargs:
+            host: "localhost"
+            port: 5432
+            database: "cw_local"
+            user: "postgres"
+            password: "postgres"
+filesystem:
+    mapping: '../../fhir-mapping'
+

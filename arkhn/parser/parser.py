@@ -7,9 +7,11 @@ from os.path import isfile, join
 
 from arkhn import scripts
 from arkhn.parser import checks
+from arkhn.config import Config
 
 
-path = '../../fhir-mapping/{}/templates/'
+config = Config('filesystem')
+path = config.mapping + '/{}/templates/'
 
 
 def _is_empty(value):

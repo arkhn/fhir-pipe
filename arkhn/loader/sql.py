@@ -1,9 +1,33 @@
 import psycopg2
+import cx_Oracle
+
+from arkhn.config import Config
 
 
-def run(query):
-    with psycopg2.connect(host="localhost", port=5432, database="cw_local", user="postgres",
-                          password="postgres") as connection: 
+def get_connection(connection_type):
+    """
+    Return a sql connexion depending on the configuration provided in config.yml
+    Note: should be used in a context environment (with get_connection(c) as ...)
+    :param connection_type: a string like "postgre", "oracle". See your config
+    :return: a sql connexion
+    """
+    sql_config = Config("sql").to_dict()
+    if connection_type is None:
+        connection_type = sql_config['default']
+    connection = sql_config[connection_type]
+    lib = eval(connection['lib'])
+    args = connection['args']
+    kwargs = connection['kwargs']
+
+    return lib.connect(*args, **kwargs)
+
+
+def run(query, connection=None):
+    """
+    Run a sql query after opening a sql connexion
+    """
+
+    with get_connection(connection) as connection:
         with connection.cursor() as cursor:
             cursor.execute(query)
             output_row = cursor.fetchall()
