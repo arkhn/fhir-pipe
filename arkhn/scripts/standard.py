@@ -13,7 +13,7 @@ from arkhn.scripts import utils
 # From now on, standard scripts
 
 def make_title(raw_input):
-    return raw_input.title()
+    return raw_input.title().strip()
 
 
 def split_space(raw_input):
@@ -23,15 +23,18 @@ def split_space(raw_input):
 def format_date_from_yyyymmdd(raw_input):
     if utils.is_empty(raw_input):
         return ''
-    date = datetime.datetime.strptime(raw_input, "%Y%m%d")
-    iso_date = date.isoformat()
-    return iso_date
+    try:
+        date = datetime.datetime.strptime(raw_input, "%Y%m%d")
+        iso_date = date.isoformat()
+        return iso_date
+    except ValueError:
+        return raw_input
 
 
 def equal(raw_input):
     if raw_input is None or raw_input == 'NaN':
         return ''
-    return raw_input
+    return raw_input.strip()
 
 
 def clean_phone(raw_input):

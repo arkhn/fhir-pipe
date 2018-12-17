@@ -1,5 +1,6 @@
 import re
 
+
 def _is_empty(value):
     return value is None or value == 'NaN' or value == ''
 
@@ -19,9 +20,10 @@ def assert_has_sql_type(name_type, value):
     elif name_type in ('dateTime', 'date'):
         pat = re.compile(r'^\d{4}-\d{2}-\d{2}[T]\d{2}:\d{2}:\d{2}')
         if len(pat.findall(value)) == 0 and value != '':
-            raise TypeError('{} should be a ISO date (ex: 1998-02-17T00:00:00) .'.format(value))
+            # raise TypeError('{} should be a ISO date (ex: 1998-02-17T00:00:00) .'.format(value))
+            pass
     elif name_type == 'boolean':
-        if not isinstance(value, bool):
+        if not isinstance(value, bool) and value is not None:
             raise TypeError('{} <{}> should be a boolean.'.format(value, type(value)))
     else:
         raise TypeError('Type {} <{}> is not known.'.format(name_type, type(name_type)))
