@@ -1,44 +1,51 @@
 import psycopg2
 import cx_Oracle
+import logging
 
 from arkhn.config import Config
 
 
-def get_connection(connection_type):
+def get_connection(connection_type: str):
     """
     Return a sql connexion depending on the configuration provided in config.yml
+    (see root of the project)
     Note: should be used in a context environment (with get_connection(c) as ...)
-    :param connection_type: a string like "postgre", "oracle". See your config
+    :param connection_type: a string like "postgre", "oracle". See your config file
     :return: a sql connexion
     """
     sql_config = Config("sql").to_dict()
     if connection_type is None:
-        connection_type = sql_config['default']
+        connection_type = sql_config["default"]
     connection = sql_config[connection_type]
-    lib = eval(connection['lib'])
-    args = connection['args']
-    kwargs = connection['kwargs']
+    try:
+        lib = eval(connection["lib"])
+    except NameError:
+        logging.warning(
+            f"NameError found, did you import the lib {connection['lib']} ?"
+        )
+        raise ImportError
+    args = connection["args"]
+    kwargs = connection["kwargs"]
 
     return lib.connect(*args, **kwargs)
 
 
 def batch_run(query, batch_size, offset=0, connection=None):
     """
-    Run a query batch per batch
+    Run a query batch per batch, when the query is too big
     :param query: the query to batch
     :param batch_size: the size of the batch
-    :param offset: initial offset used when restarting a job
-    :param connection: a connection if any already active
-    :return: an iterator which computes and returns the results per batch
+    :param offset: initial offset (used when restarting a job which stopped
+    in the middle)
+    :param connection: a connection if any already active (to avoid opening too many)
+    :return: an iterator which computes and returns the results batch per batch
     """
     call_next_batch = True
     batch_idx = 0
     while call_next_batch:
-        batch_query = query +\
-                      ' OFFSET {} ROWS FETCH NEXT {} ROWS ONLY'.format(
-                          offset,
-                          batch_size
-                      )
+        batch_query = query + " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY".format(
+            offset, batch_size
+        )
         batch = run(batch_query, connection)
 
         call_next_batch = len(batch) >= batch_size
@@ -48,11 +55,11 @@ def batch_run(query, batch_size, offset=0, connection=None):
         yield batch_idx, offset, batch
 
 
-def run(query, connection=None):
+def run(query, connection: str = None):
     """
     Run a sql query after opening a sql connexion
+    :param connection: type of connection: "postgre", "oracle" (see config.yml)
     """
-
     with get_connection(connection) as connection:
         with connection.cursor() as cursor:
             cursor.execute(query)
@@ -65,24 +72,31 @@ def run(query, connection=None):
 
 def apply_joins(rows, squash_rule, parent_cols=tuple()):
     """
-    Apply the OneToMany joins to have a single result with a list.
+    Apply the OneToMany joins to have a single result with a list in it from
+    a list of "flat" results.
+    args:
+        rows (list<str>): all the results returned from a sql query
+        squash_rule (tuple<list>): which columns should serve as identifier to merge
+        the rows
+        parent_cols (list): param used for recursive call
+
     Example:
-    if you join people with bank accounts on guy.id = account.owner_id, you want at
-    the end to have for a single guy to have a single instance with an attribute
-    accounts.
-    ROWS:
-    GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
-    Robert              21          Compte courant      17654
-    Robert              21          Compte d'epargne    123456789
-    David               51          Ibiza summer        100
+        if you join people with bank accounts on guy.id = account.owner_id, you want at
+        the end to have for a single guy to have a single instance with an attribute
+        accounts.
+        ROWS:
+        GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
+        Robert              21          Compte courant      17654
+        Robert              21          Compte d'epargne    123456789
+        David               51          Ibiza summer        100
 
-    Squash rule: ('GUY', 'ACCOUNT') or in terms of columns ([0, ..., 5], [6, 7])
+        Squash rule: ('GUY', 'ACCOUNT') or in terms of columns ([0, ..., 5], [6, 7])
 
-    Output:
-    GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
-    Robert              21        [(Compte courant   ,  17654            )
-                                   (Compte d'epargne ,  123456789         )]
-    David               51          Ibiza summer        100
+        Output:
+        GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
+        Robert              21        [(Compte courant   ,  17654            )
+                                       (Compte d'epargne ,  123456789         )]
+        David               51          Ibiza summer        100
     """
     cols, child_rules = squash_rule
 
@@ -97,21 +111,28 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
         # a sanity check
         assert all([e in range(len(row)) for e in cols])
         # As we work on the whole row, we add the parent left parts transmitted recursively
-        pivot_cols, many_cols = parent_cols + cols, leave(range(len(row)), parent_cols + cols)
+        pivot_cols, many_cols = (
+            parent_cols + cols,
+            leave(range(len(row)), parent_cols + cols),
+        )
         # Build an identifier for the 'left' part of the join
-        hash_key = hash(''.join(take(row, pivot_cols)))
+        hash_key = hash("".join(take(row, pivot_cols)))
         if hash_key not in new_row_dict:
             # Add the key if needed
             new_row_dict[hash_key] = {
-                'pivot': {
-                    'before': take(row, range(many_cols[0])) if len(many_cols) > 0 else list(row),
-                    'after':  take(row, range(many_cols[-1]+1, len(row))) if len(many_cols) > 0 else []
+                "pivot": {
+                    "before": take(row, range(many_cols[0]))
+                    if len(many_cols) > 0
+                    else list(row),
+                    "after": take(row, range(many_cols[-1] + 1, len(row)))
+                    if len(many_cols) > 0
+                    else [],
                 },
-                'many': []
+                "many": [],
             }
         # Add a many part to squash
         if len(many_cols) > 0:
-            new_row_dict[hash_key]['many'].append(take(row, many_cols))
+            new_row_dict[hash_key]["many"].append(take(row, many_cols))
 
     # print(new_row_dict)
 
@@ -124,9 +145,9 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
 
     new_rows = []
     for hash_key, item in new_row_dict.items():
-        new_row = item['pivot']['before']
-        new_row += [item['many']] if len(item['many']) > 0 else []
-        new_row += item['pivot']['after']
+        new_row = item["pivot"]["before"]
+        new_row += [item["many"]] if len(item["many"]) > 0 else []
+        new_row += item["pivot"]["after"]
         new_rows.append(new_row)
 
     return new_rows

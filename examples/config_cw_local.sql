@@ -29,6 +29,57 @@ INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUE
 );
 
 INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUES (
+    '0000000284',
+    '19700402',
+    'Chirac',
+    'Jacques',
+    'M',
+    'N',
+    ''
+);
+
+INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUES (
+    '0000000285',
+    '19700402',
+    'dormesson',
+    'Jean',
+    'M',
+    'N',
+    ''
+);
+
+INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUES (
+    '0000000286',
+    '19700403',
+    'Vendame',
+    'Jean Claude',
+    'M',
+    'N',
+    ''
+);
+
+INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUES (
+    '0000000287',
+    '19700404',
+    'Theresa',
+    'Mère',
+    'F',
+    'N',
+    ''
+);
+
+
+INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUES (
+    '0000000288',
+    '19700405',
+    'Gambetta',
+    'Monsieur',
+    'M',
+    'N',
+    ''
+);
+
+INSERT INTO PATIENT (NOPAT, DTNAIS, NOMPAT, PREPAT, SEXE, DECEDE, DTDECES) VALUES (
     '0000000285',
     '19940506',
     'KIRIKOU',
