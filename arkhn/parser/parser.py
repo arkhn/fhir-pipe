@@ -88,6 +88,18 @@ def parse_name_type(name_type):
     return name, node_type, is_list
 
 
+def parse_type(node_type):
+    """
+
+    """
+    is_list = node_type.startswith("list")
+    if len(node_type.split("::")) > 1:
+        node_type = node_type.split("::")[1]
+    elif is_list:
+        node_type = None
+    return node_type, is_list
+
+
 def is_node_type_templatable(project, type_name):
     """
     Check that the node_type is compatible with templating
@@ -101,22 +113,26 @@ def is_node_type_templatable(project, type_name):
     return type_name in datatypes
 
 
-def build_sql_query(project, resource, info):
+def build_sql_query(project, resource, info='ICSF.PATIENT'):
     """
     Take a FHIR Resource (eg Patient) specification in input
     Output a sql query to fill this resource, and rules
     to combine (or squash) rows that embed a OneToMany relation
     :param project: name of the mapping project (eg CW)
     :param resource: the FHIR resource specification (as a dict)
-    :param info: a dict with the source_table and optionally more
+    :param info:
     """
-    table_name = get_table_name(info["source_table"] + ".*")
+    table_name = get_table_name(info + ".*")
 
     # Get the info about the columns and joins to query
-    d = dfs_find_sql_cols_joins(resource, source_table=table_name, project=project)
+    cols, joins = dfs_find_sql_cols_joins(resource, source_table=table_name, project=project)
+
+    print(cols)
+    print(joins)
+
     # Format the sql arguments
-    col_names = d["cols"]
-    joins, dependency_graph = parse_joins(d["joins"])
+    col_names = cols
+    joins, dependency_graph = parse_joins(joins)
     sql_query = "SELECT {} FROM {} {}".format(
         ", ".join(col_names),
         table_name,
@@ -301,7 +317,7 @@ def load_template(project, data_type, template_id):
     return None
 
 
-def dfs_find_sql_cols_joins(tree, node_type=None, source_table=None, project="CW"):
+def dfs_find_sql_cols_joins(tree, source_table=None, project="CW"):
     """
     Run through the dict/tree of a Resource (and the references to templates)
     To find:
@@ -322,19 +338,20 @@ def dfs_find_sql_cols_joins(tree, node_type=None, source_table=None, project="CW
     TODO: change the dict return format to a tuple one
     """
     if isinstance(tree, dict):
-        return find_cols_joins_in_object(tree, node_type, source_table, project)
+        return find_cols_joins_in_object(tree, source_table, project)
     elif isinstance(tree, list) and len(tree) > 0:
-        response = {"cols": [], "joins": []}
+        all_cols = []
+        all_joins = []
         for t in tree:
-            d = find_cols_joins_in_object(t, node_type, source_table, project)
-            response["cols"] += d["cols"]
-            response["joins"] += d["joins"]
-        return response
+            cols, joins = find_cols_joins_in_object(t, source_table, project)
+            all_cols += cols
+            all_joins += joins
+        return all_cols, all_joins
     else:
-        return {"cols": [], "joins": []}
+        return [], []
 
 
-def find_cols_joins_in_object(tree, node_type, source_table, project):
+def find_cols_joins_in_object(tree, source_table, project):
     """
     Inspect a tree specification of a FHIR mapping to find columns and joins
     :param tree: the mapping spec to explore
@@ -343,53 +360,49 @@ def find_cols_joins_in_object(tree, node_type, source_table, project):
     :param project: ex: CW, (used for templating)
     :return: a dict {'cols': [...], 'joins': [...]}
     """
-    children = tree.keys()
-    joins = []
-    # If there is a join
-    if "_join" in tree.keys():
-        join_info = tree["_join"]
-        # Add the join
-        join = (join_info["_type"], _unlist(join_info["_args"]))
-        joins = _list(join)
-
-    # If there is a template
-    if "_template_id" in tree.keys():
-        # Load the referenced template
-        template_ids = tree["_template_id"]
-        assert is_node_type_templatable(
-            project, node_type
-        ), "Can't have a template for type {}".format(node_type)
-        template_ids = _list(template_ids)
-        template_cols = []
-        template_joins = []
-        for template_id in template_ids:
-            template = load_template(project, node_type, template_id)
-            template_d = dfs_find_sql_cols_joins(template, node_type, project=project)
-            template_cols += template_d["cols"]
-            template_joins += template_d["joins"]
-        return {"cols": [] + template_cols, "joins": joins + template_joins}
+    # print(tree['id'])
     # Else if there are columns and scripts defined
-    elif "_col" in tree.keys() and "_script" in tree.keys():
-        col = tree["_col"]
-        cols = _list(col)
-        cols = [remove_owner(col) for col in cols]
-        if source_table is not None:
-            cols = [add_table_name(col, source_table) for col in cols]
-        return {"cols": cols, "joins": joins}
+    if "inputColumns" in tree.keys() and len(tree["inputColumns"]) > 0:
+        inputColumns = tree["inputColumns"]
+        joins = []
+        column_names = []
+        for col in inputColumns:
+            # If there is a join
+            if "joins" in col.keys() and len(col['joins']) > 0:
+                for join in col["joins"]:
+                    # Add the join
+                    join_type = "OneToOne"  # TODO: infer type ?
+                    join_args = "{}.{}.{}={}.{}.{}".format(
+                        join['sourceOwner'],
+                        join['sourceTable'],
+                        join['sourceColumn'],
+                        join['targetOwner'],
+                        join['targetTable'],
+                        join['targetColumn'],
+                    )
+                    joins += [(join_type, join_args)]
+
+            # Check if not static value
+            if col['table'] is not None and col['column'] is not None:
+                column_name = "{}.{}.{}".format(
+                    col['owner'],
+                    col['table'],
+                    col['column']
+                )
+                column_names.append(column_name)
+
+        # cols = _list(col)
+        # cols = [remove_owner(col) for col in cols]
+        # if source_table is not None:
+        #     cols = [add_table_name(col, source_table) for col in cols]
+        # print(column_names)
+        return column_names, joins
     # Else, we have no join and no col referenced: just a json node (ex: name.given)
     else:
-        cols = []
-        joins = []
-        for child in children:
-            name, node_type, is_list = parse_name_type(child)
-            d = dfs_find_sql_cols_joins(
-                tree[child], node_type, source_table, project=project
-            )
-            child_cols = d["cols"]
-            child_joins = d["joins"]
-            cols += child_cols
-            joins += child_joins
-        return {"cols": cols, "joins": joins}
+        cols, joins = dfs_find_sql_cols_joins(
+            tree['attributes'], source_table, project=project
+        )
+        return cols, joins
 
 
 def _list(obj):
@@ -425,78 +438,60 @@ def get_script_arity(cols, scripts):
         )
 
 
-def dfs_create_fhir(project, tree, row, node_type=None):
+def dfs_create_fhir(d, tree, row):
     """
-    For each instance of a Resource,
-    Run through the dict/tree of a Resource (and the references to templates)
-    And build a similar dict, where we replace all occurrences of _col with the result of the query,
-    Processed by the appropriate _script.
+        For each instance of a Resource,
+        Run through the dict/tree of a Resource (and the references to templates)
+        And build a similar dict, where we replace all occurrences of inputColumns
+        with the result of the query,
+        Processed by the appropriate script.
 
-    args:
-        project: name of the project (ex: CW)
-        tree: the FHIR spec mapping
-        row: one row of the result of the SQL query
+        args:
+            d: the fhir structure we build
+            tree: the FHIR spec mapping from graphql
+            row: one row of the result of the SQL query
 
-    return:
-        A dict which is in the partial fhir format.
+        return:
+            None
     """
-    if isinstance(tree, dict):
-        children = tree.keys()
+    # if there are columns specified
+    if len(tree['inputColumns']) > 0:
+        l = []
+        for c in tree['inputColumns']:
+            if c['table'] is not None and c['column'] is not None:
+                script_name = c['script']
+                value = row.pop(0)
+                if script_name is not None:
+                    value = scripts.get_script(script_name)(value)
+                l.append(value)
+            else:
+                l.append(c['staticValue'])
 
-        # If there is a template for the join
-        if "_template_id" in tree.keys():
-            # Load the referenced template
-            template_ids = _list(tree["_template_id"])
-
-            response = []
-            for template_id in template_ids:
-                template = load_template(project, node_type, template_id)
-                resp = dfs_create_fhir(project, template, row, node_type)
-                response.append(resp)
-            return _unlist(response)
-        # Else if there are columns and scripts defined
-        elif "_col" in tree.keys() and "_script" in tree.keys():
-            script_names = _list(tree["_script"])
-            col_names = _list(tree["_col"])
-            script_arities = _list(get_script_arity(col_names, script_names))
-            values = []
-            for name, arity in zip(script_names, script_arities):
-                # Row.pop(0) pops out the first element in row
-                args = []
-                for i in range(arity):
-                    args.append(row.pop(0))
-                value = scripts.get_script(name)(*args)
-                checks.assert_has_sql_type(node_type, value)
-                values.append(value)
-            return _unlist(values)
-        # Else, we have no join and no col referenced: just a json node (ex: name.given)
+        if tree['type'].startswith('list'):
+            d[tree['name']] = l
         else:
-            d = dict()
-            for child in children:
-                name, node_type, is_list = parse_name_type(child)
-                d[name] = dfs_create_fhir(project, tree[child], row, node_type)
-                # Put in a list if required by typing and not already a list
-                if is_list:
-                    d[name] = _list(d[name])
-            return d
-    elif isinstance(tree, list):
-        # If the element to pop(0) is a list, as we're expected a list, we make the guess
-        # that both list match and we iterate over this data list to fill the fhir list
-        # Note that we have no proof that they match exactly: this could fail.
-        if len(row) > 0 and isinstance(row[0], list):
-            join_rows = row.pop(0)
-            response = []
-            for join_row in join_rows:
-                response.append(
-                    _unlist(
-                        [dfs_create_fhir(project, t, join_row, node_type) for t in tree]
-                    )
-                )
-            return response
+            d[tree['name']] = ''.join(l)
+    else:  # else iterate recursively
+        if tree['type'].startswith('list'):
+            d[tree['name']] = list()
+            for a in tree['attributes']:
+                if isinstance(row[0], list):
+                    join_rows = row.pop(0)
+                    for join_row in join_rows:
+                        d2 = dict()
+                        dfs_create_fhir(d2, a, join_row)
+                        d[tree['name']].append(d2)
+                else:
+                    d2 = dict()
+                    dfs_create_fhir(d2, a, row)
+                    d[tree['name']].append(d2)
+        elif tree['isProfile']:
+            for a in tree['attributes']:
+                dfs_create_fhir(d, a, row)
         else:
-            return [dfs_create_fhir(project, t, row, node_type) for t in tree]
-    else:
-        return tree
+            d[tree['name']] = dict()
+            for a in tree['attributes']:
+                dfs_create_fhir(d[tree['name']], a, row)
 
 
 def clean_fhir(tree):
