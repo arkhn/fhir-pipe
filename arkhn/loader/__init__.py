@@ -1,1 +1,1 @@
-from .yml import load
+from .json import load

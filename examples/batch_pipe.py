@@ -9,20 +9,19 @@ import arkhn
 start_time = time.time()
 
 # Define config variables
-project = "CW"
-resource = "patient"
+database = 'Crossway'
+resource = 'Patient'
 
 # Load data
-data = arkhn.loader.load(project, resource)
-patient = data["fhir"]
-info = data["info"]
+data = arkhn.loader.json.load(database, resource)
+patient = data
 
 # Build the sql query
-sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, patient, info)
+sql_query, squash_rules, graph = arkhn.parser.build_sql_query(database, patient)
 print(sql_query)
 
 # Remove owner with MIMIC
-sql_query = sql_query.replace("ICSF.", "")
+# sql_query = sql_query.replace("ICSF.", "")
 
 # Run it
 print("Launching query batch per batch...")
@@ -48,8 +47,11 @@ for batch_idx, offset, rows in arkhn.sql.batch_run(
         if i % 1000 == 0:
             progression = round(i / len(rows) * 100, 2)
             print("batch {} %".format(progression))
-        tree = arkhn.parser.dfs_create_fhir(project, patient, list(row))
+        tree = dict()
+        for a in patient['attributes']:
+            arkhn.parser.dfs_create_fhir(tree, a, list(row))
         tree, n_leafs = arkhn.parser.clean_fhir(tree)
+        # TODO: think about it
         tree["id"] = int(random.random() * 10e10)
         json_rows.append(tree)
 
@@ -69,6 +71,9 @@ with open("fhir_data/samples.json", "wb") as merged_file:
     for batch_filename in glob.glob("fhir_data/tmp/samples.*.json"):
         with open(batch_filename, "rb") as batch_file:
             shutil.copyfileobj(batch_file, merged_file)
+
+# TODO rm tmp files
+
 print("done")
 
 print(round((time.time() - start_time), 2), "seconds")

@@ -479,7 +479,7 @@ def dfs_create_fhir(d, tree, row):
                     join_rows = row.pop(0)
                     for join_row in join_rows:
                         d2 = dict()
-                        dfs_create_fhir(d2, a, join_row)
+                        dfs_create_fhir(d2, a, list(join_row))
                         d[tree['name']].append(d2)
                 else:
                     d2 = dict()
