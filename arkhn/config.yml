@@ -11,4 +11,5 @@ sql:
             password: "postgres"
 filesystem:
     mapping: '../../fhir-mapping'
-
+graphql:
+    server: 'https://graphql.live.arkhn.org/'
