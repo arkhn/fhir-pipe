@@ -5,7 +5,7 @@ import logging
 from arkhn.config import Config
 
 
-def get_connection(connection_type: str):
+def get_connection(connection_type: str = None):
     """
     Return a sql connexion depending on the configuration provided in config.yml
     (see root of the project)
@@ -42,10 +42,27 @@ def batch_run(query, batch_size, offset=0, connection=None):
     """
     call_next_batch = True
     batch_idx = 0
+
+    # Remove the ending ';' if any
+    if query[-1] == ';':
+        query = query[:-1]
+    # A query with a limit can't be batch run
+    limit_words = ['limit', 'fetch next']
+    if any(limit_word in query.lower() for limit_word in limit_words):
+        raise NotImplementedError("You currently can't run by batch a query which already has a limit"
+                                  "statement. Error in {}".format(query))
+
+    # Adapt the offset and limit depending of oracle or postgre db
+    database_type = Config("sql").default
+    if database_type == 'oracle':
+        offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
+    elif database_type == 'postgre':
+        offset_batch_size_instruction = " OFFSET {} LIMIT {}"
+    else:
+        raise RuntimeError(f'{database_type} is not a supported database type.')
+
     while call_next_batch:
-        batch_query = query + " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY".format(
-            offset, batch_size
-        )
+        batch_query = query + offset_batch_size_instruction.format(offset, batch_size)
         batch = run(batch_query, connection)
 
         call_next_batch = len(batch) >= batch_size
