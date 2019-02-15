@@ -363,10 +363,9 @@ def find_cols_joins_in_object(tree, source_table, project):
     # print(tree['id'])
     # Else if there are columns and scripts defined
     if "inputColumns" in tree.keys() and len(tree["inputColumns"]) > 0:
-        inputColumns = tree["inputColumns"]
         joins = []
         column_names = []
-        for col in inputColumns:
+        for col in tree["inputColumns"]:
             # If there is a join
             if "joins" in col.keys() and len(col['joins']) > 0:
                 for join in col["joins"]:
@@ -382,7 +381,7 @@ def find_cols_joins_in_object(tree, source_table, project):
                     )
                     joins += [(join_type, join_args)]
 
-            # Check if not static value
+            # Check if table and column target are defined
             if col['table'] is not None and col['column'] is not None:
                 column_name = "{}.{}.{}".format(
                     col['owner'],
@@ -390,6 +389,7 @@ def find_cols_joins_in_object(tree, source_table, project):
                     col['column']
                 )
                 column_names.append(column_name)
+            # Else it's a static value and there is nothing to do
 
         # cols = _list(col)
         # cols = [remove_owner(col) for col in cols]
@@ -455,17 +455,17 @@ def dfs_create_fhir(d, tree, row):
             None
     """
     # if there are columns specified
-    if len(tree['inputColumns']) > 0:
+    if "inputColumns" in tree.keys() and len(tree["inputColumns"]) > 0:
         l = []
-        for c in tree['inputColumns']:
-            if c['table'] is not None and c['column'] is not None:
-                script_name = c['script']
+        for col in tree['inputColumns']:
+            if col['table'] is not None and col['column'] is not None:
+                script_name = col['script']
                 value = row.pop(0)
                 if script_name is not None:
                     value = scripts.get_script(script_name)(value)
                 l.append(value)
             else:
-                l.append(c['staticValue'])
+                l.append(col['staticValue'])
 
         if tree['type'].startswith('list'):
             d[tree['name']] = l
@@ -475,7 +475,7 @@ def dfs_create_fhir(d, tree, row):
         if tree['type'].startswith('list'):
             d[tree['name']] = list()
             for a in tree['attributes']:
-                if isinstance(row[0], list):
+                if len(row) > 0 and isinstance(row[0], list):
                     join_rows = row.pop(0)
                     for join_row in join_rows:
                         d2 = dict()
