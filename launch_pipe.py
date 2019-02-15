@@ -12,10 +12,10 @@ project = 'Crossway'
 resource = 'Patient'
 
 # Load data
-data = arkhn.loader.load(project, resource)
+resource_structure = arkhn.fetcher.get_fhir_resource(project, resource)
 
 # Build the sql query
-sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, data)
+sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, resource_structure)
 print(sql_query)
 
 # Run it
@@ -23,11 +23,8 @@ print('Launching query...')
 rows = arkhn.sql.run(sql_query)
 
 # Fix: replace None values with ''
-non_none_rows = []
-for row in rows:
-    el_list = list(map(lambda x: x if x is not None else '', row))
-    non_none_rows.append(el_list)
-rows = non_none_rows
+for i, row in enumerate(rows):
+    rows[i] = [e if e is not None else '' for e in row ]
 
 print(len(rows), 'results')
 # Print cols if you want
@@ -50,7 +47,7 @@ for i, row in enumerate(rows):
     # The first node has a different structure so we iterate outside the
     # dfs_create_fhir function
     tree = dict()
-    for attr in data['attributes']:
+    for attr in resource_structure['attributes']:
         arkhn.parser.dfs_create_fhir(tree, attr, row)
     tree, n_leafs = arkhn.parser.clean_fhir(tree)
     tree['id'] = int(random.random() * 10e10)
