@@ -9,19 +9,15 @@ import arkhn
 start_time = time.time()
 
 # Define config variables
-database = 'Crossway'
+project = 'Crossway'
 resource = 'Patient'
 
 # Load data
-data = arkhn.loader.json.load(database, resource)
-patient = data
+resource_structure = arkhn.fetcher.get_fhir_resource(project, resource)
 
 # Build the sql query
-sql_query, squash_rules, graph = arkhn.parser.build_sql_query(database, patient)
+sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, resource_structure)
 print(sql_query)
-
-# Remove owner with MIMIC
-# sql_query = sql_query.replace("ICSF.", "")
 
 # Run it
 print("Launching query batch per batch...")
@@ -47,9 +43,10 @@ for batch_idx, offset, rows in arkhn.sql.batch_run(
         if i % 1000 == 0:
             progression = round(i / len(rows) * 100, 2)
             print("batch {} %".format(progression))
+        row = list(row)
         tree = dict()
-        for a in patient['attributes']:
-            arkhn.parser.dfs_create_fhir(tree, a, list(row))
+        for attr in resource_structure['attributes']:
+            arkhn.parser.dfs_create_fhir(tree, attr, row)
         tree, n_leafs = arkhn.parser.clean_fhir(tree)
         # TODO: think about it
         tree["id"] = int(random.random() * 10e10)
