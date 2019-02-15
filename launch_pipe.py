@@ -8,16 +8,14 @@ import arkhn
 start_time = time.time()
 
 # Define config variables
-project = 'CW'
-resource = 'patient'
+project = 'Crossway'
+resource = 'Patient'
 
 # Load data
 data = arkhn.loader.load(project, resource)
-patient = data['fhir']
-info = data['info']
 
 # Build the sql query
-sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, patient, info)
+sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, data)
 print(sql_query)
 
 # Run it
@@ -38,7 +36,7 @@ print(len(rows), 'results')
 #         print(row)
 
 
-# Apply join rule to merge some lines fomr the same resource
+# Apply join rule to merge some lines from the same resource
 rows = arkhn.sql.apply_joins(rows, squash_rules)
 
 
@@ -49,11 +47,14 @@ for i, row in enumerate(rows):
         progression = round(i / len(rows) * 100, 2)
         print('PROGRESS... {} %'.format(progression))
     row = list(row)
-    tree = arkhn.parser.dfs_create_fhir(project, patient, row)
+    # The first node has a different structure so we iterate outside the
+    # dfs_create_fhir function
+    tree = dict()
+    for attr in data['attributes']:
+        arkhn.parser.dfs_create_fhir(tree, attr, row)
     tree, n_leafs = arkhn.parser.clean_fhir(tree)
     tree['id'] = int(random.random() * 10e10)
     json_rows.append(tree)
-    # print('Entity with', n_leafs, 'elems')
     # print(json.dumps(tree, indent=2, ensure_ascii=False))
 
 # Uncomment to write to file
