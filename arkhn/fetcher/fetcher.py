@@ -125,4 +125,7 @@ def get_fhir_resource(database, resource):
     before calling api endpoint.
     """
 
-    return run_query(QUERY.format(database, resource))
+    response = run_query(QUERY.format(database, resource))
+    response = response['data']['getResource']
+
+    return response
