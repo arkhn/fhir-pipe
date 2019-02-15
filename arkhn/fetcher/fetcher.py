@@ -107,7 +107,7 @@ def run_query(query):
         SERVER,
         headers=HEADERS,
         json={
-            'query': QUERY,
+            'query': query,
             'variables': None,
             'operationName': None,
         }
