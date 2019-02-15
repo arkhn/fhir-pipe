@@ -249,6 +249,12 @@ class DependencyGraph:
             self.add(table)
         return self.nodes[table]
 
+    def __repr__(self):
+        out = "Dependency Graph\n"
+        for name, node in self.nodes.items():
+            out += "{}: {}\n".format(name, node.__repr__())
+        return out
+
 
 def parse_joins(joins):
     """
