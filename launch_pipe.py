@@ -51,6 +51,7 @@ for i, row in enumerate(rows):
         arkhn.parser.dfs_create_fhir(tree, attr, row)
     tree, n_leafs = arkhn.parser.clean_fhir(tree)
     tree['id'] = int(random.random() * 10e10)
+    tree['resourceType'] = resource
     json_rows.append(tree)
     # print(json.dumps(tree, indent=2, ensure_ascii=False))
 
