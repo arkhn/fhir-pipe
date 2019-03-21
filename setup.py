@@ -11,6 +11,9 @@ setup(
     packages=['fhirpipe'],
     zip_safe=False,
     entry_points={
-        'console_scripts': ['fhirpipe-run=fhirpipe.console.run:run'],
+        'console_scripts': [
+            'fhirpipe-run=fhirpipe.console.run:run',
+            'fhirpipe-batchrun=fhirpipe.console.run:batch_run',
+        ],
     },
 )

@@ -3,98 +3,109 @@ import requests
 from fhirpipe.config import Config
 
 
-CONFIG = Config("graphql")
-SERVER = CONFIG.server
+config = Config("graphql")
+SERVER = config.server
 HEADERS = {
     "content-type": "application/json",
+    "Authorization": f"Bearer {config.token}",
 }
-QUERY = """
-fragment entireJoin on Join {{
-    id
-    sourceOwner
-    sourceTable
-    sourceColumn
-    targetOwner
-    targetTable
-    targetColumn
-}}
 
-fragment entireInputColumn on InputColumn {{
-    id
-    owner
-    table
-    column
-    script
-    staticValue
-    joins {{
-        ...entireJoin
-    }}
-}}
 
-fragment a on Attribute {{
-    id
-    comment
-    name
-    mergingScript
-    isProfile
-    type
-    inputColumns {{
-        ...entireInputColumn
-    }}
-}}
-
-query {{
-    getResource (database: "{0}", resource: "{1}") {{
+def get_query(database, resource):
+    query = (
+        """
+    fragment entireJoin on Join {
         id
+        sourceOwner
+        sourceTable
+        sourceColumn
+        targetOwner
+        targetTable
+        targetColumn
+    }
+    
+    fragment entireInputColumn on InputColumn {
+        id
+        owner
+        table
+        column
+        script
+        staticValue
+        joins {
+            ...entireJoin
+        }
+    }
+    
+    fragment a on Attribute {
+        id
+        comment
         name
-        attributes {{
-            ...a
-            attributes {{
+        mergingScript
+        isProfile
+        type
+        inputColumns {
+            ...entireInputColumn
+        }
+    }
+    
+    query {
+        getResource (database: """
+        + database
+        + """, resource: """
+        + resource
+        + """) {
+            id
+            name
+            attributes {
                 ...a
-                attributes {{
+                attributes {
                     ...a
-                    attributes {{
+                    attributes {
                         ...a
-                        attributes {{
+                        attributes {
                             ...a
-                            attributes {{
+                            attributes {
                                 ...a
-                                attributes {{
+                                attributes {
                                     ...a
-                                    attributes {{
+                                    attributes {
                                         ...a
-                                        attributes {{
+                                        attributes {
                                             ...a
-                                            attributes {{
+                                            attributes {
                                                 ...a
-                                                attributes {{
+                                                attributes {
                                                     ...a
-                                                    attributes {{
+                                                    attributes {
                                                         ...a
-                                                        attributes {{
+                                                        attributes {
                                                             ...a
-                                                            attributes {{
+                                                            attributes {
                                                                 ...a
-                                                                attributes {{
+                                                                attributes {
                                                                     ...a
-                                                                }}
-                                                            }}
-                                                        }}
-                                                    }}
-                                                }}
-                                            }}
-                                        }}
-                                    }}
-                                }}
-                            }}
-                        }}
-                    }}
-                }}
-            }}
-        }}
-    }}
-}}
-"""
+                                                                    attributes {
+                                                                        ...a
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    """
+    )
+    return query
 
 
 def run_query(query):
@@ -106,17 +117,15 @@ def run_query(query):
     request = requests.post(
         SERVER,
         headers=HEADERS,
-        json={
-            'query': query,
-            'variables': None,
-            'operationName': None,
-        }
+        json={"query": query, "variables": None, "operationName": None},
     )
 
     if request.status_code == 200:
         return request.json()
     else:
-        raise Exception("Query failed with returning code {}.".format(request.status_code))
+        raise Exception(
+            "Query failed with returning code {}.".format(request.status_code)
+        )
 
 
 def get_fhir_resource(database, resource):
@@ -125,7 +134,7 @@ def get_fhir_resource(database, resource):
     before calling api endpoint.
     """
 
-    response = run_query(QUERY.format(database, resource))
-    response = response['data']['getResource']
+    response = run_query(get_query(database, resource))
+    response = response["data"]["getResource"]
 
     return response

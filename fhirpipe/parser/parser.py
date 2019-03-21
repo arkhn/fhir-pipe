@@ -1,10 +1,12 @@
 import json
 import yaml
 import re
+import random
 import logging
 from os import listdir
 from os.path import isfile, join
 
+from fhirpipe import parser
 from fhirpipe import scripts
 from fhirpipe.parser import checks
 from fhirpipe.config import Config
@@ -113,7 +115,7 @@ def is_node_type_templatable(project, type_name):
     return type_name in datatypes
 
 
-def build_sql_query(project, resource, info='ICSF.PATIENT'):
+def build_sql_query(project, resource, info="ICSF.PATIENT"):
     """
     Take a FHIR Resource (eg Patient) specification in input
     Output a sql query to fill this resource, and rules
@@ -125,7 +127,9 @@ def build_sql_query(project, resource, info='ICSF.PATIENT'):
     table_name = get_table_name(info + ".*")
 
     # Get the info about the columns and joins to query
-    cols, joins = dfs_find_sql_cols_joins(resource, source_table=table_name, project=project)
+    cols, joins = dfs_find_sql_cols_joins(
+        resource, source_table=table_name, project=project
+    )
 
     print(cols)
     print(joins)
@@ -373,26 +377,24 @@ def find_cols_joins_in_object(tree, source_table, project):
         column_names = []
         for col in tree["inputColumns"]:
             # If there is a join
-            if "joins" in col.keys() and len(col['joins']) > 0:
+            if "joins" in col.keys() and len(col["joins"]) > 0:
                 for join in col["joins"]:
                     # Add the join
                     join_type = "OneToOne"  # TODO: infer type ?
                     join_args = "{}.{}.{}={}.{}.{}".format(
-                        join['sourceOwner'],
-                        join['sourceTable'],
-                        join['sourceColumn'],
-                        join['targetOwner'],
-                        join['targetTable'],
-                        join['targetColumn'],
+                        join["sourceOwner"],
+                        join["sourceTable"],
+                        join["sourceColumn"],
+                        join["targetOwner"],
+                        join["targetTable"],
+                        join["targetColumn"],
                     )
                     joins += [(join_type, join_args)]
 
             # Check if table and column target are defined
-            if col['table'] is not None and col['column'] is not None:
+            if col["table"] is not None and col["column"] is not None:
                 column_name = "{}.{}.{}".format(
-                    col['owner'],
-                    col['table'],
-                    col['column']
+                    col["owner"], col["table"], col["column"]
                 )
                 column_names.append(column_name)
             # Else it's a static value and there is nothing to do
@@ -406,7 +408,7 @@ def find_cols_joins_in_object(tree, source_table, project):
     # Else, we have no join and no col referenced: just a json node (ex: name.given)
     else:
         cols, joins = dfs_find_sql_cols_joins(
-            tree['attributes'], source_table, project=project
+            tree["attributes"], source_table, project=project
         )
         return cols, joins
 
@@ -444,6 +446,28 @@ def get_script_arity(cols, scripts):
         )
 
 
+def create_fhir_object(row, resource, resource_structure):
+    """
+    High level function which manages dfs_create_fhir to transform
+    a row returned by a SQL query intro a fhir object using some structure
+    instructions
+    :param row: the data input from a sql query
+    :param resource: the name of the fhir resource
+    :param resource_structure: the structure of the fhir object
+    :return: a dictionary with a the structure of a fhir object
+    """
+    # The first node has a different structure so we iterate outside the
+    # dfs_create_fhir function
+    fhir_object = dict()
+    for attr in resource_structure["attributes"]:
+        parser.dfs_create_fhir(fhir_object, attr, row)
+    fhir_object, n_leafs = parser.clean_fhir(fhir_object)
+    # Identify the fhir object
+    fhir_object["id"] = int(random.random() * 10e10)
+    fhir_object["resourceType"] = resource
+    return fhir_object
+
+
 def dfs_create_fhir(d, tree, row):
     """
         For each instance of a Resource,
@@ -463,41 +487,41 @@ def dfs_create_fhir(d, tree, row):
     # if there are columns specified
     if "inputColumns" in tree.keys() and len(tree["inputColumns"]) > 0:
         l = []
-        for col in tree['inputColumns']:
-            if col['table'] is not None and col['column'] is not None:
-                script_name = col['script']
+        for col in tree["inputColumns"]:
+            if col["table"] is not None and col["column"] is not None:
+                script_name = col["script"]
                 value = row.pop(0)
                 if script_name is not None:
                     value = scripts.get_script(script_name)(value)
                 l.append(value)
             else:
-                l.append(col['staticValue'])
+                l.append(col["staticValue"])
 
-        if tree['type'].startswith('list'):
-            d[tree['name']] = l
+        if tree["type"].startswith("list"):
+            d[tree["name"]] = l
         else:
-            d[tree['name']] = ''.join(l)
+            d[tree["name"]] = "".join(l)
     else:  # else iterate recursively
-        if tree['type'].startswith('list'):
-            d[tree['name']] = list()
-            for a in tree['attributes']:
+        if tree["type"].startswith("list"):
+            d[tree["name"]] = list()
+            for a in tree["attributes"]:
                 if len(row) > 0 and isinstance(row[0], list):
                     join_rows = row.pop(0)
                     for join_row in join_rows:
                         d2 = dict()
                         dfs_create_fhir(d2, a, list(join_row))
-                        d[tree['name']].append(d2)
+                        d[tree["name"]].append(d2)
                 else:
                     d2 = dict()
                     dfs_create_fhir(d2, a, row)
-                    d[tree['name']].append(d2)
-        elif tree['isProfile']:
-            for a in tree['attributes']:
+                    d[tree["name"]].append(d2)
+        elif tree["isProfile"]:
+            for a in tree["attributes"]:
                 dfs_create_fhir(d, a, row)
         else:
-            d[tree['name']] = dict()
-            for a in tree['attributes']:
-                dfs_create_fhir(d[tree['name']], a, row)
+            d[tree["name"]] = dict()
+            for a in tree["attributes"]:
+                dfs_create_fhir(d[tree["name"]], a, row)
 
 
 def clean_fhir(tree):
