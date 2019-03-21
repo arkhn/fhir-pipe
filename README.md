@@ -2,25 +2,22 @@
 [![Website arkhn.org](https://img.shields.io/website-up-down-green-red/https/arkhn.org.svg)](http://arkhn.org/)
 
 
-# FHIR Pipe: a smart standardization pipeline
+# FHIR pipeline: a smart ETL to standardize health data
 
-Fhir-pipe helps extracting data from SQL database and mapping it into the standardized health format [FHIR](https://www.hl7.org/fhir/), using given mapping rules.
+Fhir-pipe helps extracting data from SQL databases and converting it to the standardized health format [FHIR](https://www.hl7.org/fhir/), using given mapping rules provided by the [pyrog project](https://github.com/arkhn).
 
-The link to a presentation will be made available soon to illustrate Arkhn's approach to standardization.
 
 ## Mapping rules
 
-The mapping rules are made of `yml` files. To each FHIR Resource (e.g. `Patient`) corresponds a `yml` file, and each attribute of the ressource (for example `patient.firstname`) has a mapping instruction which details which `DATABASE/TABLE/COLUMN` to select and which processing scripts to apply. The scripts are available in [arkhn/scripts](https://github.com/arkhn/fhir-pipe/tree/master/arkhn/scripts).
+The mapping rules are provided through the **pyrog** graphql API. To each FHIR Resource (e.g. `Patient`) corresponds a rule file, and each attribute of the ressource (for example `patient.name.firstname`) has a mapping instruction which details which `DATABASE/TABLE/COLUMN` to select and which processing scripts to apply, as the data might need to be cleaned. A non-exhaustive list of scripts is available in [arkhn/scripts](https://github.com/arkhn/cleaning-scripts).
 
-The mapping rules for a specific usecase are available in the repo `fhir-mapping`, and the general structure of the format is in the repo `fhir-store`.
+## Goal of `fhirpipe`
 
-## Goal of `fhir-pipe`
-
-Be able to parse a mapping rule, connect to SQL databases, and populate FHIR-compliant objects using these databases and the processing rules given.
+fhirpipe is an ETL which is agnostic of the type of input SQL databases. It should be able to parse mapping rules, connect to arbitrary SQL databases, and populate processed FHIR objects using these databases and the processing rules given.
 
 ## How to start
 
-We have reported several issues with the label `Good first issue` which can be a good way to start! Also of course, feel free to contact us on Slack in you have trouble with the project.
+We have reported several issues with the label `Good first issue` which can be a good way to start! You can also join our [Slack](https://join.slack.com/t/arkhn/shared_invite/enQtNTc1NDE5MDIxMDU3LWZmMzUwYWIwN2U0NGI1ZjM2MjcwNTAyZDZhNzcyMWFiYjJhNTIxNWQ1MWY4YmRiM2VhMDY4MDkzNGU5MTQ4ZWM) to contact us if you have trouble or questions :)
 
 If you're enthusiastic about our project, :star: it to show your support! :heart:
 
