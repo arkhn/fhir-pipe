@@ -5,9 +5,9 @@ import logging
 from os import listdir
 from os.path import isfile, join
 
-from arkhn import scripts
-from arkhn.parser import checks
-from arkhn.config import Config
+from fhirpipe import scripts
+from fhirpipe.parser import checks
+from fhirpipe.config import Config
 
 
 config = Config("filesystem")

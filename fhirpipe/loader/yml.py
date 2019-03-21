@@ -1,6 +1,6 @@
 import yaml
 
-from arkhn.config import Config
+from fhirpipe.config import Config
 
 
 def load(project, filename, path="Identification/Individuals/"):

@@ -4,10 +4,10 @@ import re
 from enum import Enum
 
 # Utility functions (not callable)
-from arkhn.scripts import patient
+from fhirpipe.scripts import patient
 
 # Scripts specific to patients
-from arkhn.scripts import utils
+from fhirpipe.scripts import utils
 
 
 # From now on, standard scripts

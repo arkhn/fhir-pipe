@@ -2,7 +2,7 @@ import psycopg2
 import cx_Oracle
 import logging
 
-from arkhn.config import Config
+from fhirpipe.config import Config
 
 
 def get_connection(connection_type: str = None):

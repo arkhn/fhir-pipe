@@ -1,6 +1,6 @@
 import requests
 
-from arkhn.config import Config
+from fhirpipe.config import Config
 
 
 CONFIG = Config("graphql")

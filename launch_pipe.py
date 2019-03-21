@@ -2,7 +2,7 @@ import json
 import time
 import random
 
-import arkhn
+import fhirpipe
 
 # Launch timer
 start_time = time.time()
@@ -12,15 +12,15 @@ project = 'Crossway'
 resource = 'Patient'
 
 # Load data
-resource_structure = arkhn.fetcher.get_fhir_resource(project, resource)
+resource_structure = fhirpipe.fetcher.get_fhir_resource(project, resource)
 
 # Build the sql query
-sql_query, squash_rules, graph = arkhn.parser.build_sql_query(project, resource_structure)
+sql_query, squash_rules, graph = fhirpipe.parser.build_sql_query(project, resource_structure)
 print(sql_query)
 
 # Run it
 print('Launching query...')
-rows = arkhn.sql.run(sql_query)
+rows = fhirpipe.sql.run(sql_query)
 
 # Fix: replace None values with ''
 for i, row in enumerate(rows):
@@ -34,7 +34,7 @@ print(len(rows), 'results')
 
 
 # Apply join rule to merge some lines from the same resource
-rows = arkhn.sql.apply_joins(rows, squash_rules)
+rows = fhirpipe.sql.apply_joins(rows, squash_rules)
 
 
 # Build a fhir object for each resource instance
@@ -48,14 +48,14 @@ for i, row in enumerate(rows):
     # dfs_create_fhir function
     tree = dict()
     for attr in resource_structure['attributes']:
-        arkhn.parser.dfs_create_fhir(tree, attr, row)
-    tree, n_leafs = arkhn.parser.clean_fhir(tree)
+        fhirpipe.parser.dfs_create_fhir(tree, attr, row)
+    tree, n_leafs = fhirpipe.parser.clean_fhir(tree)
     tree['id'] = int(random.random() * 10e10)
     tree['resourceType'] = resource
     json_rows.append(tree)
     # print(json.dumps(tree, indent=2, ensure_ascii=False))
 
 # Uncomment to write to file
-arkhn.parser.write_to_file(json_rows, 'fhir_data/samples.json')
+fhirpipe.parser.write_to_file(json_rows, 'fhir_data/samples.json')
 
 print(round((time.time() - start_time), 2), 'seconds')
