@@ -1,6 +1,6 @@
 import pytest
 
-from arkhn.config import Config
+from fhirpipe.config import Config
 
 
 @pytest.fixture(scope="session", autouse=True)

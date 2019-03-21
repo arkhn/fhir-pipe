@@ -1,12 +1,12 @@
-import arkhn
-from arkhn import sql
+import fhirpipe
+from fhirpipe import sql
 
 
 def test_get_connection(config):
     connection_type = config.sql.default
-    with arkhn.sql.get_connection(connection_type):
+    with fhirpipe.sql.get_connection(connection_type):
         pass
-    with arkhn.sql.get_connection():
+    with fhirpipe.sql.get_connection():
         pass
 
 
@@ -26,27 +26,27 @@ def test_batch_run(config):
     query = 'SELECT * from patient'
     batch_size = 10
     offset = 0
-    for batch_idx, offset, rows in arkhn.sql.batch_run(
+    for batch_idx, offset, rows in fhirpipe.sql.batch_run(
             query, batch_size, offset=offset
     ):
         pass
 
     # Normal query with a connection type
     connection_type = config.sql.default
-    for batch_idx, offset, rows in arkhn.sql.batch_run(
+    for batch_idx, offset, rows in fhirpipe.sql.batch_run(
             query, batch_size, offset=offset, connection=connection_type
     ):
         pass
 
     # Normal query with a ending ';'
     query = 'SELECT * from patient'
-    for _, _, _ in arkhn.sql.batch_run(query, batch_size, offset=offset):
+    for _, _, _ in fhirpipe.sql.batch_run(query, batch_size, offset=offset):
         pass
 
     # Query with a Limit statement
     query = 'SELECT * from patient limit 20'
     try:
-        for _, _, _ in arkhn.sql.batch_run(query, batch_size, offset=offset):
+        for _, _, _ in fhirpipe.sql.batch_run(query, batch_size, offset=offset):
             pass
     except NotImplementedError:
         pass
