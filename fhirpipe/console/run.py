@@ -56,11 +56,11 @@ def run():
     project = args.project
     resource = args.resource
 
-    # Load data
-    resource_structure = fhirpipe.fetcher.get_fhir_resource(project, resource)
+    # Load mapping rules
+    resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
 
     # Build the sql query
-    sql_query, squash_rules, graph = fhirpipe.parser.build_sql_query(
+    sql_query, squash_rules, graph = fhirpipe.sql.build_sql_query(
         project, resource_structure
     )
 
@@ -84,7 +84,7 @@ def run():
             progression = round(i / len(rows) * 100, 2)
             print("Progress... {} %".format(progression))
         row = list(row)
-        fhir_object = fhirpipe.parser.create_fhir_object(
+        fhir_object = fhirpipe.sql.create_fhir_object(
             row, resource, resource_structure
         )
         fhir_objects.append(fhir_object)
@@ -117,10 +117,10 @@ def batch_run():
     batch_size = args.batch_size
 
     # Load data
-    resource_structure = fhirpipe.fetcher.get_fhir_resource(project, resource)
+    resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
 
     # Build the sql query
-    sql_query, squash_rules, graph = fhirpipe.parser.build_sql_query(
+    sql_query, squash_rules, graph = fhirpipe.sql.build_sql_query(
         project, resource_structure
     )
 
@@ -148,7 +148,7 @@ def batch_run():
                 progression = round(i / len(rows) * 100, 2)
                 print("batch {} %".format(progression))
             row = list(row)
-            fhir_object = fhirpipe.parser.create_fhir_object(
+            fhir_object = fhirpipe.sql.create_fhir_object(
                 row, resource, resource_structure
             )
             fhir_objects.append(fhir_object)
