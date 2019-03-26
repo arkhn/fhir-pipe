@@ -84,7 +84,7 @@ def run():
             progression = round(i / len(rows) * 100, 2)
             print("Progress... {} %".format(progression))
         row = list(row)
-        fhir_object = fhirpipe.sql.create_fhir_object(
+        fhir_object = fhirpipe.build.fhir.create_fhir_object(
             row, resource, resource_structure
         )
         fhir_objects.append(fhir_object)
@@ -127,7 +127,7 @@ def batch_run():
     # Run it
     print("Launching query batch per batch...")
 
-    offset = fhirpipe.log.get("pipe.processing.offset", default=0)
+    offset = fhirpipe.write.log.get("pipe.processing.offset", default=0)
 
     # Launch the query batch per batch
     for batch_idx, offset, rows in fhirpipe.sql.batch_run(
@@ -148,7 +148,7 @@ def batch_run():
                 progression = round(i / len(rows) * 100, 2)
                 print("batch {} %".format(progression))
             row = list(row)
-            fhir_object = fhirpipe.sql.create_fhir_object(
+            fhir_object = fhirpipe.build.fhir.create_fhir_object(
                 row, resource, resource_structure
             )
             fhir_objects.append(fhir_object)
@@ -157,10 +157,10 @@ def batch_run():
         fhirpipe.sql.save_in_fhirbase(fhir_objects)
 
         # Log offset to restart in case of a crash
-        fhirpipe.log.set("pipe.processing.offset", offset)
+        fhirpipe.write.log.set("pipe.processing.offset", offset)
 
     # Rm tmp value
-    fhirpipe.log.rm("pipe.processing.offset")
+    fhirpipe.write.log.rm("pipe.processing.offset")
 
     print("Done!")
 
