@@ -1,0 +1,4148 @@
+{
+  "data": {
+    "database": {
+      "id": "cjpiarhzxmfmu0a611t9zwqgm",
+      "name": "Crossway",
+      "resources": [
+        {
+          "id": "cjpicvbkxusn60a57glvgvc90",
+          "name": "Patient",
+          "attributes": [
+            {
+              "id": "cjpicvbl2usn70a57x5juy08k",
+              "comment": "An identifier for this patient",
+              "name": "identifier",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Identifier",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpicvbl5usn90a57dhmj6m07",
+                  "comment": null,
+                  "name": "Identifier_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Identifier",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpicvbm7usnx0a57f0zp7f4b",
+                      "comment": "The value that is unique",
+                      "name": "value",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpil1tdao3lz0a61s50cn8ss",
+                          "owner": "ICSF",
+                          "table": "PATIENT",
+                          "column": "NOPAT",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpicvbmmuso70a57cs3gclss",
+              "comment": "Whether this patient's record is in active use",
+              "name": "active",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "boolean",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpicvbmouso90a57p8irnpx6",
+              "comment": "A name associated with the patient",
+              "name": "name",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::HumanName",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpicvbmrusob0a57ru95njt5",
+                  "comment": null,
+                  "name": "HumanName_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "HumanName",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpicvbmuusod0a572zcixgqn",
+                      "comment": "usual | official | temp | nickname | anonymous | old | maiden",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpicvbmyusoh0a579qvwoi1p",
+                      "comment": "Family name (often called 'Surname')",
+                      "name": "family",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpikp174o1ia0a61owy0aumv",
+                          "owner": "ICSF",
+                          "table": "PATIENT",
+                          "column": "NOMPAT",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpicvbn1usoj0a57209fc3np",
+                      "comment": "Given names (not always 'first'). Includes middle names",
+                      "name": "given",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpikpcxeo1k70a61o2qeklnj",
+                          "owner": "ICSF",
+                          "table": "PATIENT",
+                          "column": "PREPAT",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpikpfl6wji10a57cyj19385",
+                          "owner": "ICSF",
+                          "table": "PATIENT",
+                          "column": "PREPATSUITE",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpicvbo9uspd0a57n14ntf5y",
+              "comment": "male | female | other | unknown",
+              "name": "gender",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "code",
+              "inputColumns": [
+                {
+                  "id": "cjpikq0t0o1ot0a61lv9q4xgr",
+                  "owner": "ICSF",
+                  "table": "PATIENT",
+                  "column": "SEXE",
+                  "script": null,
+                  "staticValue": null,
+                  "joins": [
+
+                  ]
+                }
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpicvbokuspl0a57aikmv6fz",
+              "comment": "Addresses for the individual",
+              "name": "address",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Address",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpicvbonuspn0a57kuqd1kck",
+                  "comment": null,
+                  "name": "Address_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Address",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpicvboquspp0a576a5mx1eo",
+                      "comment": "home | work | temp | old - purpose of this address",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpicvbouuspr0a5794vlsskt",
+                      "comment": "postal | physical | both",
+                      "name": "type",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpicvbowuspt0a570rorisiw",
+                      "comment": "Text representation of the address",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpicvbozuspv0a57c846ssu5",
+                      "comment": "Street name, number, direction & P.O. Box etc.",
+                      "name": "line",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpikvlqbo2y40a61n2paf9eh",
+                          "owner": "ICSF",
+                          "table": "PATADR",
+                          "column": "ADR1",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+                            {
+                              "id": "cjpikvsedwlap0a57gxlzmvsg",
+                              "sourceOwner": "ICSF",
+                              "sourceTable": "PATIENT",
+                              "sourceColumn": "NOPAT",
+                              "targetOwner": "ICSF",
+                              "targetTable": "PATADR",
+                              "targetColumn": "NOPAT"
+                            }
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpicvbpeusq50a57ok8qwez4",
+                      "comment": "Country (e.g. can be ISO 3166 2 or 3 letter code)",
+                      "name": "country",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpiktq20wku60a57uvvol326",
+                          "owner": "ICSF",
+                          "table": "PAYS",
+                          "column": "LIBELLE",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+                            {
+                              "id": "cjpiktr9to2n40a616g7eyqun",
+                              "sourceOwner": "ICSF",
+                              "sourceTable": "PATIENT",
+                              "sourceColumn": "NOPAT",
+                              "targetOwner": "ICSF",
+                              "targetTable": "PATADR",
+                              "targetColumn": "NOPAT"
+                            },
+                            {
+                              "id": "cjpikuj95wl1a0a573cy7eh7o",
+                              "sourceOwner": "ICSF",
+                              "sourceTable": "PATADR",
+                              "sourceColumn": "NOPAYS",
+                              "targetOwner": "ICSF",
+                              "targetTable": "PAYS",
+                              "targetColumn": "NOPAYS"
+                            }
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cjpihpehznjay0a619428546t",
+          "name": "Practitioner",
+          "attributes": [
+            {
+              "id": "cjpihpei3njaz0a61qvczwl7r",
+              "comment": "A identifier for the person as this agent",
+              "name": "identifier",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Identifier",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpei4njb10a61qaxzmz0s",
+                  "comment": null,
+                  "name": "Identifier_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Identifier",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpei6njb30a617j62imt2",
+                      "comment": "usual | official | temp | secondary (If known)",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpei8njb50a6136jz0po8",
+                      "comment": "Description of identifier",
+                      "name": "type",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "CodeableConcept",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpei9njb70a61hdmqkyxm",
+                          "comment": "Code defined by a terminology system",
+                          "name": "coding",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "list::Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpihpeibnjb90a6114nz2t7k",
+                              "comment": null,
+                              "name": "Coding_0",
+                              "mergingScript": null,
+                              "isProfile": true,
+                              "type": "Coding",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+                                {
+                                  "id": "cjpihpeicnjbb0a615zvbrrj9",
+                                  "comment": "Identity of the terminology system",
+                                  "name": "system",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "uri",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpihpeienjbd0a61jes93jml",
+                                  "comment": "Version of the system - if relevant",
+                                  "name": "version",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "string",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpihpeignjbf0a61avsbartm",
+                                  "comment": "Symbol in syntax defined by the system",
+                                  "name": "code",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "code",
+                                  "inputColumns": [
+                                    {
+                                      "id": "cjpildh7twoqu0a57lpwpq6ui",
+                                      "owner": null,
+                                      "table": null,
+                                      "column": null,
+                                      "script": null,
+                                      "staticValue": "Crossway",
+                                      "joins": [
+
+                                      ]
+                                    }
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpihpeihnjbh0a613vatiyyg",
+                                  "comment": "Representation defined by the system",
+                                  "name": "display",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "string",
+                                  "inputColumns": [
+                                    {
+                                      "id": "cjpildbg7wopj0a57uhb1hldb",
+                                      "owner": null,
+                                      "table": null,
+                                      "column": null,
+                                      "script": null,
+                                      "staticValue": "CrossWay",
+                                      "joins": [
+
+                                      ]
+                                    }
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpihpeijnjbj0a61h7klkmuw",
+                                  "comment": "If this coding was chosen directly by the user",
+                                  "name": "userSelected",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "boolean",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "cjpihpeilnjbl0a61otifqywj",
+                          "comment": "Plain text representation of the concept",
+                          "name": "text",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpihpeimnjbn0a61epc2sbft",
+                      "comment": "The namespace for the identifier value",
+                      "name": "system",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "uri",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpeionjbp0a614efwucox",
+                      "comment": "The value that is unique",
+                      "name": "value",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilczt0o5an0a61lygrgl2i",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "NOMED",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpeiqnjbr0a61tl5xts46",
+                      "comment": "Time period when id is\/was valid for use",
+                      "name": "period",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Period",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpeirnjbt0a61huq5alyj",
+                          "comment": "C? Starting time with inclusive boundary",
+                          "name": "start",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpeitnjbv0a61qjxx3y5o",
+                          "comment": "C? End time with inclusive boundary if not ongoing",
+                          "name": "end",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpihpeivnjbx0a6165x9wvhn",
+                      "comment": "Organization that issued id (may be just text)",
+                      "name": "assigner",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Reference(Organization)",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpihpeixnjbz0a61gp7p729j",
+              "comment": "Whether this practitioner's record is in active use",
+              "name": "active",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "boolean",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpihpeiynjc10a61ejiyfom7",
+              "comment": "The name(s) associated with the practitioner",
+              "name": "name",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::HumanName",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpej0njc30a61wefdbhuq",
+                  "comment": null,
+                  "name": "HumanName_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "HumanName",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpej2njc50a61s60gk434",
+                      "comment": "usual | official | temp | nickname | anonymous | old | maiden",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpej3njc70a61z1v463q0",
+                      "comment": "Text representation of the full name",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpej5njc90a61xo83dv88",
+                      "comment": "Family name (often called 'Surname')",
+                      "name": "family",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpile3nao5hv0a61ydh2cpf5",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "NOM",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpej7njcb0a61ankbk6wi",
+                      "comment": "Given names (not always 'first'). Includes middle names",
+                      "name": "given",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpile6t6o5im0a61as4wxmvc",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "PRENOM",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpej8njcd0a617tf1iw7a",
+                      "comment": "Parts that come before the name",
+                      "name": "prefix",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpejanjcf0a61d6jzu6ix",
+                      "comment": "Parts that come after the name",
+                      "name": "suffix",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpejcnjch0a61bs9dc462",
+                      "comment": "Time period when name was\/is in use",
+                      "name": "period",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Period",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpejdnjcj0a61wopk51hr",
+                          "comment": "C? Starting time with inclusive boundary",
+                          "name": "start",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpejfnjcl0a612l481u6l",
+                          "comment": "C? End time with inclusive boundary if not ongoing",
+                          "name": "end",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpihpejhnjcn0a6163jgvksj",
+              "comment": "A contact detail for the practitioner (that apply to all roles)",
+              "name": "telecom",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::ContactPoint",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpejjnjcp0a61pzxirfmb",
+                  "comment": null,
+                  "name": "ContactPoint_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "ContactPoint",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpejmnjcr0a619o891n8t",
+                      "comment": "C? phone | fax | email | pager | url | sms | other",
+                      "name": "system",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code=phone|fax|email|pager|url|sms",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilf8wqo5o20a6179barkd7",
+                          "owner": null,
+                          "table": null,
+                          "column": null,
+                          "script": null,
+                          "staticValue": "phone",
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpejpnjct0a61ohzniuy9",
+                      "comment": "The actual contact point details",
+                      "name": "value",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilffpswp7a0a57k7hq7vvo",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "TEL",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpejsnjcv0a61x18d8dia",
+                      "comment": "home | work | temp | old | mobile - purpose of this contact point",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpejunjcx0a61enxl1loo",
+                      "comment": "Specify preferred order of use (1 = highest)",
+                      "name": "rank",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "positiveInt",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpejwnjcz0a613rqsfh5h",
+                      "comment": "Time period when the contact point was\/is in use",
+                      "name": "period",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Period",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpejznjd10a61tg9ipm9t",
+                          "comment": "C? Starting time with inclusive boundary",
+                          "name": "start",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpek2njd30a61kjco0plz",
+                          "comment": "C? End time with inclusive boundary if not ongoing",
+                          "name": "end",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpihpek6njd50a61lupuxut4",
+              "comment": "Address(es) of the practitioner that are not role specific (typically home address)",
+              "name": "address",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Address",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpek9njd70a615m6rjltq",
+                  "comment": null,
+                  "name": "Address_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Address",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpekcnjd90a617crz2xbt",
+                      "comment": "home | work | temp | old - purpose of this address",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekdnjdb0a61cvvy4hed",
+                      "comment": "postal | physical | both",
+                      "name": "type",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekfnjdd0a61bnnjdiic",
+                      "comment": "Text representation of the address",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekhnjdf0a61o5oamw24",
+                      "comment": "Street name, number, direction & P.O. Box etc.",
+                      "name": "line",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilftx1wpai0a57tjkrw7l1",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "ADR1",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpilfvpyo5si0a61da0lcc6c",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "ADR2",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpilfy8ro5t60a61w27jmqm3",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "ADR3",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpilg08wo5tp0a61xm5ypqxk",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "ADR4",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekjnjdh0a61b41tp3lw",
+                      "comment": "Name of city, town etc.",
+                      "name": "city",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilg9p8o5w10a6135qndh71",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "VILLE",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpeklnjdj0a61jtvj0i94",
+                      "comment": "District name (aka county)",
+                      "name": "district",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekmnjdl0a61qc0e2kf7",
+                      "comment": "Sub-unit of country (abbreviations ok)",
+                      "name": "state",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpeknnjdn0a612t6oalp3",
+                      "comment": "Postal code for area",
+                      "name": "postalCode",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilgh29wpgx0a57n7798l7t",
+                          "owner": "ICSF",
+                          "table": "MEDECIN",
+                          "column": "CP",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekpnjdp0a61yf697a3x",
+                      "comment": "Country (e.g. can be ISO 3166 2 or 3 letter code)",
+                      "name": "country",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpilgu62o61g0a610zc5laed",
+                          "owner": "ICSF",
+                          "table": "PAYS",
+                          "column": "LIBELLE",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+                            {
+                              "id": "cjpilgv1rwplc0a57htn98zuh",
+                              "sourceOwner": "ICSF",
+                              "sourceTable": "MEDECIN",
+                              "sourceColumn": "NOPAYS",
+                              "targetOwner": "ICSF",
+                              "targetTable": "PAYS",
+                              "targetColumn": "NOPAYS"
+                            }
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpekrnjdr0a61nnzl94np",
+                      "comment": "Time period when address was\/is in use",
+                      "name": "period",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Period",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpektnjdt0a61m9qvi7nr",
+                          "comment": "C? Starting time with inclusive boundary",
+                          "name": "start",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpekvnjdv0a61by23ritr",
+                          "comment": "C? End time with inclusive boundary if not ongoing",
+                          "name": "end",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpihpekxnjdx0a618ei1doun",
+              "comment": "male | female | other | unknown",
+              "name": "gender",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "code",
+              "inputColumns": [
+                {
+                  "id": "cjpileorwo5ky0a61bceyui0n",
+                  "owner": "ICSF",
+                  "table": "MEDECIN",
+                  "column": "GENRE",
+                  "script": null,
+                  "staticValue": null,
+                  "joins": [
+
+                  ]
+                }
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpihpekynjdz0a61jmxm8ajt",
+              "comment": "The date  on which the practitioner was born",
+              "name": "birthDate",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "date",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpihpel0nje10a61ds45pchd",
+              "comment": "Image of the person",
+              "name": "photo",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Attachment",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpel2nje30a61fpaqph9t",
+                  "comment": null,
+                  "name": "Attachment_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Attachment",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpel3nje50a61725vsupf",
+                      "comment": "Mime type of the content, with charset etc.",
+                      "name": "contentType",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpel5nje70a61zno0l1yy",
+                      "comment": "Human language of the content (BCP-47)",
+                      "name": "language",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpel7nje90a612q2ud0a2",
+                      "comment": "Data inline, base64ed",
+                      "name": "data",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "base64Binary",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpel8njeb0a61n4p0xceq",
+                      "comment": "Uri where the data can be found",
+                      "name": "url",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "uri",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpelanjed0a61vke01rj4",
+                      "comment": "Number of bytes of content (if url provided)",
+                      "name": "size",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "unsignedInt",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpelbnjef0a615df4uk15",
+                      "comment": "Hash of the data (sha-1, base64ed)",
+                      "name": "hash",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "base64Binary",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpelcnjeh0a61zyjksrv7",
+                      "comment": "Label to display in place of the data",
+                      "name": "title",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpelenjej0a61tnr7jha8",
+                      "comment": "Date attachment was first created",
+                      "name": "creation",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "dateTime",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpihpelgnjel0a613dn510mi",
+              "comment": "Qualifications obtained by training and certification",
+              "name": "qualification",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpelinjen0a61gjjdsg77",
+                  "comment": "An identifier for this qualification for the practitioner",
+                  "name": "identifier",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "list::Identifier",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpeljnjep0a61cme3943b",
+                      "comment": null,
+                      "name": "Identifier_0",
+                      "mergingScript": null,
+                      "isProfile": true,
+                      "type": "Identifier",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpellnjer0a61iwg84n1w",
+                          "comment": "usual | official | temp | secondary (If known)",
+                          "name": "use",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "code",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpelnnjet0a61k6kguvho",
+                          "comment": "Description of identifier",
+                          "name": "type",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "CodeableConcept",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpihpelpnjev0a61gr4pyrvt",
+                              "comment": "Code defined by a terminology system",
+                              "name": "coding",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "list::Coding",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+                                {
+                                  "id": "cjpihpelrnjex0a61f8cdzora",
+                                  "comment": null,
+                                  "name": "Coding_0",
+                                  "mergingScript": null,
+                                  "isProfile": true,
+                                  "type": "Coding",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+                                    {
+                                      "id": "cjpihpelsnjez0a616rrqbbq9",
+                                      "comment": "Identity of the terminology system",
+                                      "name": "system",
+                                      "mergingScript": null,
+                                      "isProfile": null,
+                                      "type": "uri",
+                                      "inputColumns": [
+
+                                      ],
+                                      "attributes": [
+
+                                      ]
+                                    },
+                                    {
+                                      "id": "cjpihpeltnjf10a61snr2uaww",
+                                      "comment": "Version of the system - if relevant",
+                                      "name": "version",
+                                      "mergingScript": null,
+                                      "isProfile": null,
+                                      "type": "string",
+                                      "inputColumns": [
+
+                                      ],
+                                      "attributes": [
+
+                                      ]
+                                    },
+                                    {
+                                      "id": "cjpihpelwnjf30a612gj8zacc",
+                                      "comment": "Symbol in syntax defined by the system",
+                                      "name": "code",
+                                      "mergingScript": null,
+                                      "isProfile": null,
+                                      "type": "code",
+                                      "inputColumns": [
+
+                                      ],
+                                      "attributes": [
+
+                                      ]
+                                    },
+                                    {
+                                      "id": "cjpihpelxnjf50a61ummerlup",
+                                      "comment": "Representation defined by the system",
+                                      "name": "display",
+                                      "mergingScript": null,
+                                      "isProfile": null,
+                                      "type": "string",
+                                      "inputColumns": [
+
+                                      ],
+                                      "attributes": [
+
+                                      ]
+                                    },
+                                    {
+                                      "id": "cjpihpelynjf70a611y3bbl8v",
+                                      "comment": "If this coding was chosen directly by the user",
+                                      "name": "userSelected",
+                                      "mergingScript": null,
+                                      "isProfile": null,
+                                      "type": "boolean",
+                                      "inputColumns": [
+
+                                      ],
+                                      "attributes": [
+
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            },
+                            {
+                              "id": "cjpihpem0njf90a61c3an0ycj",
+                              "comment": "Plain text representation of the concept",
+                              "name": "text",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "cjpihpem2njfb0a61pcl9y8wg",
+                          "comment": "The namespace for the identifier value",
+                          "name": "system",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "uri",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpem3njfd0a61eqfg3n3j",
+                          "comment": "The value that is unique",
+                          "name": "value",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpihpem4njff0a618nd7zatv",
+                          "comment": "Time period when id is\/was valid for use",
+                          "name": "period",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "Period",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpihpem6njfh0a61qs7au3mb",
+                              "comment": "C? Starting time with inclusive boundary",
+                              "name": "start",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "dateTime",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpem8njfj0a61y1qbonhc",
+                              "comment": "C? End time with inclusive boundary if not ongoing",
+                              "name": "end",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "dateTime",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "cjpihpem9njfl0a61v58nwdsx",
+                          "comment": "Organization that issued id (may be just text)",
+                          "name": "assigner",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "Reference(Organization)",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpihpembnjfn0a61hr3youoi",
+                  "comment": "R!  Coded representation of the qualification",
+                  "name": "code",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpemdnjfp0a61xbkhaixw",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpemfnjfr0a6114vq1xfw",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpihpemhnjft0a61djwlwd1h",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpemjnjfv0a61487iubzb",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpemlnjfx0a618nlrbd8l",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpemmnjfz0a61ti6a32qh",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpemonjg10a61xzkig44h",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpihpemqnjg30a61kwjo7573",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpihpemsnjg50a61x0g1lwse",
+                  "comment": "Period during which the qualification is valid",
+                  "name": "period",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "Period",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpemtnjg70a61o1h199dj",
+                      "comment": "C? Starting time with inclusive boundary",
+                      "name": "start",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "dateTime",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpihpemunjg90a61ewea47en",
+                      "comment": "C? End time with inclusive boundary if not ongoing",
+                      "name": "end",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "dateTime",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpihpemwnjgb0a61akfeq2ph",
+                  "comment": "Organization that regulates and issues the qualification",
+                  "name": "issuer",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "Reference(Organization)",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpihpemxnjgd0a619msnmc66",
+              "comment": "A language the practitioner is able to use in patient communication",
+              "name": "communication",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpihpemznjgf0a61qmpmhv7s",
+                  "comment": null,
+                  "name": "CodeableConcept_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpihpen1njgh0a61j248n7dx",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpihpen2njgj0a612dtudtqn",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpihpen5njgl0a617cdg3fja",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpen7njgn0a618i1ne01l",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpen8njgp0a61jadlpm4r",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpenanjgr0a61qng8dzm7",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpihpenbnjgt0a61jy64p86a",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpihpendnjgv0a611vte3fzb",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "cjpsa6pg7etgs0947091r6b81",
+          "name": "Procedure",
+          "attributes": [
+            {
+              "id": "cjpsa6pgdetgt09472zfyt2m7",
+              "comment": "External Identifiers for this procedure",
+              "name": "identifier",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Identifier",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pggetgv0947w6ci3252",
+                  "comment": null,
+                  "name": "Identifier_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Identifier",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pgketgx0947xfse74nz",
+                      "comment": "usual | official | temp | secondary (If known)",
+                      "name": "use",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "code",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pgnetgz0947kfsfqs6q",
+                      "comment": "Description of identifier",
+                      "name": "type",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "CodeableConcept",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pgqeth10947dd3h9t6m",
+                          "comment": "Code defined by a terminology system",
+                          "name": "coding",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "list::Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6pgueth30947zdw0yqat",
+                              "comment": null,
+                              "name": "Coding_0",
+                              "mergingScript": null,
+                              "isProfile": true,
+                              "type": "Coding",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+                                {
+                                  "id": "cjpsa6pgxeth509476qox4cgr",
+                                  "comment": "Identity of the terminology system",
+                                  "name": "system",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "uri",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpsa6ph1eth70947k0ovfs91",
+                                  "comment": "Version of the system - if relevant",
+                                  "name": "version",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "string",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpsa6ph4eth90947dey0btp1",
+                                  "comment": "Symbol in syntax defined by the system",
+                                  "name": "code",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "code",
+                                  "inputColumns": [
+                                    {
+                                      "id": "cjpsf6b2836400a00gsfaok5m",
+                                      "owner": null,
+                                      "table": null,
+                                      "column": null,
+                                      "script": null,
+                                      "staticValue": "CrossWay",
+                                      "joins": [
+
+                                      ]
+                                    }
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpsa6ph8ethb0947oiv8xesc",
+                                  "comment": "Representation defined by the system",
+                                  "name": "display",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "string",
+                                  "inputColumns": [
+                                    {
+                                      "id": "cjpsf6hmw366k0a00kv9l9d1g",
+                                      "owner": null,
+                                      "table": null,
+                                      "column": null,
+                                      "script": null,
+                                      "staticValue": "CrossWay",
+                                      "joins": [
+
+                                      ]
+                                    }
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                },
+                                {
+                                  "id": "cjpsa6phbethd0947dnm71y8w",
+                                  "comment": "If this coding was chosen directly by the user",
+                                  "name": "userSelected",
+                                  "mergingScript": null,
+                                  "isProfile": null,
+                                  "type": "boolean",
+                                  "inputColumns": [
+
+                                  ],
+                                  "attributes": [
+
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pheethf09478pwv2c7p",
+                          "comment": "Plain text representation of the concept",
+                          "name": "text",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6phiethh0947ne3phkv9",
+                      "comment": "The namespace for the identifier value",
+                      "name": "system",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "uri",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6phlethj0947kl4ebi0l",
+                      "comment": "The value that is unique",
+                      "name": "value",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+                        {
+                          "id": "cjpsf5ilr35xn0a00vtng6sm5",
+                          "owner": "ICSF",
+                          "table": "ACTEPAT",
+                          "column": "NOACTEPAT",
+                          "script": null,
+                          "staticValue": null,
+                          "joins": [
+
+                          ]
+                        }
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6phoethl094726co382g",
+                      "comment": "Time period when id is\/was valid for use",
+                      "name": "period",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Period",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6phrethn09473g5x5wu5",
+                          "comment": "C? Starting time with inclusive boundary",
+                          "name": "start",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6phuethp09474zax8r0i",
+                          "comment": "C? End time with inclusive boundary if not ongoing",
+                          "name": "end",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "dateTime",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6phwethr09475e2pp84k",
+                      "comment": "Organization that issued id (may be just text)",
+                      "name": "assigner",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Reference(Organization)",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6phyetht09475vmm8g9f",
+              "comment": "Instantiates protocol or definition",
+              "name": "definition",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(PlanDefinition|ActivityDefinition|HealthcareService)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pi1ethv0947phgr9mrm",
+              "comment": "A request for this procedure",
+              "name": "basedOn",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(CarePlan|ProcedureRequest|ReferralRequest)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pi4ethx0947ipm6oplw",
+              "comment": "Part of referenced event",
+              "name": "partOf",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(Procedure|Observation|MedicationAdministration)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pi7ethz09470ertsu00",
+              "comment": "Part of referenced event",
+              "name": "status",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "code",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pi9eti10947wszjuget",
+              "comment": "R!  preparation | in-progress | suspended | aborted | completed | entered-in-error | unknown",
+              "name": "notDone",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "boolean",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pibeti30947c1csyryc",
+              "comment": "C? Reason procedure was not performed",
+              "name": "notDoneReason",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pieeti50947ath3dlnu",
+                  "comment": "Code defined by a terminology system",
+                  "name": "coding",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "list::Coding",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6piheti70947dk8zbv3b",
+                      "comment": null,
+                      "name": "Coding_0",
+                      "mergingScript": null,
+                      "isProfile": true,
+                      "type": "Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pijeti90947osysjp4t",
+                          "comment": "Identity of the terminology system",
+                          "name": "system",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "uri",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pimetib09470reh3bw3",
+                          "comment": "Version of the system - if relevant",
+                          "name": "version",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pipetid09473k0uxyx3",
+                          "comment": "Symbol in syntax defined by the system",
+                          "name": "code",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "code",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6piretif0947fy6u5i2k",
+                          "comment": "Representation defined by the system",
+                          "name": "display",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6piuetih0947dbln4yo7",
+                          "comment": "If this coding was chosen directly by the user",
+                          "name": "userSelected",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "boolean",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpsa6piwetij0947t816imnz",
+                  "comment": "Plain text representation of the concept",
+                  "name": "text",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "string",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pizetil0947myrlwzup",
+              "comment": "Classification of the procedure",
+              "name": "category",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pj1etin09472jx6c0a3",
+                  "comment": "Code defined by a terminology system",
+                  "name": "coding",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "list::Coding",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pj4etip0947ln8hzmb3",
+                      "comment": null,
+                      "name": "Coding_0",
+                      "mergingScript": null,
+                      "isProfile": true,
+                      "type": "Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pj6etir0947jbo322tf",
+                          "comment": "Identity of the terminology system",
+                          "name": "system",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "uri",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pj9etit0947y3jgbahe",
+                          "comment": "Version of the system - if relevant",
+                          "name": "version",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pjcetiv0947avp8j801",
+                          "comment": "Symbol in syntax defined by the system",
+                          "name": "code",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "code",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pjeetix0947jln2fgkz",
+                          "comment": "Representation defined by the system",
+                          "name": "display",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pjhetiz0947oo6lzy0g",
+                          "comment": "If this coding was chosen directly by the user",
+                          "name": "userSelected",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "boolean",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpsa6pjketj309477kbsa5j9",
+                  "comment": "Plain text representation of the concept",
+                  "name": "text",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "string",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pjnetj50947kpgjm4bt",
+              "comment": "Identification of the procedure",
+              "name": "code",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pjqetj70947uwnmq8jb",
+                  "comment": "Code defined by a terminology system",
+                  "name": "coding",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "list::Coding",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pjsetj909476a5ti57y",
+                      "comment": null,
+                      "name": "Coding_0",
+                      "mergingScript": null,
+                      "isProfile": true,
+                      "type": "Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pjuetjb0947kx27ln3h",
+                          "comment": "Identity of the terminology system",
+                          "name": "system",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "uri",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pjyetjd0947fry1e2ij",
+                          "comment": "Version of the system - if relevant",
+                          "name": "version",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pk0etjf0947azgkznl4",
+                          "comment": "Symbol in syntax defined by the system",
+                          "name": "code",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "code",
+                          "inputColumns": [
+                            {
+                              "id": "cjpsf9tmrgaa30947jqb600g6",
+                              "owner": "ICSF",
+                              "table": "ACTEPAT",
+                              "column": "CODE_CCAM",
+                              "script": null,
+                              "staticValue": null,
+                              "joins": [
+
+                              ]
+                            }
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pk2etjh0947dtesadt7",
+                          "comment": "Representation defined by the system",
+                          "name": "display",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+                            {
+                              "id": "cjpsfa125gack0947lyg5y57j",
+                              "owner": "ICSF",
+                              "table": "ACTEPAT",
+                              "column": "CODE_CCAM",
+                              "script": null,
+                              "staticValue": null,
+                              "joins": [
+
+                              ]
+                            }
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pk5etjj0947xfuxi3iq",
+                          "comment": "If this coding was chosen directly by the user",
+                          "name": "userSelected",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "boolean",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpsa6pk8etjl0947cz15n6ws",
+                  "comment": "Plain text representation of the concept",
+                  "name": "text",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "string",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pkbetjn09471en88mdw",
+              "comment": "R!  Who the procedure was performed on",
+              "name": "subject",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "Reference(Patient|Group)",
+              "inputColumns": [
+                {
+                  "id": "cjpsfcud6gb350947pe562e5n",
+                  "owner": "ICSF",
+                  "table": "EVTPAT",
+                  "column": "NOPAT",
+                  "script": null,
+                  "staticValue": null,
+                  "joins": [
+                    {
+                      "id": "cjpsfcv8qgb3i0947rs0b0o7o",
+                      "sourceOwner": "ICSF",
+                      "sourceTable": "ACTEPAT",
+                      "sourceColumn": "NOEVT",
+                      "targetOwner": "ICSF",
+                      "targetTable": "EVTPAT",
+                      "targetColumn": "NOEVT"
+                    }
+                  ]
+                }
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pkdetjp0947snm5swdk",
+              "comment": "Encounter or episode associated with the procedure",
+              "name": "context",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "Reference(Encounter|EpisodeOfCare)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pkgetjr0947c9wxubrw",
+              "comment": "Encounter or episode associated with the procedure",
+              "name": "performedDateTime",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "dateTime",
+              "inputColumns": [
+                {
+                  "id": "cjpsfbgnvgapq0947b5lqhu21",
+                  "owner": "ICSF",
+                  "table": "ACTEPAT",
+                  "column": "DATE_ACTE",
+                  "script": null,
+                  "staticValue": null,
+                  "joins": [
+
+                  ]
+                }
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pkjetjt0947mbp7mxjv",
+              "comment": "",
+              "name": "performedPeriod",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "Period",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pkmetjv09471en3me3y",
+                  "comment": "C? Starting time with inclusive boundary",
+                  "name": "start",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "dateTime",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                },
+                {
+                  "id": "cjpsa6pkpetjx094782pizpc0",
+                  "comment": "C? End time with inclusive boundary if not ongoing",
+                  "name": "end",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "dateTime",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pkretjz0947nmir1fas",
+              "comment": "The people who performed the procedure",
+              "name": "performer",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pktetk109472oo4u10z",
+                  "comment": "The role the actor was in",
+                  "name": "role",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pkvetk30947139s28mb",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pkxetk50947c7bh96la",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6pl0etk9094755e5ptkm",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pl2etkb0947cj2wyq0i",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pl5etkd0947bexc6y2b",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pl7etkf0947i4douzwz",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6plaetkh0947qxd834zc",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6plcetkj0947dsyx10zn",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpsa6plfetkl0947p6bs38zb",
+                  "comment": "R!  The reference to the practitioner",
+                  "name": "actor",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "Reference(Practitioner|Organization|Patient|RelatedPerson|Device)",
+                  "inputColumns": [
+                    {
+                      "id": "cjpsff4j9gbhv0947txq1z18z",
+                      "owner": "ICSF",
+                      "table": "EVTMED",
+                      "column": "NOMED",
+                      "script": null,
+                      "staticValue": null,
+                      "joins": [
+                        {
+                          "id": "cjpsff6cu384c0a00bclts0kx",
+                          "sourceOwner": "ICSF",
+                          "sourceTable": "ACTEPAT",
+                          "sourceColumn": "NOEVT",
+                          "targetOwner": "ICSF",
+                          "targetTable": "EVTMED",
+                          "targetColumn": "NOEVT"
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjrsbf1ym049e0971c26d544a",
+                      "owner": "BLOC",
+                      "table": "T_ACTE_OPERATOIRE",
+                      "column": "NOACTEOPERATOIRE",
+                      "script": null,
+                      "staticValue": null,
+                      "joins": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjrsbf1zo0b0h0a16mg8vzgzc",
+                      "owner": "BLOC",
+                      "table": "T_ACTE_OPERATOIRE",
+                      "column": "NOACTEOPERATOIRE",
+                      "script": null,
+                      "staticValue": null,
+                      "joins": [
+
+                      ]
+                    }
+                  ],
+                  "attributes": [
+
+                  ]
+                },
+                {
+                  "id": "cjpsa6plietkn0947q0swpakk",
+                  "comment": "Organization the device or practitioner was acting for",
+                  "name": "onBehalfOf",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "Reference(Organization)",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6plletkp0947pnrgcrbq",
+              "comment": "Where the procedure happened",
+              "name": "location",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "Reference(Location)",
+              "inputColumns": [
+                {
+                  "id": "cjpsfc2on37qk0a00nwk7gey9",
+                  "owner": "ICSF",
+                  "table": "ACTEPAT",
+                  "column": "NOUMHEB",
+                  "script": null,
+                  "staticValue": null,
+                  "joins": [
+
+                  ]
+                }
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6plnetkr0947405ooe0n",
+              "comment": "Coded reason procedure performed",
+              "name": "reasonCode",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6plpetkt0947ycf4n00i",
+                  "comment": null,
+                  "name": "CodeableConcept_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6plsetkv0947wg0qbfyw",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6plvetkx094747ckbghj",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6plxetkz094776fjllbr",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pm1etl109478xafec7v",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pm3etl30947xfmby7a6",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pm5etl509473ur6xmia",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pm8etl7094778qhwjpe",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pmbetl90947x9mahssa",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pmdetlb0947hkzvun6z",
+              "comment": "Condition that is the reason the procedure performed",
+              "name": "reasonReference",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(Condition|Observation)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pmfetld0947o10rkgqu",
+              "comment": "Target body sites",
+              "name": "bodySite",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pmietlf0947bu1ydy41",
+                  "comment": null,
+                  "name": "CodeableConcept_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pmletlh09476qef21lw",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pmnetlj0947k4ed1lx2",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6pmqetll0947ueh58ruf",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pmsetln0947b4m3f03o",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pmvetlp0947hsz1w6nl",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pmxetlr09478yaby819",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pmzetlt0947xhxbdaiu",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pn2etlv0947tlecx927",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pn4etlx09475ncswo5x",
+              "comment": "The result of procedure",
+              "name": "outcome",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pn7etlz0947gmzzdi4h",
+                  "comment": "Code defined by a terminology system",
+                  "name": "coding",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "list::Coding",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pnaetm109473q57gn5z",
+                      "comment": null,
+                      "name": "Coding_0",
+                      "mergingScript": null,
+                      "isProfile": true,
+                      "type": "Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pndetm309470pz60g98",
+                          "comment": "Identity of the terminology system",
+                          "name": "system",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "uri",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pnfetm50947n4wpqrn9",
+                          "comment": "Version of the system - if relevant",
+                          "name": "version",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pnietm70947wcqrd18a",
+                          "comment": "Symbol in syntax defined by the system",
+                          "name": "code",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "code",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pnletm909470vozcu8f",
+                          "comment": "Representation defined by the system",
+                          "name": "display",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "string",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        },
+                        {
+                          "id": "cjpsa6pnnetmb0947mon1ojp5",
+                          "comment": "If this coding was chosen directly by the user",
+                          "name": "userSelected",
+                          "mergingScript": null,
+                          "isProfile": null,
+                          "type": "boolean",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpsa6pnqetmd09473bas6lox",
+                  "comment": "Plain text representation of the concept",
+                  "name": "text",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "string",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pnsetmh0947w31jedhh",
+              "comment": "Any report resulting from the procedure",
+              "name": "report",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(DiagnosticReport)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pnuetmj09474yuo5ptd",
+              "comment": "Complication following the procedure",
+              "name": "complication",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pnxetml0947jbs5rsm0",
+                  "comment": null,
+                  "name": "CodeableConcept_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pnzetmn0947ixjsjndw",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6po1etmp0947g7024w0e",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6po4etmr0947jy0pchxt",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6po7etmt0947bssb6nv2",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6po9etmv0947q0kdryat",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pobetmx0947gnh3zf2t",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6poeetmz09479ek8vzls",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pogetn109479ntvu0b6",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6poietn30947h4o7duk1",
+              "comment": "A condition that\u00a0is a result of the procedure",
+              "name": "complicationDetail",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(Condition)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6poletn509474sine7sg",
+              "comment": "Instructions for follow up",
+              "name": "followUp",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6ponetn70947g1awc4nw",
+                  "comment": null,
+                  "name": "CodeableConcept_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6poqetn90947yfq67hah",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6posetnb0947202slors",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6povetnd0947zlpq05k3",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6poxetnf0947lv68y27d",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pp1etnh0947tz4igihj",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pp3etnj0947hnb953ti",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pp6etnl0947pxuz9pdu",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pp8etnn0947nn84kkao",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6ppaetnp0947fncdpum8",
+              "comment": "Additional information about the procedure",
+              "name": "note",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Annotation",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6ppdetnr0947vzel38z0",
+                  "comment": null,
+                  "name": "Annotation_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "Annotation",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6ppgetnt0947h6yo3hyi",
+                      "comment": "",
+                      "name": "authorReference",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "Reference(Practitioner|Patient|RelatedPerson)",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6ppietnv094736yg6kj3",
+                      "comment": "",
+                      "name": "authorString",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6ppletnx0947czj2nmy0",
+                      "comment": "When the annotation was made",
+                      "name": "time",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "dateTime",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6ppnetnz09473ecyo2uv",
+                      "comment": "R!  The annotation  - text content",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6ppqeto109474ejsygkd",
+              "comment": "Device changed in procedure",
+              "name": "focalDevice",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6ppteto30947qoyahrdw",
+                  "comment": "Kind of change to device",
+                  "name": "action",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6ppweto50947fs4is3l0",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6ppzeto7094769yccr85",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6pq2eto90947xuaozit2",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pq4etob0947mxu178em",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pq7etod0947lmn9ysmp",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pqaetof09478guhv3j7",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pqcetoh0947b0ykkx4z",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pqeetoj0947ejj0c96j",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "id": "cjpsa6pqgetol0947yxryqg3v",
+                  "comment": "R!  Device that was changed",
+                  "name": "manipulated",
+                  "mergingScript": null,
+                  "isProfile": null,
+                  "type": "Reference(Device)",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "cjpsa6pqjeton09472pzwi4bv",
+              "comment": "Items used during procedure",
+              "name": "usedReference",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::Reference(Device|Medication|Substance)",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+
+              ]
+            },
+            {
+              "id": "cjpsa6pqletop0947t7mjz27h",
+              "comment": "Coded items used during the procedure",
+              "name": "usedCode",
+              "mergingScript": null,
+              "isProfile": null,
+              "type": "list::CodeableConcept",
+              "inputColumns": [
+
+              ],
+              "attributes": [
+                {
+                  "id": "cjpsa6pqnetor0947s2u4935f",
+                  "comment": null,
+                  "name": "CodeableConcept_0",
+                  "mergingScript": null,
+                  "isProfile": true,
+                  "type": "CodeableConcept",
+                  "inputColumns": [
+
+                  ],
+                  "attributes": [
+                    {
+                      "id": "cjpsa6pqqetot0947ndrsrcpj",
+                      "comment": "Code defined by a terminology system",
+                      "name": "coding",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "list::Coding",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+                        {
+                          "id": "cjpsa6pqsetox0947cb9uaz0s",
+                          "comment": null,
+                          "name": "Coding_0",
+                          "mergingScript": null,
+                          "isProfile": true,
+                          "type": "Coding",
+                          "inputColumns": [
+
+                          ],
+                          "attributes": [
+                            {
+                              "id": "cjpsa6pquetoz0947p7bwnw7m",
+                              "comment": "Identity of the terminology system",
+                              "name": "system",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "uri",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pqxetp10947pt6c4ddb",
+                              "comment": "Version of the system - if relevant",
+                              "name": "version",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pqzetp30947h54mz14m",
+                              "comment": "Symbol in syntax defined by the system",
+                              "name": "code",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "code",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pr1etp50947man7obww",
+                              "comment": "Representation defined by the system",
+                              "name": "display",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "string",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            },
+                            {
+                              "id": "cjpsa6pr4etp70947gpjvdq5a",
+                              "comment": "If this coding was chosen directly by the user",
+                              "name": "userSelected",
+                              "mergingScript": null,
+                              "isProfile": null,
+                              "type": "boolean",
+                              "inputColumns": [
+
+                              ],
+                              "attributes": [
+
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    },
+                    {
+                      "id": "cjpsa6pr6etp90947xluoshn2",
+                      "comment": "Plain text representation of the concept",
+                      "name": "text",
+                      "mergingScript": null,
+                      "isProfile": null,
+                      "type": "string",
+                      "inputColumns": [
+
+                      ],
+                      "attributes": [
+
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

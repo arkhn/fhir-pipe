@@ -1,12 +1,12 @@
 import fhirpipe
-from fhirpipe import sql
+from fhirpipe.load import sql
 
 
 def test_get_connection(config):
     connection_type = config.sql.default
-    with fhirpipe.sql.get_connection(connection_type):
+    with fhirpipe.load.sql.get_connection(connection_type):
         pass
-    with fhirpipe.sql.get_connection():
+    with fhirpipe.load.sql.get_connection():
         pass
 
 
@@ -26,7 +26,7 @@ def test_batch_run(config):
     query = 'SELECT * from patient'
     batch_size = 10
     offset = 0
-    for batch_idx, offset, rows in fhirpipe.sql.batch_run(
+    for batch_idx, offset, rows in fhirpipe.load.sql.batch_run(
             query, batch_size, offset=offset
     ):
         pass
@@ -40,13 +40,13 @@ def test_batch_run(config):
 
     # Normal query with a ending ';'
     query = 'SELECT * from patient'
-    for _, _, _ in fhirpipe.sql.batch_run(query, batch_size, offset=offset):
+    for _, _, _ in fhirpipe.load.sql.batch_run(query, batch_size, offset=offset):
         pass
 
     # Query with a Limit statement
     query = 'SELECT * from patient limit 20'
     try:
-        for _, _, _ in fhirpipe.sql.batch_run(query, batch_size, offset=offset):
+        for _, _, _ in fhirpipe.load.sql.batch_run(query, batch_size, offset=offset):
             pass
     except NotImplementedError:
         pass
