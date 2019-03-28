@@ -13,3 +13,5 @@ psycopg2==2.7.7
 simplejson==3.16.0
 wincertstore==0.2
 PyYAML==5.1
+fhirbase
+requests

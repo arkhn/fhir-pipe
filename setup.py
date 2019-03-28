@@ -9,6 +9,8 @@ setup(
     author_email='theo@arkhn.org',
     license='Apache License 2.0',
     packages=['fhirpipe'],
+    setup_requires=["pytest-runner"],
+    tests_require=["pytest"],
     zip_safe=False,
     entry_points={
         'console_scripts': [
