@@ -84,7 +84,7 @@ def run():
             progression = round(i / len(rows) * 100, 2)
             print("Progress... {} %".format(progression))
         row = list(row)
-        fhir_object = fhirpipe.build.fhir.create_fhir_object(
+        fhir_object = fhirpipe.parse.fhir.create_fhir_object(
             row, resource, resource_structure
         )
         fhir_objects.append(fhir_object)
@@ -148,7 +148,7 @@ def batch_run():
                 progression = round(i / len(rows) * 100, 2)
                 print("batch {} %".format(progression))
             row = list(row)
-            fhir_object = fhirpipe.build.fhir.create_fhir_object(
+            fhir_object = fhirpipe.parse.fhir.create_fhir_object(
                 row, resource, resource_structure
             )
             fhir_objects.append(fhir_object)
