@@ -49,9 +49,6 @@ def build_sql_query(project, resource, info="ICSF.PATIENT"):
         resource, source_table=table_name, project=project
     )
 
-    print(cols)
-    print(joins)
-
     # Format the sql arguments
     col_names = cols
     joins, dependency_graph = parse_joins(joins)
@@ -139,12 +136,12 @@ def dfs_find_sql_cols_joins(tree, source_table=None, project="CW"):
         return find_cols_joins_in_object(tree, source_table, project)
     elif isinstance(tree, list) and len(tree) > 0:
         all_cols = []
-        all_joins = []
+        all_joins = set()
         for t in tree:
             cols, joins = find_cols_joins_in_object(t, source_table, project)
             all_cols += cols
-            all_joins += joins
-        return all_cols, all_joins
+            all_joins = all_joins.union(joins)
+        return all_cols, list(all_joins)
     else:
         return [], []
 
@@ -152,23 +149,26 @@ def dfs_find_sql_cols_joins(tree, source_table=None, project="CW"):
 def find_cols_joins_in_object(tree, source_table, project):
     """
     Inspect a tree specification of a FHIR mapping to find columns and joins
-    :param tree: the mapping spec to explore
-    :param node_type: type of the head node of the tree (useful for recursive calls)
-    :param source_table: the reference SQL table for this FHIR resource
-    :param project: ex: CW, (used for templating)
-    :return: a dict {'cols': [...], 'joins': [...]}
+
+    args:
+        tree (dict): the mapping spec to explore
+        source_table (str): the reference SQL table for this FHIR resource
+        project (str): ex: CW, (used for templating)
+
+    returns:
+        a dict {'cols': [...], 'joins': [...]}
     """
     # print(tree['id'])
     # Else if there are columns and scripts defined
     if "inputColumns" in tree.keys() and len(tree["inputColumns"]) > 0:
-        joins = []
+        joins = set()
         column_names = []
         for col in tree["inputColumns"]:
             # If there is a join
             if "joins" in col.keys() and len(col["joins"]) > 0:
                 for join in col["joins"]:
                     # Add the join
-                    join_type = "OneToOne"  # TODO: infer type ?
+                    join_type = "OneToMany"  # TODO: infer type ?
                     join_args = "{}.{}.{}={}.{}.{}".format(
                         join["sourceOwner"],
                         join["sourceTable"],
@@ -177,7 +177,7 @@ def find_cols_joins_in_object(tree, source_table, project):
                         join["targetTable"],
                         join["targetColumn"],
                     )
-                    joins += [(join_type, join_args)]
+                    joins.add((join_type, join_args))
 
             # Check if table and column target are defined
             if col["table"] is not None and col["column"] is not None:
@@ -187,7 +187,7 @@ def find_cols_joins_in_object(tree, source_table, project):
                 column_names.append(column_name)
             # Else it's a static value and there is nothing to do
 
-        return column_names, joins
+        return column_names, list(joins)
     # Else, we have no join and no col referenced: just a json node (ex: name.given)
     else:
         cols, joins = dfs_find_sql_cols_joins(
