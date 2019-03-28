@@ -60,13 +60,13 @@ def run():
     resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
 
     # Build the sql query
-    sql_query, squash_rules, graph = fhirpipe.sql.build_sql_query(
+    sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
         project, resource_structure
     )
 
     # Run it
     print("Launching query...")
-    rows = fhirpipe.sql.run(sql_query)
+    rows = fhirpipe.load.sql.run(sql_query)
 
     # Fix: replace None values with ''
     for i, row in enumerate(rows):
@@ -75,7 +75,7 @@ def run():
     print(len(rows), "results")
 
     # Apply join rule to merge some lines from the same resource
-    rows = fhirpipe.sql.apply_joins(rows, squash_rules)
+    rows = fhirpipe.load.sql.apply_joins(rows, squash_rules)
 
     # Build a fhir object for each resource instance
     fhir_objects = []
@@ -84,14 +84,14 @@ def run():
             progression = round(i / len(rows) * 100, 2)
             print("Progress... {} %".format(progression))
         row = list(row)
-        fhir_object = fhirpipe.build.fhir.create_fhir_object(
+        fhir_object = fhirpipe.parse.fhir.create_fhir_object(
             row, resource, resource_structure
         )
         fhir_objects.append(fhir_object)
         # print(json.dumps(tree, indent=2, ensure_ascii=False))
 
     # Save instances in fhirbase
-    fhirpipe.sql.save_in_fhirbase(fhir_objects)
+    fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
 
     print(round((time.time() - start_time), 2), "seconds")
 
@@ -120,7 +120,7 @@ def batch_run():
     resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
 
     # Build the sql query
-    sql_query, squash_rules, graph = fhirpipe.sql.build_sql_query(
+    sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
         project, resource_structure
     )
 
@@ -130,7 +130,7 @@ def batch_run():
     offset = fhirpipe.write.log.get("pipe.processing.offset", default=0)
 
     # Launch the query batch per batch
-    for batch_idx, offset, rows in fhirpipe.sql.batch_run(
+    for batch_idx, offset, rows in fhirpipe.load.sql.batch_run(
         sql_query, batch_size, offset=offset
     ):
         print("Running batch {} offset {}...".format(batch_idx, offset))
@@ -139,7 +139,7 @@ def batch_run():
             rows[i] = [e if e is not None else "" for e in row]
 
         # Apply OneToMany joins
-        rows = fhirpipe.sql.apply_joins(rows, squash_rules)
+        rows = fhirpipe.load.sql.apply_joins(rows, squash_rules)
 
         # Hydrate FHIR objects
         fhir_objects = []
@@ -148,13 +148,13 @@ def batch_run():
                 progression = round(i / len(rows) * 100, 2)
                 print("batch {} %".format(progression))
             row = list(row)
-            fhir_object = fhirpipe.build.fhir.create_fhir_object(
+            fhir_object = fhirpipe.parse.fhir.create_fhir_object(
                 row, resource, resource_structure
             )
             fhir_objects.append(fhir_object)
 
         # Save instances in fhirbase
-        fhirpipe.sql.save_in_fhirbase(fhir_objects)
+        fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
 
         # Log offset to restart in case of a crash
         fhirpipe.write.log.set("pipe.processing.offset", offset)
