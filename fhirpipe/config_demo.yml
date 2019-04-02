@@ -6,9 +6,14 @@ sql:
         kwargs:
             host: "localhost"
             port: 5432
-            database: "cw_local"
+            database: "database"
             user: "postgres"
             password: "postgres"
+    oracle:
+        lib: 'cx_Oracle'
+        args: ['user/password@database']
+        kwargs: {}
+
 
 fhirbase:
     host: "localhost"
@@ -16,9 +21,6 @@ fhirbase:
     database: "fhirbase"
     user: "postgres"
 
-filesystem:
-    mapping: '../../fhir-mapping'
-
 graphql:
     server: 'https://graphql.live.arkhn.org/'
-    token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjanRpdXplNncwMHJqMDk2MmMzNnl4Z3hkIiwiaWF0IjoxNTUzMTg2NTY0fQ.dACqyzzvOkukbpypZCR4_OuPbS8c-DxWyr8zRcsDdMg"
+    token: "<token>"
