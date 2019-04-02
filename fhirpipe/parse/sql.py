@@ -1,12 +1,6 @@
 import json
 
-from fhirpipe.config import Config
 from fhirpipe.parse.graph import DependencyGraph
-
-
-config = Config("filesystem")
-path = config.mapping + "/{}/templates/"
-
 
 def get_table_name(name):
     """
