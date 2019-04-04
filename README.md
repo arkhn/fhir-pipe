@@ -15,7 +15,11 @@ The mapping rules are provided through the **pyrog** graphql API. To each FHIR R
 
 fhirpipe is an ETL which is agnostic of the type of input SQL databases. It should be able to parse mapping rules, connect to arbitrary SQL databases, and populate processed FHIR objects using these databases and the processing rules given.
 
-## How to start
+## Get started
+
+[Read our guide](https://github.com/arkhn/fhir-pipe/blob/master/GET_STARTED.md) to start standardizing health data! 
+
+## Contribute
 
 We have reported several issues with the label `Good first issue` which can be a good way to start! You can also join our [Slack](https://join.slack.com/t/arkhn/shared_invite/enQtNTc1NDE5MDIxMDU3LWZmMzUwYWIwN2U0NGI1ZjM2MjcwNTAyZDZhNzcyMWFiYjJhNTIxNWQ1MWY4YmRiM2VhMDY4MDkzNGU5MTQ4ZWM) to contact us if you have trouble or questions :)
 
