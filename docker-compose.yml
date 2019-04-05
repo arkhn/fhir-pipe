@@ -1,0 +1,21 @@
+version: '3'
+services:
+    mimic:
+        build:
+            context: .
+        image: arkhn/mimic:latest
+        depends_on:
+            - postgres-db
+    postgres-db:
+        image: postgres:9.5
+        restart: always
+        environment:
+            POSTGRES_USER: mimicuser
+            POSTGRES_PASSWORD: mimicuser
+        volumes:
+            - postgres:/var/lib/postgresql/data
+            - ./static:/tmp/postgresql_mimic
+        ports:
+            - "5432:5432"
+volumes:
+    postgres:
