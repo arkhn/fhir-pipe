@@ -57,7 +57,7 @@ def run():
     resource = args.resource
 
     # Load mapping rules
-    resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
+    resource_structure = fhirpipe.load.graphql.get_fhir_resource(project, resource)
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(

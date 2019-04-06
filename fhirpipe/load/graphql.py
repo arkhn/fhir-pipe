@@ -130,25 +130,36 @@ def run_query(query):
         )
 
 
-def get_fhir_resource(database, resource, from_file=False):
+def get_fhir_resource(database, resource, from_file=None):
     """
     Formats GraphQL query with given arguments
     before calling api endpoint.
+
+    Args:
+        database (str): name of the database or software for which the mapping rules are intended
+        resource (str): name of Fhir resource we want to fill with the mapping rules
+        from_file (str or None): optional file name to load mapping rules from a file
     """
-    if from_file:
-        path = 'data/graphql_response.json'
-        real_path = '/'.join(os.path.abspath(__file__).split('/')[:-1] + path.split('/'))
+    if from_file is not None:
+        path = from_file
+        real_path = "/".join(
+            os.path.abspath(__file__).split("/")[:-1] + path.split("/")
+        )
         with open(real_path) as json_file:
             resources = json.load(json_file)
-        database_json = resources['data']['database']
+        database_json = resources["data"]["database"]
 
-        assert database_json['name'] == database, f"Database {database} is not in the graphql json resource"
+        assert (
+            database_json["name"] == database
+        ), f"Database {database} is not in the graphql json resource"
 
-        for resource_json in database_json['resources']:
-            if resource_json['name'] == resource:
+        for resource_json in database_json["resources"]:
+            if resource_json["name"] == resource:
                 return resource_json
 
-        raise FileNotFoundError(f"Resource {resource} not found in the graphql json resource")
+        raise FileNotFoundError(
+            f"Resource {resource} not found in the graphql json resource"
+        )
 
     else:
         response = run_query(get_query(database, resource))

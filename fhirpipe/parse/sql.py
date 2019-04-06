@@ -2,6 +2,7 @@ import json
 
 from fhirpipe.parse.graph import DependencyGraph
 
+
 def get_table_name(name):
     """
     Extract the table_name from a column specification
@@ -21,21 +22,28 @@ def get_table_name(name):
         return None
 
 
-def get_table_col_name(name):
-    if len(name.split(".")) != 3:
-        raise TypeError("Name is not valid, should be <owner>.<table>.<col>.")
-    return ".".join(name.split(".")[:])
-
-
-def build_sql_query(project, resource, info="ICSF.PATIENT"):
+def build_sql_query(project, resource, info=None):
     """
     Take a FHIR Resource (eg Patient) specification in input
     Output a sql query to fill this resource, and rules
     to combine (or squash) rows that embed a OneToMany relation
-    :param project: name of the mapping project (eg CW)
-    :param resource: the FHIR resource specification (as a dict)
-    :param info:
+
+    Args:
+        project (str): name of the mapping project (eg CW)
+        resource (str): the FHIR resource specification (as a dict)
+        info (str): specify the main table for this FHIR Resource,
+            usually for example for the resource fhir Patient you would
+            provide a sql table OWNER.Patients or something like this.
+            Don't forget to provide the owner
     """
+    if info is None and isinstance(info, str):
+        raise AttributeError(
+            "Please specify the main table for this FHIR Resource,\
+            usually for example for the resource fhir Patient you would\
+            provide a sql table OWNER.Patients or something like this.\
+            Don't forget to provide the owner"
+        )
+
     table_name = get_table_name(info + ".*")
 
     # Get the info about the columns and joins to query
@@ -91,11 +99,8 @@ def parse_joins(joins):
         # Get <join_table>
         join_table = get_table_name(join_parts[1])
         # Get "<table>.<col> = <join_table>.<join_col>"
-        join_bind = (
-            get_table_col_name(join_parts[0])
-            + " = "
-            + get_table_col_name(join_parts[1])
-        )
+        join_bind = "{} = {}".format(join_parts[0], join_parts[1])
+
         joins_elems[join_table] = [join_table, join_bind]
 
         # Add the join in the join_graph
@@ -163,11 +168,15 @@ def find_cols_joins_in_object(tree, source_table, project):
                 for join in col["joins"]:
                     # Add the join
                     join_type = "OneToMany"  # TODO: infer type ?
-                    join_args = "{}.{}.{}={}.{}.{}".format(
-                        join["sourceOwner"],
+                    join_args = "{}{}.{}={}{}.{}".format(
+                        join["sourceOwner"] + "."
+                        if join["sourceOwner"] is not None
+                        else "",
                         join["sourceTable"],
                         join["sourceColumn"],
-                        join["targetOwner"],
+                        join["targetOwner"] + "."
+                        if join["targetOwner"] is not None
+                        else "",
                         join["targetTable"],
                         join["targetColumn"],
                     )
@@ -175,8 +184,10 @@ def find_cols_joins_in_object(tree, source_table, project):
 
             # Check if table and column target are defined
             if col["table"] is not None and col["column"] is not None:
-                column_name = "{}.{}.{}".format(
-                    col["owner"], col["table"], col["column"]
+                column_name = "{}{}.{}".format(
+                    col["owner"] + "." if col["owner"] is not None else "",
+                    col["table"],
+                    col["column"],
                 )
                 column_names.append(column_name)
             # Else it's a static value and there is nothing to do
