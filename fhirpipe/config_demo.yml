@@ -17,9 +17,10 @@ sql:
 
 fhirbase:
     host: "localhost"
-    port: 5432
+    port: 5433
     database: "fhirbase"
     user: "postgres"
+    password: "postgres"
 
 graphql:
     server: 'https://graphql.live.arkhn.org/'
