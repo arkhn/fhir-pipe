@@ -17,7 +17,7 @@ fhirpipe is an ETL which is agnostic of the type of input SQL databases. It shou
 
 ## Get started
 
-[Read our guide](https://github.com/arkhn/fhir-pipe/blob/master/GET_STARTED.md) to start standardizing health data! 
+[Read our guide](./GET_STARTED.md) to start standardizing health data!
 
 ## Contribute
 
@@ -29,4 +29,4 @@ If you're enthusiastic about our project, :star: it to show your support! :heart
 
 ## License
 
-[Apache License 2.0](https://github.com/OpenMined/PySyft/blob/master/LICENSE)
+[Apache License 2.0](./LICENSE)

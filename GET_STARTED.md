@@ -3,60 +3,45 @@
 
 To standardize data with the pipe, you need some data! Let's set up a database filled with the MIMIC III Clinical Database Demo.
 
-## Load the MIMIC Database
+## Configure MIMIC demo dataset credentials
 
 First, register [here](https://mimic.physionet.org/gettingstarted/demo/) on the official website to get access to the demo data, it takes 30 seconds and you'll set a username and a password. This will be needed to download the data.
 
-When you're done, go in your working directory and launch the docker postgres image
+Then copy `.env.example` into `.env` and edit this last to configure it with yours physionet credentials.
+
+## Build the database docker
+
+This will download the data sources and load its to the PSQL database. The logs should give you hints
+if anything is going wrong.
 
 ```
-docker-compose up postgres-db
+docker-compose up mimic-db
 ```
 
-In the same directory, maybe in another tab, you can run the following to download the data. Make sure to replace `<login>` with the username you just set.
+To check if data are well loaded, you can execute this in a new terminal :
 
 ```
-wget --user <login> --ask-password -A csv.gz -m -p -E -k -K -np https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/files/
+$ docker exec -ti fhir-pipe-mimic-db psql -d mimic -U mimicuser -c 'SELECT count(subject_id) FROM patients'
+ count
+-------
+   100
+(1 row)
 ```
 
-You will be ask to provide your password. Then, run the following sequence of operations to insert the data in the postgres database of the docker container.
+You can then shutdown the database with `ctrl-c` or with `docker-compose down mimic-db`
+
+In case of troubles, note that the setup scripts are executed only if the PSQL database is empty.
+To clear the previously build dockers and databases to re-start from a clean state, please run :
 
 ```
-mv physionet.org/works/MIMICIIIClinicalDatabaseDemo/files/version_1_4 static/resources
+docker-compose down mimic-db
+docker volume rm fhir-pipe-mimic-db
+```
 
-rm -r physionet.org
-
-gzip -d static/resources/*.gz
-
-curl https://raw.githubusercontent.com/MIT-LCP/mimic-code/master/buildmimic/postgres/postgres_create_tables.sql > ./static/postgres_create_tables.sql
-curl https://raw.githubusercontent.com/MIT-LCP/mimic-code/master/buildmimic/postgres/postgres_load_data.sql > ./static/postgres_load_data.sql
-curl https://raw.githubusercontent.com/MIT-LCP/mimic-code/master/buildmimic/postgres/postgres_add_indexes.sql > ./static/postgres_add_indexes.sql
-
-docker exec -ti mimic_postgres-db_1 /bin/bash
-
-
-psql -U mimicuser -d postgres
-
-CREATE DATABASE mimic OWNER mimicuser;
-\c mimic;
-CREATE SCHEMA mimiciii;
-set search_path to mimiciii;
-
-\q
-
-psql 'dbname=mimic user=mimicuser options=--search_path=mimiciii' -f /tmp/postgresql_mimic/postgres_create_tables.sql
-
-psql 'dbname=mimic user=mimicuser options=--search_path=mimiciii' -f /tmp/postgresql_mimic/postgres_load_data.sql -v mimic_data_dir='/tmp/postgresql_mimic/resources/'
-
-psql 'dbname=mimic user=mimicuser options=--search_path=mimiciii' -f /tmp/postgresql_mimic/postgres_add_indexes.sql
+And, after that, if you have to re-build the docker (for example to take into account the values setup in `.env` file), please run :
 
 ```
-You can now connect and run normal sql:
-
-```
-psql 'dbname=mimic user=mimicuser options=--search_path=mimiciii'
-
-select count(subject_id) from patients;
+docker-compose build mimic-db
 ```
 
 Et voilà! Let's now standardize this database in the FHIR format!
