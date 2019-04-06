@@ -4,19 +4,19 @@ from fhirpipe.parse.graph import DependencyGraph, Table
 def test_graph():
     graph = DependencyGraph()
 
-    assert not graph.has('tutu')
+    assert not graph.has("tutu")
 
-    graph.add('tutu')
+    graph.add("tutu")
 
-    assert graph.has('tutu')
+    assert graph.has("tutu")
 
-    assert isinstance(graph.get('tutu'), Table)
+    assert isinstance(graph.get("tutu"), Table)
 
-    graph.add('tata')
+    graph.add("titi")
 
-    tutu = graph.get('tutu')
-    tata = graph.get('tata')
+    tutu = graph.get("tutu")
+    tata = graph.get("titi")
 
     assert not tutu.connected(tata)
-    tutu.connect(tata, 'OneToOne')
+    tutu.connect(tata, "OneToOne")
     assert tutu.connected(tata)

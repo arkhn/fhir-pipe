@@ -26,42 +26,26 @@ def test_clean_fhir():
     cleaned_tree, _ = clean_fhir(dirty_tree)
     assert cleaned_tree == {}
 
-    dirty_tree = [
-        {'a': 1}
-    ]
+    dirty_tree = [{"a": 1}]
     cleaned_tree, _ = clean_fhir(dirty_tree)
     assert cleaned_tree == dirty_tree
 
-    dirty_tree = [
-        {'a': 1},
-        {}
-    ]
+    dirty_tree = [{"a": 1}, {}]
     cleaned_tree, _ = clean_fhir(dirty_tree)
-    assert cleaned_tree == [
-        {'a': 1}
-    ]
+    assert cleaned_tree == [{"a": 1}]
 
-    dirty_tree = [
-        {'a': 1},
-        []
-    ]
+    dirty_tree = [{"a": 1}, []]
     cleaned_tree, _ = clean_fhir(dirty_tree)
-    assert cleaned_tree == [
-        {'a': 1}
-    ]
+    assert cleaned_tree == [{"a": 1}]
 
-    dirty_tree = [
-        {'a': 1},
-        [{}, [[], {}]]
-    ]
+    dirty_tree = [{"a": 1}, [{}, [[], {}]]]
     cleaned_tree, _ = clean_fhir(dirty_tree)
-    assert cleaned_tree == [
-        {'a': 1}
-    ]
+    assert cleaned_tree == [{"a": 1}]
 
 
 def test_dfs_create_fhir_object():
-    fhir_spec = json.loads("""{
+    fhir_spec = json.loads(
+        """{
                   "id": "cjpicvbl5usn90a57dhmj6m07",
                   "comment": null,
                   "name": "Identifier_0",
@@ -97,14 +81,15 @@ def test_dfs_create_fhir_object():
                       ]
                     }
                   ]
-                }""")
+                }"""
+    )
     fhir_obj = dict()
-    dfs_create_fhir_object(fhir_obj, fhir_spec, ['1009283'])
+    dfs_create_fhir_object(fhir_obj, fhir_spec, ["1009283"])
 
-    assert fhir_obj == {'value': '1009283'}
+    assert fhir_obj == {"value": "1009283"}
 
-
-    fhir_spec = json.loads("""{
+    fhir_spec = json.loads(
+        """{
               "id": "cjpicvbmouso90a57p8irnpx6",
               "comment": "A name associated with the patient",
               "name": "name",
@@ -202,31 +187,35 @@ def test_dfs_create_fhir_object():
                   ]
                 }
               ]
-            }""")
+            }"""
+    )
 
     fhir_obj = dict()
-    dfs_create_fhir_object(fhir_obj, fhir_spec, ['Chirac', 'Jacques', 'François'])
+    dfs_create_fhir_object(fhir_obj, fhir_spec, ["Chirac", "Jacques", "François"])
 
-    assert fhir_obj == {'name': [{'family': 'Chirac', 'given': ['Jacques', 'François'], 'use': {}}]}
+    assert fhir_obj == {
+        "name": [{"family": "Chirac", "given": ["Jacques", "François"], "use": {}}]
+    }
 
     clean_fhir_obj, n_leafs = clean_fhir(fhir_obj)
 
-    assert clean_fhir_obj == {'name': [{'family': 'Chirac', 'given': ['Jacques', 'François']}]}
+    assert clean_fhir_obj == {
+        "name": [{"family": "Chirac", "given": ["Jacques", "François"]}]
+    }
 
     assert n_leafs == 3
 
+
 def test_create_fhir_object():
-    row = ['100092', 'Chirac', 'Jacques', 'François', 'M']
+    row = ["100092", "Chirac", "Jacques", "François", "M"]
     resource = "Patient"
     resource_patient_structure = json.loads(PATIENT_LIGHT_RESOURCE)
     fhir_object = create_fhir_object(row, resource, resource_patient_structure)
-    fhir_id = fhir_object['id']
+    fhir_id = fhir_object["id"]
     assert fhir_object == {
-        'id': fhir_id,
-        'resourceType': 'Patient',
-        'identifier': [{'value': '100092'}],
-        'name': [{'family': 'Chirac',
-                  'given': ['Jacques', 'François']}],
-        'gender': 'M'
+        "id": fhir_id,
+        "resourceType": "Patient",
+        "identifier": [{"value": "100092"}],
+        "name": [{"family": "Chirac", "given": ["Jacques", "François"]}],
+        "gender": "M",
     }
-
