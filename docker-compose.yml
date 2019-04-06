@@ -6,6 +6,7 @@ services:
         image: arkhn/mimic:latest
         depends_on:
             - postgres-db
+            - fhirbase
     postgres-db:
         image: postgres:9.5
         restart: always
@@ -17,5 +18,13 @@ services:
             - ./static:/tmp/postgresql_mimic
         ports:
             - "5432:5432"
+    fhirbase:
+        image: fhirbase/fhirbase:latest
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+        ports:
+            - "5433:5432"
 volumes:
     postgres:

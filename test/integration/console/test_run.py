@@ -1,5 +1,3 @@
-import datetime
-
 import fhirpipe
 
 
@@ -26,18 +24,6 @@ def test_adapted_run():
     # Run it
     print("Launching query...")
     rows = fhirpipe.load.sql.run(sql_query)
-
-    # Fix: replace None values with '' AND replace date with str representation
-    for i, row in enumerate(rows):
-        new_row = []
-        for el in row:
-            if el is None:
-                new_row.append("")
-            elif isinstance(el, datetime.datetime):
-                new_row.append(str(el))
-            else:
-                new_row.append(el)
-        rows[i] = new_row
 
     print(len(rows), "results")
 

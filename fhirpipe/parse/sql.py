@@ -34,17 +34,17 @@ def build_sql_query(project, resource, info=None):
         info (str): specify the main table for this FHIR Resource,
             usually for example for the resource fhir Patient you would
             provide a sql table OWNER.Patients or something like this.
-            Don't forget to provide the owner
+            Don't forget to provide the owner if it applies
     """
-    if info is None and isinstance(info, str):
+    if info is None or not isinstance(info, str):
         raise AttributeError(
             "Please specify the main table for this FHIR Resource,\
             usually for example for the resource fhir Patient you would\
             provide a sql table OWNER.Patients or something like this.\
-            Don't forget to provide the owner"
+            Don't forget to provide the owner if it applies"
         )
 
-    table_name = get_table_name(info + ".*")
+    table_name = get_table_name(info.upper() + ".*")
 
     # Get the info about the columns and joins to query
     cols, joins = dfs_find_sql_cols_joins(

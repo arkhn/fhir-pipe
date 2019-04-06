@@ -1,3 +1,4 @@
+import datetime
 import psycopg2
 import cx_Oracle
 import logging
@@ -13,7 +14,7 @@ def save_in_fhirbase(instances):
     """
     config = Config("fhirbase")
     with psycopg2.connect(
-        dbname=config.database, user=config.user, host=config.host, port=config.port
+        dbname=config.database, user=config.user, host=config.host, port=config.port, password=config.password
     ) as connection:
         fb = fhirbase.FHIRBase(connection)
         for instance in instances:
@@ -97,11 +98,22 @@ def run(query, connection: str = None):
     with get_connection(connection) as connection:
         with connection.cursor() as cursor:
             cursor.execute(query)
-            output_row = cursor.fetchall()
+            rows = cursor.fetchall()
 
         connection.commit()
 
-    return output_row
+    # Replace None values with '' AND replace date with str representation
+    for i, row in enumerate(rows):
+        new_row = []
+        for el in row:
+            if el is None:
+                new_row.append("")
+            elif isinstance(el, datetime.datetime):
+                new_row.append(str(el))
+            else:
+                new_row.append(el)
+        rows[i] = new_row
+    return rows
 
 
 def apply_joins(rows, squash_rule, parent_cols=tuple()):

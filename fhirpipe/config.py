@@ -11,7 +11,7 @@ class Config:
         self._dict = {}
         self._config = {}
         path = os.path.dirname(__file__)
-        filename = "./config.yml"
+        filename = "config.yml"
         with open(os.path.join(path, filename)) as config_file:
             config = yaml.safe_load(config_file)
             if key is not None:
