@@ -6,7 +6,7 @@ services:
             context: .
         image: arkhn/mimic:latest
         depends_on:
-            - postgres-db
+            - mimic-db
             - fhirbase
 
     mimic-db:
