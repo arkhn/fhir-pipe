@@ -1,23 +1,33 @@
-version: '3'
+version: '3.7'
 services:
+
     mimic:
         build:
             context: .
         image: arkhn/mimic:latest
         depends_on:
-            - postgres-db
+            - mimic-db
             - fhirbase
-    postgres-db:
-        image: postgres:9.5
+
+    mimic-db:
+        env_file: .env
+        build:
+            context: ./docker
+            dockerfile: MimicPSQL.Dockerfile
+            args:
+                MIMIC_USER: $MIMIC_USER
+                MIMIC_PASSWORD: $MIMIC_PASSWORD
+        container_name: fhir-pipe-mimic-db
         restart: always
         environment:
             POSTGRES_USER: mimicuser
             POSTGRES_PASSWORD: mimicuser
+            POSTGRES_DB: mimic
         volumes:
-            - postgres:/var/lib/postgresql/data
-            - ./static:/tmp/postgresql_mimic
+            - mimic-db:/var/lib/postgresql/data
         ports:
             - "5432:5432"
+
     fhirbase:
         image: fhirbase/fhirbase:latest
         restart: always
@@ -26,5 +36,7 @@ services:
             POSTGRES_PASSWORD: postgres
         ports:
             - "5433:5432"
+
 volumes:
-    postgres:
+    mimic-db:
+        name: fhir-pipe-mimic-db
