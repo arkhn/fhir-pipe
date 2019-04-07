@@ -53,30 +53,33 @@ Get the image and fill the database
 ```
 docker pull fhirbase/fhirbase:latest
 
-docker run --rm -p 3000:3000 -d fhirbase/fhirbase:latest
+docker run --rm -p 3000:3000 -d --name fhir-pipe-fhirbase fhirbase/fhirbase:latest
 
-docker exec -it gallant_varahamihira /bin/bash
-
-psql
-
-CREATE DATABASE fhirbase;
-
-\q
+docker exec fhir-pipe-fhirbase psql -c "CREATE DATABASE fhirbase"
 
 # Fill the db
 
-fhirbase -d fhirbase --fhir=3.0.1 init
+docker exec fhir-pipe-fhirbase fhirbase -d fhirbase --fhir=3.0.1 init
 
-fhirbase -d fhirbase --fhir=3.0.1 load /bundle.ndjson.gzip
-
-exit
+docker exec fhir-pipe-fhirbase fhirbase -d fhirbase --fhir=3.0.1 load /bundle.ndjson.gzip
 ```
 
 > How does this relates to the container defined in the docker-compose.yml ?
 
+## Install the pipe locally
+
+You should install it in an isolated virtual environment, by using virtualenv or Pipenv for example.
+
+```
+pip install -r requirements.txt
+pip install -e .
+```
+
 ## Run the pipe
 
 Run locally the pipeline. You should already have the docker containers with mimic and fhirbase running.
+You need to get the config.yml file, extracted from pyrog, into the fhirpipe sub-directory.
+
 ```
 fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --use-graphql-file=True
 ```
