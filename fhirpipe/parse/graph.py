@@ -61,4 +61,3 @@ class Table:
 
     def connected(self, table):
         return table in (self.one_to_one + self.one_to_many)
-

@@ -13,11 +13,11 @@ def parse_args():
     """
     Read all the arguments which should describe the run task
     """
-    parser = argparse.ArgumentParser(description="Fhirpipe ETL")
+    parser = argparse.ArgumentParser(description="The smart ETL to standardize health data")
     parser.add_argument(
         "--project",
         type=str,
-        default="Crossway",
+        default="Mimic",
         help="Project to run (default: Crossway)",
     )
     parser.add_argument(
@@ -28,10 +28,23 @@ def parse_args():
         help="Resource type to process (default: Patient)",
     )
     parser.add_argument(
-        "--batch_size",
+        "--main-table",
+        type=str,
+        default="Patients",
+        help="SQL table name (with owner if relevant) of reference for this resource (default: Patients)",
+    )
+    parser.add_argument(
+        "--batch-size",
         type=int,
         default="100000",
         help="Batch size if applicable (default: 100000)",
+        required=False,
+    )
+    parser.add_argument(
+        "--use-graphql-file",
+        type=bool,
+        default=False,
+        help="Use graphql file response instead of the API",
         required=False,
     )
     return parser.parse_args()
@@ -56,21 +69,22 @@ def run():
     project = args.project
     resource = args.resource
 
+    if args.use_graphql_file:
+        path = "../../test/integration/fixtures/graphql_mimic_patient.json"
+    else:
+        path = None
+
     # Load mapping rules
-    resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
+    resource_structure = fhirpipe.load.graphql.get_fhir_resource(project, resource, from_file=path)
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
-        project, resource_structure
+        project, resource_structure, info=args.main_table
     )
 
     # Run it
     print("Launching query...")
     rows = fhirpipe.load.sql.run(sql_query)
-
-    # Fix: replace None values with ''
-    for i, row in enumerate(rows):
-        rows[i] = [e if e is not None else "" for e in row]
 
     print(len(rows), "results")
 

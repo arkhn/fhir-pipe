@@ -1,7 +1,6 @@
 import json
 import random
 from fhirpipe.parse.sql import get_table_name
-from fhirpipe.parse.sql import get_table_col_name
 from fhirpipe.parse.sql import build_sql_query
 from fhirpipe.parse.sql import parse_joins
 from fhirpipe.parse.sql import dfs_find_sql_cols_joins
@@ -25,13 +24,6 @@ def test_get_table_name():
     assert get_table_name(full_name) == table
 
 
-def test_get_table_col_name():
-    full_name = "OWNER.TABLE.COLUMN"
-    table = "OWNER.TABLE.COLUMN"
-
-    assert get_table_col_name(full_name) == table
-
-
 def test_build_sql_query_no_join():
     project = "Crossway"
     resource = json.loads(PATIENT_LIGHT_RESOURCE)
@@ -39,8 +31,10 @@ def test_build_sql_query_no_join():
 
     sql_query, squash_rules, dependency_graph = build_sql_query(project, resource, info)
 
-    target_sql = 'SELECT ICSF.PATIENT.NOPAT, ICSF.PATIENT.NOMPAT, ICSF.PATIENT.PREPAT, ' \
-                 'ICSF.PATIENT.PREPATSUITE, ICSF.PATIENT.SEXE FROM ICSF.PATIENT'
+    target_sql = (
+        "SELECT ICSF.PATIENT.NOPAT, ICSF.PATIENT.NOMPAT, ICSF.PATIENT.PREPAT, "
+        "ICSF.PATIENT.PREPATSUITE, ICSF.PATIENT.SEXE FROM ICSF.PATIENT"
+    )
     assert target_sql in sql_query
 
     target_rules = [(0, 1, 2, 3, 4), []]
@@ -54,44 +48,51 @@ def test_build_sql_query_no_join():
 
     sql_query, squash_rules, dependency_graph = build_sql_query(project, resource, info)
 
-    target_sql1 = 'SELECT ' \
-                 'ICSF.PATIENT.NOPAT, ' \
-                 'ICSF.PATIENT.NOMPAT, ' \
-                 'ICSF.PATIENT.PREPAT, ' \
-                 'ICSF.PATIENT.PREPATSUITE, ' \
-                 'ICSF.PATIENT.SEXE, ' \
-                 'ICSF.PATADR.ADR1, ' \
-                 'ICSF.PAYS.LIBELLE ' \
-                 'FROM ICSF.PATIENT'
-    target_sql2 = 'LEFT JOIN ICSF.PATADR ON ICSF.PATIENT.NOPAT = ICSF.PATADR.NOPAT'
-    target_sql3 = 'LEFT JOIN ICSF.PAYS ON ICSF.PATADR.NOPAYS = ICSF.PAYS.NOPAYS'
-
+    target_sql1 = (
+        "SELECT "
+        "ICSF.PATIENT.NOPAT, "
+        "ICSF.PATIENT.NOMPAT, "
+        "ICSF.PATIENT.PREPAT, "
+        "ICSF.PATIENT.PREPATSUITE, "
+        "ICSF.PATIENT.SEXE, "
+        "ICSF.PATADR.ADR1, "
+        "ICSF.PAYS.LIBELLE "
+        "FROM ICSF.PATIENT"
+    )
+    target_sql2 = "LEFT JOIN ICSF.PATADR ON ICSF.PATIENT.NOPAT = ICSF.PATADR.NOPAT"
+    target_sql3 = "LEFT JOIN ICSF.PAYS ON ICSF.PATADR.NOPAYS = ICSF.PAYS.NOPAYS"
 
     assert target_sql1 in sql_query
     assert target_sql2 in sql_query
     assert target_sql3 in sql_query
 
     target_rules = [
-        (0, 1, 2, 3, 4), [
+        (0, 1, 2, 3, 4),
+        [
             # child 1.1
-            [(5,), [
-                # child 2.1
-                [(6,), [
-
-                ]]
-            ]]
-        ]]
+            [
+                (5,),
+                [
+                    # child 2.1
+                    [(6,), []]
+                ],
+            ]
+        ],
+    ]
 
     assert squash_rules == target_rules
 
 
 def test_parse_joins():
-    joins = [('OneToMany', 'ICSF.PATIENT.NOPAT=ICSF.PATADR.NOPAT'), ('OneToMany', 'ICSF.PATADR.NOPAYS=ICSF.PAYS.NOPAYS')]
+    joins = [
+        ("OneToMany", "ICSF.PATIENT.NOPAT=ICSF.PATADR.NOPAT"),
+        ("OneToMany", "ICSF.PATADR.NOPAYS=ICSF.PAYS.NOPAYS"),
+    ]
     join_elems, graph = parse_joins(joins)
 
     join_elems_target = [
-        ['ICSF.PATADR', 'ICSF.PATIENT.NOPAT = ICSF.PATADR.NOPAT'],
-        ['ICSF.PAYS', 'ICSF.PATADR.NOPAYS = ICSF.PAYS.NOPAYS']
+        ["ICSF.PATADR", "ICSF.PATIENT.NOPAT = ICSF.PATADR.NOPAT"],
+        ["ICSF.PAYS", "ICSF.PATADR.NOPAYS = ICSF.PAYS.NOPAYS"],
     ]
 
     assert join_elems_target == join_elems
@@ -109,16 +110,17 @@ def test_dfs_find_sql_cols_joins():
         resource, source_table=table_name, project=project
     )
 
-    assert 'ICSF.PATIENT.NOPAT' in cols
+    assert "ICSF.PATIENT.NOPAT" in cols
     assert len(cols) == 7
 
     assert len(joins) == 2
 
 
 def test_find_cols_joins_in_object():
-    project = 'Crossway'
-    source_table = 'Patient'
-    fhir_spec = json.loads("""{
+    project = "Crossway"
+    source_table = "Patient"
+    fhir_spec = json.loads(
+        """{
                       "id": "cjpicvbl5usn90a57dhmj6m07",
                       "comment": null,
                       "name": "Identifier_0",
@@ -154,48 +156,48 @@ def test_find_cols_joins_in_object():
                           ]
                         }
                       ]
-                    }""")
+                    }"""
+    )
 
     cols, joins = find_cols_joins_in_object(fhir_spec, source_table, project)
 
-    assert cols == ['ICSF.PATIENT.NOPAT']
+    assert cols == ["ICSF.PATIENT.NOPAT"]
     assert joins == []
 
     fhir_spec = json.loads(PATIENT_MEDIUM_RESOURCE)
 
     cols, joins = find_cols_joins_in_object(fhir_spec, source_table, project)
 
-    assert cols == ['ICSF.PATIENT.NOPAT', 'ICSF.PATIENT.NOMPAT', 'ICSF.PATIENT.PREPAT',
-                    'ICSF.PATIENT.PREPATSUITE', 'ICSF.PATIENT.SEXE', 'ICSF.PATADR.ADR1',
-                    'ICSF.PAYS.LIBELLE']
+    assert cols == [
+        "ICSF.PATIENT.NOPAT",
+        "ICSF.PATIENT.NOMPAT",
+        "ICSF.PATIENT.PREPAT",
+        "ICSF.PATIENT.PREPATSUITE",
+        "ICSF.PATIENT.SEXE",
+        "ICSF.PATADR.ADR1",
+        "ICSF.PAYS.LIBELLE",
+    ]
     assert len(joins) == 2
 
 
 def test_build_squash_rule():
-    table_name = 'ICSF.PATIENT'
+    table_name = "ICSF.PATIENT"
     joins = [
-        ('OneToMany', 'ICSF.PATADR.NOPAYS=ICSF.PAYS.NOPAYS'),
-        ('OneToOne', 'ICSF.PATIENT.NOPAT=ICSF.FAKE_TABLE.FAKE_COL'),
-        ('OneToMany', 'ICSF.PATIENT.NOPAT=ICSF.PATADR.NOPAT'),
-        ('OneToMany', 'ICSF.PATIENT.NOPAT=ICSF.FAKE_TABLE2.FAKE_COL2')
+        ("OneToMany", "ICSF.PATADR.NOPAYS=ICSF.PAYS.NOPAYS"),
+        ("OneToOne", "ICSF.PATIENT.NOPAT=ICSF.FAKE_TABLE.FAKE_COL"),
+        ("OneToMany", "ICSF.PATIENT.NOPAT=ICSF.PATADR.NOPAT"),
+        ("OneToMany", "ICSF.PATIENT.NOPAT=ICSF.FAKE_TABLE2.FAKE_COL2"),
     ]
     table_col_idx = {
-        'ICSF.PATIENT': [0, 1, 2],
-        'ICSF.PATADR': [3, 4],
-        'ICSF.FAKE_TABLE': [5],
-        'ICSF.PAYS': [6],
-        'ICSF.FAKE_TABLE2': [7, 8]
+        "ICSF.PATIENT": [0, 1, 2],
+        "ICSF.PATADR": [3, 4],
+        "ICSF.FAKE_TABLE": [5],
+        "ICSF.PAYS": [6],
+        "ICSF.FAKE_TABLE2": [7, 8],
     }
     _, graph = parse_joins(joins)
     head_node = graph.get(table_name)
     rules = build_squash_rule(head_node, table_col_idx)
 
-    target_rules = [
-        (0, 1, 2, 5), [
-            [(3, 4), [
-                    [(6,), []]
-                ]],
-            [(7, 8), []]
-        ]
-    ]
+    target_rules = [(0, 1, 2, 5), [[(3, 4), [[(6,), []]]], [(7, 8), []]]]
     assert rules == target_rules
