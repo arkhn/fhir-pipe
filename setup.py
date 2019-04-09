@@ -31,7 +31,7 @@ setup(
     long_description_content_type="text/markdown",
     install_requires=requirements,
     setup_requires=["pytest-runner"],
-    tests_require=["pytest", "pytest-flake8"],
+    tests_require=["pytest"],
     zip_safe=False,
     entry_points={
         'console_scripts': [
