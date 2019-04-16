@@ -6,9 +6,9 @@ sql:
         kwargs:
             host: "localhost"
             port: 5432
-            database: "database"
-            user: "postgres"
-            password: "postgres"
+            database: "mimic"
+            user: "mimicuser"
+            password: "mimicuser"
     oracle:
         lib: 'cx_Oracle'
         args: ['user/password@database']

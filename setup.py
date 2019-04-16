@@ -26,7 +26,7 @@ setup(
     license='Apache License 2.0',
     packages=find_packages(exclude=["docs", "examples", "dist"]),
     include_package_data=True,
-    data_files=[('', ['fhirpipe/config.yml'])],
+    data_files=[('', ['fhirpipe/config.yml', 'test/integration/fixtures/graphql_mimic_patient.json'])],
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     install_requires=requirements,
