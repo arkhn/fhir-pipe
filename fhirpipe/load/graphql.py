@@ -14,7 +14,7 @@ HEADERS = {
 
 
 source_info_query = """
-query {
+query($sourceName: String!) {
     sourceInfo(sourceName: $sourceName) {
         id
         name
@@ -23,7 +23,7 @@ query {
 """
 
 available_resources_query = """
-query {
+query($sourceId: ID!) {
     availableResources(sourceId: $sourceId) {
         id
         name
@@ -66,7 +66,7 @@ fragment a on Attribute {
     }
 }
 
-query {
+query($resourceId: ID!) {
     resource(where: {id: $resourceId}) {
         id
         name
@@ -125,18 +125,17 @@ def run_graphql_query(graphql_query, variables=None):
     This function queries a GraphQL endpoint
     and returns a json parsed response.
     """
-
     request = requests.post(
-        SERVER,
-        headers=HEADERS,
-        json={"query": graphql_query, "variables": variables, "operationName": None},
+        SERVER, headers=HEADERS, json={"query": graphql_query, "variables": variables}
     )
 
     if request.status_code == 200:
         return request.json()
     else:
         raise Exception(
-            "Query failed with returning code {}.".format(request.status_code)
+            "Query failed with returning code {}\n{}.".format(
+                request.status_code, request.reason
+            )
         )
 
 
@@ -146,8 +145,8 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
     before calling api endpoint.
 
     Args:
-        database (str): name of the database or software for which the mapping rules are intended
-        resource (str): name of Fhir resource we want to fill with the mapping rules
+        source_name (str): name of the database or software for which the mapping rules are intended
+        resource_name (str): name of Fhir resource we want to fill with the mapping rules
         from_file (str or None): optional file name to load mapping rules from a file
     """
 
@@ -174,19 +173,30 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
         )
     else:
         # Get Source id from Source name
-        source = run_graphql_query(source_info_query, variables={"sourceName": source_name})
+        source = run_graphql_query(
+            source_info_query, variables={"sourceName": source_name}
+        )
         source_id = source["data"]["sourceInfo"]["id"]
 
         # Check that Resource exists for given Source
-        available_resources = run_graphql_query(available_resources_query, variables={"sourceId": source_id})
-        assert(
-            resource_name in list(map(lambda x: x["name"], available_resources["data"]["availableResources"]))
+        available_resources = run_graphql_query(
+            available_resources_query, variables={"sourceId": source_id}
+        )
+        assert resource_name in list(
+            map(lambda x: x["name"], available_resources["data"]["availableResources"])
         ), f"Resource {resource_name} doesn't exist for Source {source_name}"
 
         # Deduce Resource id from Resource name
-        resource_id = list(filter(lambda x: x["name"] == resource_name, available_resources["data"]["availableResources"]))[0]["id"]
+        resource_id = list(
+            filter(
+                lambda x: x["name"] == resource_name,
+                available_resources["data"]["availableResources"],
+            )
+        )[0]["id"]
 
         # Get Resource mapping
-        resource = run_graphql_query(resource_query, variables={"resourceId": resource_id})
+        resource = run_graphql_query(
+            resource_query, variables={"resourceId": resource_id}
+        )
 
         return resource["data"]["resource"]
