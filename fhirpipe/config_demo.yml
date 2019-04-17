@@ -23,5 +23,5 @@ fhirbase:
     password: "postgres"
 
 graphql:
-    server: 'https://graphql.live.arkhn.org/'
+    server: 'https://graphql.pyrog.staging.arkhn.org/'
     token: "<token>"
