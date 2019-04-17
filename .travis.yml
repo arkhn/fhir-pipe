@@ -8,4 +8,5 @@ install:
   - pip install -r requirements.txt
 # command to run tests
 script:
+- cp fhirpipe/config_demo.yml fhirpipe/config.yml
 - pytest test/unit
