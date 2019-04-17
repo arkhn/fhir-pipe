@@ -117,9 +117,7 @@ query {
         }
     }
 }
-    """
-    )
-    return query
+"""
 
 
 def run_graphql_query(graphql_query, variables=None):
@@ -176,11 +174,11 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
         )
     else:
         # Get Source id from Source name
-        source = run_graphql_query(source_info_query, variables={sourceName: source_name})
+        source = run_graphql_query(source_info_query, variables={"sourceName": source_name})
         source_id = source["data"]["sourceInfo"]["id"]
 
         # Check that Resource exists for given Source
-        available_resources = run_graphql_query(available_resources_query, variables={sourceId: source_id})
+        available_resources = run_graphql_query(available_resources_query, variables={"sourceId": source_id})
         assert(
             resource_name in list(map(lambda x: x["name"], available_resources["data"]["availableResources"]))
         ), f"Resource {resource_name} doesn't exist for Source {source_name}"
@@ -189,6 +187,6 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
         resource_id = list(filter(lambda x: x["name"] == resource_name, available_resources["data"]["availableResources"]))[0]["id"]
 
         # Get Resource mapping
-        resource = run_graphql_query(resource_query, variables={resourceId: resource_id})
+        resource = run_graphql_query(resource_query, variables={"resourceId": resource_id})
 
         return resource["data"]["resource"]
