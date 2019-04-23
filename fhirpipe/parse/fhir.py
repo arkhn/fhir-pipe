@@ -80,12 +80,19 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):
             for fhir_spec_attr in fhir_spec["attributes"]:
                 if len(row) > 0 and isinstance(row[0], list):
                     join_rows = row.pop(0)
-                    for join_row in join_rows:
+                    join_rows_remaining = []
+                    for i, join_row in enumerate(join_rows):
                         fhir_obj_list_el = dict()
                         dfs_create_fhir_object(
-                            fhir_obj_list_el, fhir_spec_attr, list(join_row)
+                            fhir_obj_list_el, fhir_spec_attr, join_row
                         )
                         fhir_obj_list.append(fhir_obj_list_el)
+                        # Not everything has been consumed: we need to keep what's remaining
+                        if len(join_row) > 0:
+                            join_rows_remaining.append(join_row)
+                    # If there are remaining elements, we put them back
+                    if len(join_rows_remaining) > 0:
+                        row.insert(0, join_rows_remaining)
                 else:
                     fhir_obj_list_el = dict()
                     dfs_create_fhir_object(fhir_obj_list_el, fhir_spec_attr, row)
