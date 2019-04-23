@@ -39,6 +39,8 @@ And run
 fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --use-graphql-file=True
 ```
 
+> You can remove `--use-graphql-file=True` to fetch the mapping rules from the [pyrog](https://github.com/arkhn/pyrog) api
+
 Et voilà!
 
 ---
