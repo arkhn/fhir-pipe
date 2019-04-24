@@ -108,10 +108,8 @@ def run(query, connection: str = None):
         for el in row:
             if el is None:
                 new_row.append("")
-            elif isinstance(el, datetime.datetime):
+            else:  # Force conversion to str if not already (ex: datetime, int, etc)
                 new_row.append(str(el))
-            else:
-                new_row.append(el)
         rows[i] = new_row
     return rows
 
