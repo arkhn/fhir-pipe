@@ -12,7 +12,7 @@ def save_in_fhirbase(instances):
     Save instances of FHIR resources in the fhirbase
     :param instances: list of instances
     """
-    config = Config("fhirbase")
+    config = Config("sql").fhirbase.kwargs
     with psycopg2.connect(
         dbname=config.database, user=config.user, host=config.host, port=config.port, password=config.password
     ) as connection:
@@ -225,3 +225,75 @@ def leave(l, indices):
         if i not in indices:
             took.append(e)
     return took
+
+
+def find_single_fhir_resource(resource_type, identifier):
+    """
+    This is the slow version of find_fhir_resource, where we do a
+    sql query per reference found, which is highly inefficient
+
+    args:
+        resource_type (str): name of the Fhir resource to search for
+        identifier (str): the provided id which could be an identifier of
+            some instance of the resource_type
+
+    return:
+        the fhir id of the instance is there is one found of resource_type
+        which has an identifier matching the provided identifier,
+        else None
+    """
+
+    query = f"""
+            SELECT id
+            FROM {resource_type}
+            WHERE resource->'identifier'->0->>'value' = '{identifier}'
+            LIMIT 1;
+            """
+
+    results = run(query, "fhirbase")
+    if len(results) > 0:
+        return results[0][0]
+    else:
+        return None
+
+
+fhir_ids = {}
+
+
+def find_fhir_resource(resource_type, identifier):
+    """
+    Return the first FHIR instance of some resource_type where the
+    identifier matches some identifier, if any is found.
+
+    This is based on caching results in RAM to limit sql queries and
+    preserve efficiency, note that it could cause a problem if the
+    cached registries grow too big.
+
+    args:
+        resource_type (str): name of the Fhir resource to search for
+        identifier (str): the provided id which could be an identifier of
+            some instance of the resource_type
+
+    return:
+        the fhir id of the instance is there is one found of resource_type
+        which has an identifier matching the provided identifier,
+        else None
+    """
+
+    if resource_type not in fhir_ids:
+        query = f"""
+                SELECT id, resource->'identifier'->0->>'value'
+                FROM {resource_type};
+                """
+
+        results = run(query, "fhirbase")
+        bindings = {}
+        for fhir_id, provided_id in results:
+            bindings[provided_id] = fhir_id
+
+        fhir_ids[resource_type] = bindings
+
+    try:
+        return fhir_ids[resource_type][identifier]
+    except KeyError:
+        return None
