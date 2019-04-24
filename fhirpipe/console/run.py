@@ -6,7 +6,7 @@ import argparse
 import fhirpipe
 
 # TODO fetch names somewhere
-LIST_RESOURCES = ["Patient", "Practitioner"]
+LIST_RESOURCES = ["Encounter", "MedicationRequest", "Patient", "Practitioner", "Procedure"]
 
 
 def parse_args():
