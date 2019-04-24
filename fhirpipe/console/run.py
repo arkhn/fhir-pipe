@@ -94,7 +94,7 @@ def run():
     # Build a fhir object for each resource instance
     fhir_objects = []
     for i, row in enumerate(rows):
-        if i % 3000 == 0:
+        if i % 1000 == 0:
             progression = round(i / len(rows) * 100, 2)
             print("Progress... {} %".format(progression))
         row = list(row)
@@ -105,6 +105,7 @@ def run():
         # print(json.dumps(tree, indent=2, ensure_ascii=False))
 
     # Save instances in fhirbase
+    print("Saving in fhirbase...")
     fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
 
     print(round((time.time() - start_time), 2), "seconds")
@@ -168,6 +169,7 @@ def batch_run():
             fhir_objects.append(fhir_object)
 
         # Save instances in fhirbase
+        print("Saving in fhirbase...")
         fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
 
         # Log offset to restart in case of a crash
