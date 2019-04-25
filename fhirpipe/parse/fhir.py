@@ -1,6 +1,8 @@
+import re
 import random
 
 from fhirpipe import scripts
+from fhirpipe import load
 
 
 def _is_empty(value):
@@ -72,8 +74,8 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):
             values = "".join(values)
 
         fhir_obj[fhir_spec["name"]] = values
-    else:  # else iterate recursively based on 3 cases
-        # 1. The object should be a list, so we parse a list
+    else:  # else iterate recursively based on 4 cases
+        # 1. The object is a list, so we parse a list
         # and insert it
         if fhir_spec["type"].startswith("list"):
             fhir_obj_list = list()
@@ -108,6 +110,10 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):
             fhir_obj[fhir_spec["name"]] = dict()
             for fhir_spec_attr in fhir_spec["attributes"]:
                 dfs_create_fhir_object(fhir_obj[fhir_spec["name"]], fhir_spec_attr, row)
+
+            # If the object is a Reference, to we give it to bind_reference
+            if fhir_spec["type"].startswith("Reference"):
+                bind_reference(fhir_obj[fhir_spec["name"]], fhir_spec)
 
 
 def clean_fhir(fhir_object):
@@ -146,3 +152,41 @@ def clean_fhir(fhir_object):
             return fhir_object, 0
         else:
             return fhir_object, 1
+
+
+def bind_reference(fhir_object, fhir_spec):
+    """
+    Analyse a reference and replace the provided identifier
+    with official FHIR uri if the resource reference exists.
+
+    args:
+        fhir_object: the fhir object to parse
+
+    return:
+        a fhir_object where valid references are now FHIR uris
+    """
+
+    # First we check that the reference has been provided
+    if fhir_object and fhir_object['identifier']['value']:
+        identifier = fhir_object['identifier']['value']
+
+        # Collect all the resource_types which could be referenced
+        try:
+            resource_types = re.search('\((.*)\)', fhir_spec["type"]).group(1).split('|')
+        except AttributeError:
+            raise ReferenceError(f"No FHIR Resource type provided for the reference {fhir_spec['name']}")
+
+        # Search for a fhir instance among the listed resources and exit when one is found
+        fhir_uri = None
+        for resource_type in resource_types:
+            fhir_uri = load.sql.find_fhir_resource(resource_type, identifier)
+            if fhir_uri is not None:
+                break
+
+        # If an instance was found, replace the provided identifier with FHIR id found
+        if fhir_uri is not None:
+            fhir_object['identifier']['value'] = fhir_uri
+
+
+
+

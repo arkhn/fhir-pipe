@@ -10,9 +10,11 @@ from fhirpipe.config import Config
 def save_in_fhirbase(instances):
     """
     Save instances of FHIR resources in the fhirbase
-    :param instances: list of instances
+
+    args:
+        instances (list): list of instances
     """
-    config = Config("fhirbase")
+    config = Config("sql").fhirbase.kwargs
     with psycopg2.connect(
         dbname=config.database, user=config.user, host=config.host, port=config.port, password=config.password
     ) as connection:
@@ -26,8 +28,13 @@ def get_connection(connection_type: str = None):
     Return a sql connexion depending on the configuration provided in config.yml
     (see root of the project)
     Note: should be used in a context environment (with get_connection(c) as ...)
-    :param connection_type: a string like "postgre", "oracle". See your config file
-    :return: a sql connexion
+
+    args:
+        connection_type (str): a string like "postgre", "oracle". See your config
+            file for available values
+
+    return:
+        a sql connexion
     """
     sql_config = Config("sql").to_dict()
     if connection_type is None:
@@ -49,12 +56,16 @@ def get_connection(connection_type: str = None):
 def batch_run(query, batch_size, offset=0, connection=None):
     """
     Run a query batch per batch, when the query is too big
-    :param query: the query to batch
-    :param batch_size: the size of the batch
-    :param offset: initial offset (used when restarting a job which stopped
-    in the middle)
-    :param connection: a connection if any already active (to avoid opening too many)
-    :return: an iterator which computes and returns the results batch per batch
+
+    args:
+        query (str): the query to batch
+        batch_size (int): the size of the batch
+        offset (int): initial offset (used when restarting a job which stopped
+            in the middle)
+        connection (str): the connection type / database to use
+
+    return:
+        an iterator which computes and returns the results batch per batch
     """
     call_next_batch = True
     batch_idx = 0
@@ -92,8 +103,14 @@ def batch_run(query, batch_size, offset=0, connection=None):
 
 def run(query, connection: str = None):
     """
-    Run a sql query after opening a sql connexion
-    :param connection: type of connection: "postgre", "oracle" (see config.yml)
+    Run a sql query after opening a sql connection
+
+    args:
+        query (str): a sql query to run
+        connection (str): the connection type / database to use
+
+    return:
+        the result of the sql query run on the specified connection
     """
     with get_connection(connection) as connection:
         with connection.cursor() as cursor:
@@ -118,6 +135,7 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
     """
     Apply the OneToMany joins to have a single result with a list in it from
     a list of "flat" results.
+
     args:
         rows (list<str>): all the results returned from a sql query
         squash_rule (tuple<list>): which columns should serve as identifier to merge
@@ -225,3 +243,75 @@ def leave(l, indices):
         if i not in indices:
             took.append(e)
     return took
+
+
+def find_single_fhir_resource(resource_type, identifier):
+    """
+    This is the slow version of find_fhir_resource, where we do a
+    sql query per reference found, which is highly inefficient
+
+    args:
+        resource_type (str): name of the Fhir resource to search for
+        identifier (str): the provided id which could be an identifier of
+            some instance of the resource_type
+
+    return:
+        the fhir id of the instance is there is one found of resource_type
+        which has an identifier matching the provided identifier,
+        else None
+    """
+
+    query = f"""
+            SELECT id
+            FROM {resource_type}
+            WHERE resource->'identifier'->0->>'value' = '{identifier}'
+            LIMIT 1;
+            """
+
+    results = run(query, "fhirbase")
+    if len(results) > 0:
+        return results[0][0]
+    else:
+        return None
+
+
+fhir_ids = {}
+
+
+def find_fhir_resource(resource_type, identifier):
+    """
+    Return the first FHIR instance of some resource_type where the
+    identifier matches some identifier, if any is found.
+
+    This is based on caching results in RAM to limit sql queries and
+    preserve efficiency, note that it could cause a problem if the
+    cached registries grow too big.
+
+    args:
+        resource_type (str): name of the Fhir resource to search for
+        identifier (str): the provided id which could be an identifier of
+            some instance of the resource_type
+
+    return:
+        the fhir id of the instance is there is one found of resource_type
+        which has an identifier matching the provided identifier,
+        else None
+    """
+
+    if resource_type not in fhir_ids:
+        query = f"""
+                SELECT id, resource->'identifier'->0->>'value'
+                FROM {resource_type};
+                """
+
+        results = run(query, "fhirbase")
+        bindings = {}
+        for fhir_id, provided_id in results:
+            bindings[provided_id] = fhir_id
+
+        fhir_ids[resource_type] = bindings
+
+    try:
+        return fhir_ids[resource_type][identifier]
+    except KeyError:
+        return None
