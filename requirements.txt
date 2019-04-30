@@ -15,3 +15,4 @@ wincertstore==0.2
 PyYAML==5.1
 fhirbase
 requests
+pytest-cov
