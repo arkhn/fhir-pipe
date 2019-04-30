@@ -2,11 +2,16 @@ dist: xenial
 language: python
 python:
   - "3.7"
+
 # command to install dependencies
 install:
   - pip install --upgrade pip
   - pip install -r requirements.txt
+
 # command to run tests
 script:
-- cp fhirpipe/config_demo.yml fhirpipe/config.yml
-- pytest test/unit
+ - cp fhirpipe/config_demo.yml fhirpipe/config.yml
+ - pytest test/unit --cov-report term --cov=fhirpipe
+
+after_success:
+ - bash < (curl -s https://codecov.io/bash)

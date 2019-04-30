@@ -188,5 +188,56 @@ def bind_reference(fhir_object, fhir_spec):
             fhir_object['identifier']['value'] = fhir_uri
 
 
+def get_identifier_table(resource_structure):
+    """
+    Analyse a resource mapping rules and return the mapping rule for
+    the identifier
+
+    args:
+        resource_structure: the object containing all the mapping rules
+
+    Return:
+        The table referenced by the identifier mapping rule
+    """
+
+    targets = []
+    for attribute in resource_structure['attributes']:
+        if attribute['name'] == 'identifier':
+            search_for_input_columns(attribute, targets)
+
+    if len(targets) > 1:
+        raise AttributeError("Too many identifiers: can't choose the right main table for building SQL request")
+    elif len(targets) < 1:
+        raise AttributeError("There is no mapping rule for the identifier of this resource")
+
+    return targets[0]
+
+
+def search_for_input_columns(obj, targets):
+    """
+    Inspect a mapping object of an identifier and list all tables used
+    in mapping rules
+
+    args:
+        obj: mapping object of an identifier
+        targets: a list to append the tables found
+
+    returns:
+        None as the results are appended to the targets list
+    """
+    if isinstance(obj, dict):
+        if 'inputColumns' in obj and len(obj['inputColumns']) > 0:
+            input_cols = obj['inputColumns']
+            for input_col in input_cols:
+                targets.append(input_col['table'])
+        elif 'attributes' in obj:
+            search_for_input_columns(obj['attributes'], targets)
+    elif isinstance(obj, list):
+        for o in obj:
+            search_for_input_columns(o, targets)
+
+
+
+
 
 

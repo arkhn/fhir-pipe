@@ -221,7 +221,7 @@ def build_squash_rule(node, table_col_idx):
     # We refer the col indices of the table and all tables joined by a OneToOne
     unifying_col_idx = table_col_idx[node.name]
     for join_node in node.one_to_one:
-        print(node.name, "---", join_node.name)
+        # print(node.name, "---", join_node.name)
         join_cols, join_child_rules = build_squash_rule(join_node, table_col_idx)
         unifying_col_idx += join_cols
         if len(join_child_rules) > 0:
@@ -230,6 +230,6 @@ def build_squash_rule(node, table_col_idx):
     # Now parse the col indices for each table joined with a OneToMany
     child_rules = []
     for join_node in node.one_to_many:
-        print(node.name, "-<=", join_node.name)
+        # print(node.name, "-<=", join_node.name)
         child_rules.append(build_squash_rule(join_node, table_col_idx))
     return [unifying_col_idx, child_rules]

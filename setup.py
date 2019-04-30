@@ -36,7 +36,9 @@ setup(
     entry_points={
         'console_scripts': [
             'fhirpipe-run=fhirpipe.console.run:run',
-            'fhirpipe-batchrun=fhirpipe.console.run:batch_run',
+            'fhirpipe-batch-run=fhirpipe.console.run:batch_run',
+            'fhirpipe-run-resource=fhirpipe.console.run_resource:run_resource',
+            'fhirpipe-batch-run-resource=fhirpipe.console.run_resource:batch_run_resource',
         ],
     },
 )
