@@ -14,4 +14,4 @@ script:
  - pytest test/unit --cov-report term --cov=fhirpipe
 
 after_success:
- - codecov
+ - bash < (curl -s https://codecov.io/bash)
