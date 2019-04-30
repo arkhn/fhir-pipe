@@ -3,7 +3,7 @@
 
 To standardize data with the pipe, you need some data! Let's set up a database filled with the MIMIC III Clinical Database Demo.
 
-## Configure MIMIC demo dataset credentials
+## Configuration & Setup
 
 First, register [on the Physionet website](https://mimic.physionet.org/gettingstarted/demo/) on the official website to get access to the demo data, it takes 30 seconds and you will get a username and a password. Access [this page](https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/) to sign the agreement needed to download the data.
 
@@ -20,32 +20,38 @@ In the fhir-pipe repo, copy `config_demo.yml` (from the `fhirpipe` directory) in
 cp config_demo.yml config.yml
 ```
 
-## Build the containers
+## Launch the pipe
 
 
 ```
 docker-compose up --build arkhn-pipe-mimic
 ```
 
-Then, get access to he pipe container:
+Then, connect to the pipe container:
 
 ```
 docker exec -ti arkhn-pipe-mimic /bin/bash
 ```
 
-And run
+And to run to whole pipe
 
 ```
-fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --use-graphql-file=True
+fhirpipe-run --project=Mimic
 ```
 
-> You can remove `--use-graphql-file=True` to fetch the mapping rules from the [pyrog](https://github.com/arkhn/pyrog) api
+> You can add `--use-graphql-file=True` if you prefer to fetch the  mapping rules from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api
+
+You can also run the pipe on a single FHIR resource:
+
+```
+fhirpipe-run-resource --project=Mimic --resource=Patient --use-graphql-file=True
+```
 
 Et voilà!
 
 ---
 
-## Checks and more
+## Miscellaneous
 
 #### Check the fhirbase
 
