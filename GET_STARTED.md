@@ -1,45 +1,82 @@
 
 # Get started!
 
-To standardize data with the pipe, you need some data! Let's set up a database filled with the MIMIC III Clinical Database Demo.
+Learn how to standardize data using the pipe!
 
-## Configuration & Setup
+## 1. Configuration
 
-First, register [on the Physionet website](https://mimic.physionet.org/gettingstarted/demo/) on the official website to get access to the demo data, it takes 30 seconds and you will get a username and a password. Access [this page](https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/) to sign the agreement needed to download the data.
+But first, you need some data! We will use the MIMIC III Clinical Database Demo, for which you need to get credentials. It's quite straightforward: register [on the Physionet website](https://mimic.physionet.org/gettingstarted/demo/) to get access to the demo data, it takes 30 seconds and you will get a username and a password. Then, access [this page](https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/) to sign the agreement needed to download the data, _you don't need to download the data yourself_.
 
-Then copy `.env.example` into `.env` and edit this last to configure it with your physionet credentials.
+Then, copy `.env.example` into `.env` and edit the file last to add your physionet credentials.
 
 ```
 cp .env.example .env
+vi .env
 source .env
 ```
 
-In the fhir-pipe repo, copy `config_demo.yml` (from the `fhirpipe` directory) into `config.yml` and put there your credentials, check that the ports are valid.
+## 2.A Docker Setup
+
+You can use Docker to start quickly playing with demos. Alternatively, the **2.B Manual Setup** section explains how to install the pipeline step by step.
+
+In the `fhirpipe` directory, copy `config_docker.yml` into `config.yml`.
 
 ```
-cp config_demo.yml config.yml
+cp fhirpipe/config_docker.yml fhirpipe/config.yml
 ```
 
-## Launch the pipe
-
-
+Start [or install](https://docs.docker.com/install/#supported-platforms) Docker, and then build the container.
 ```
 docker-compose up --build arkhn-pipe-mimic
 ```
 
-Then, connect to the pipe container:
+Then, switch to another tab and connect to the pipeline container:
 
 ```
 docker exec -ti arkhn-pipe-mimic /bin/bash
 ```
 
+You can now directly go to **3. Launch the pipe**.
+
+## 2.B Manual Setup
+
+If you're not experienced with the project, we recommend that you first go through the **2.A Docker Setup**. We still use Docker to get the MIMIC database set up along with the database where the FHIR data will be stored, but the ETL will be run from your local computer.
+
+Open `docker-compose.yml` to check that the local ports used are not used by your current apps.
+```
+vi docker-compose.yml 
+```
+
+Run the two database containers we depend on:
+```
+TODO
+```
+
+In the `fhirpipe` directory, copy `config_local.yml` (from the `fhirpipe` directory) into `config.yml` and check that the container ports match with those specified in `docker-compose.yml`
+
+```
+cd fhirpipe
+cp config_local.yml config.yml
+vi config.yml
+```
+
+Run the python setup to use our commands in the terminal:
+
+```
+cd  ..
+python setup.py install
+```
+
+## 3. Launch the pipe
+
+
 And to run to whole pipe
 
 ```
-fhirpipe-run --project=Mimic
+fhirpipe-run --project=Mimic --use-graphql-file=True
 ```
 
-> You can add `--use-graphql-file=True` if you prefer to fetch the  mapping rules from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api
+> You can remove `--use-graphql-file=True` to fetch the mapping rules directly from the [pyrog](https://github.com/arkhn/pyrog) api instead of using a static file. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask access to GraphQL api) to get one.
 
 You can also run the pipe on a single FHIR resource:
 
@@ -72,6 +109,14 @@ $ docker exec -ti fhir-pipe-mimic-db psql -d mimic -U mimicuser -c 'SELECT count
 -------
    100
 (1 row)
+```
+
+#### Install packages on the container
+
+Example for `nano`:
+```
+apt update
+apt install nano
 ```
 
 #### Reload the mimic container
