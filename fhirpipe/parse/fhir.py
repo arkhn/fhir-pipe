@@ -188,13 +188,15 @@ def bind_reference(fhir_object, fhir_spec):
             fhir_object['identifier']['value'] = fhir_uri
 
 
-def get_identifier_table(resource_structure):
+def get_identifier_table(resource_structure, extended_get=False):
     """
     Analyse a resource mapping rules and return the mapping rule for
     the identifier
 
     args:
         resource_structure: the object containing all the mapping rules
+        extended_get (bool): search for the identifier table not only in
+            identifier attributes (default: False)
 
     Return:
         The table referenced by the identifier mapping rule
@@ -202,15 +204,18 @@ def get_identifier_table(resource_structure):
 
     targets = []
     for attribute in resource_structure['attributes']:
-        if attribute['name'] == 'identifier':
+        if attribute['name'] == 'identifier' or extended_get:
             search_for_input_columns(attribute, targets)
 
-    if len(targets) > 1:
-        raise AttributeError("Too many identifiers: can't choose the right main table for building SQL request")
-    elif len(targets) < 1:
-        raise AttributeError("There is no mapping rule for the identifier of this resource")
-
-    return targets[0]
+    if len(targets) < 1:
+        if extended_get:
+            raise AttributeError("There is no mapping rule for the identifier of this resource")
+        else:
+            return get_identifier_table(resource_structure, extended_get=True)
+    else:
+        if len(targets) > 1:
+            print("Warning: Too many choices for the right main table for building SQL request, taking the first one.")
+        return targets[0]
 
 
 def search_for_input_columns(obj, targets):
