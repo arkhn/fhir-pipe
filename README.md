@@ -6,15 +6,15 @@
 [![Build Status](https://img.shields.io/travis/arkhn/fhir-pipe.svg?style=for-the-badge&)](https://travis-ci.com/arkhn/fhir-pipe)
 
 
-Fhir-pipe helps extracting data from SQL databases and converting it to the standardized health format [FHIR](https://www.hl7.org/fhir/), using given mapping rules provided by the [pyrog project](https://github.com/arkhn/pyrog).
+Fhir-Pipe is an ETL tool backed by IA solutions, which makes standardisation of health data easy. It extracts and converts data from SQL databases into the standardized health format [FHIR](https://www.hl7.org/fhir/), using mapping rules build from the [pyrog interface](https://github.com/arkhn/pyrog).
 
 ## Mapping rules
 
-The mapping rules are provided through the **pyrog** graphql API. To each FHIR Resource (e.g. `Patient`) corresponds a rule file, and each attribute of the ressource (for example `patient.name.firstname`) has a mapping instruction which details which `DATABASE/TABLE/COLUMN` to select and which processing scripts to apply, as the data might need to be cleaned. A non-exhaustive list of scripts is available in [arkhn/scripts](https://github.com/arkhn/cleaning-scripts).
+The mapping rules are provided through the [pyrog](https://github.com/arkhn/pyrog) graphql API. To each FHIR Resource (e.g. `Patient`) corresponds a set of rules, and each attribute of the ressource (like `patient.name.firstname`) has a mapping instruction which details which `DATABASE/TABLE/COLUMN` to select and which processing scripts to apply, as the data might need to be cleaned. The list of generic and health care specific scripts is available at [arkhn/scripts](https://github.com/arkhn/cleaning-scripts).
 
-## Goal of `fhirpipe`
+## Goal of `fhir-pipe`
 
-fhirpipe is an ETL which is agnostic of the type of input SQL databases. It should be able to parse mapping rules, connect to arbitrary SQL databases, and populate processed FHIR objects using these databases and the processing rules given.
+Fhir-Pipe is an ETL which is able to parse complex mapping rules which may describe intricated relations between tables. It is agnostic of the type of SQL databases used as input for its extraction, and uses Spark to perform highly scalable processing of data. The FHIR objects created are stored in a distributed file system to meet strict performance requirements.
 
 ## Get started
 
