@@ -3,9 +3,12 @@
 
 Learn how to standardize data using the pipe!
 
-## 1. Configuration
+## 1 Configuration
 
-But first, you need some data! We will use the MIMIC III Clinical Database Demo, for which you need to get credentials. It's quite straightforward: register [on the Physionet website](https://mimic.physionet.org/gettingstarted/demo/) to get access to the demo data, it takes 30 seconds and you will get a username and a password. Then, access [this page](https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/) to sign the agreement needed to download the data, _you don't need to download the data yourself_.
+But first, you need some data! We will use the MIMIC III Clinical Database Demo, for which you need to get credentials. It's quite straightforward: register [on the Physionet website](https://mimic.physionet.org/gettingstarted/demo/) to get access to the demo data, it takes 30 seconds and you will get a username and a password. Then, access [this page](https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/) to sign the agreement needed to download the data (_you don't need to download the data yourself_) or click on this button:
+
+[![Physionet Agreement](https://img.shields.io/badge/Physionet-Sign%20Agreement-green.svg?style=for-the-badge)](https://physionet.org/pnw/a/self-register?project=/works/MIMICIIIClinicalDatabaseDemo/index.shtml)
+
 
 Then, copy `.env.example` into `.env` and edit the file last to add your physionet credentials.
 
@@ -15,9 +18,9 @@ vi .env
 source .env
 ```
 
-## 2.A Docker Setup
+## 2-A Docker Setup
 
-You can use Docker to start quickly playing with demos. Alternatively, the **2.B Manual Setup** section explains how to install the pipeline step by step.
+You can use Docker to start quickly playing with demos. Alternatively, the **[2.B Manual Setup](#2-b-manual-setup)** section explains how to install the pipeline step by step.
 
 In the `fhirpipe` directory, copy `config_docker.yml` into `config.yml`.
 
@@ -36,11 +39,11 @@ Then, switch to another tab and connect to the pipeline container:
 docker exec -ti arkhn-pipe-mimic /bin/bash
 ```
 
-You can now directly go to **3. Launch the pipe**.
+You can now directly go to **[3 Launch the pipe](#3-launch-the-pipe)**.
 
-## 2.B Manual Setup
+## 2-B Manual Setup
 
-If you're not experienced with the project, we recommend that you first go through the **2.A Docker Setup**. We still use Docker to get the MIMIC database set up along with the database where the FHIR data will be stored, but the ETL will be run from your local computer.
+If you're not experienced with the project, we recommend that you first go through the **[2.A Docker Setup](#2-a-docker-setup)**. We still use Docker to get the MIMIC database set up along with the database where the FHIR data will be stored, but the ETL will be run from your local computer.
 
 Open `docker-compose.yml` to check that the local ports used are not used by your current apps.
 ```
@@ -103,9 +106,9 @@ psql -h 0.0.0.0 -p 5433 -U postgres -d fhirbase
 fhirbase=# select count(*) from patient;
 ```
 
-#### Check for FHIR data in the mimic container
+#### Check for data in the mimic container
 
-To check if the data has been correctly loaded in the mimic container, you can execute this in a new terminal:
+To check if the data was correctly loaded in the mimic container, you can execute this in a new terminal:
 
 ```
 $ docker exec -ti fhir-pipe-mimic-db psql -d mimic -U mimicuser -c 'SELECT count(subject_id) FROM patients'
