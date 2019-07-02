@@ -47,9 +47,10 @@ Open `docker-compose.yml` to check that the local ports used are not used by you
 vi docker-compose.yml 
 ```
 
-Run the two database containers we depend on:
+Run in specific tabs the two database containers we depend on:
 ```
-TODO
+docker-compose up --build mimic-db
+docker-compose up --build fhirbase
 ```
 
 In the `fhirpipe` directory, copy `config_local.yml` (from the `fhirpipe` directory) into `config.yml` and check that the container ports match with those specified in `docker-compose.yml`
@@ -64,6 +65,9 @@ Run the python setup to use our commands in the terminal:
 
 ```
 cd  ..
+# you might need to install packages manually:
+pip install -r requirements.txt
+
 python setup.py install
 ```
 
@@ -92,14 +96,14 @@ Et voilà!
 
 #### Check the fhirbase
 
-You can check fhirbase to see if the data was correctly loaded:
+You can check fhirbase to see if the data was correctly loaded (_make sure the port is correct_):
 
 ```
 psql -h 0.0.0.0 -p 5433 -U postgres -d fhirbase
 fhirbase=# select count(*) from patient;
 ```
 
-#### Check for data in mimic container
+#### Check for FHIR data in the mimic container
 
 To check if the data has been correctly loaded in the mimic container, you can execute this in a new terminal:
 
@@ -112,6 +116,8 @@ $ docker exec -ti fhir-pipe-mimic-db psql -d mimic -U mimicuser -c 'SELECT count
 ```
 
 #### Install packages on the container
+
+You might want to change stuff directly on the container.
 
 Example for `nano`:
 ```
@@ -169,10 +175,10 @@ pip install -e .
 
  Make sure you already have the docker containers with mimic and fhirbase running.
 
-Copy `config_demo.yml` (from the `fhirpipe` directory) into `config.yml` and put there your credentials. (Don't forget to change the postgres ports if needed).
+Copy `config_local.yml` (from the `fhirpipe` directory) into `config.yml` and put there your credentials. (Don't forget to change the postgres ports if needed).
 
 ```
-cp config_demo.yml config.yml
+cp config_local.yml config.yml
 ```
 
 Finish the install and run the tests to check all works fine
