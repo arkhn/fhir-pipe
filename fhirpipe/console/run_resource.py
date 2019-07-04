@@ -28,7 +28,7 @@ def run_resource(from_console=True, args=None):
     resource = args.resource
 
     if args.use_graphql_file:
-        path = "../../test/integration/fixtures/graphql_mimic_patient.json"
+        path = "../../test/integration/fixtures/graphql_mimic.json"
     else:
         path = None
 
