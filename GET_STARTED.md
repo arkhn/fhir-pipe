@@ -83,7 +83,7 @@ And to run to whole pipe
 fhirpipe-run --project=Mimic --use-graphql-file=True
 ```
 
-> You can remove `--use-graphql-file=True` to fetch the mapping rules directly from the [pyrog](https://github.com/arkhn/pyrog) api instead of using a static file. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask access to GraphQL api) to get one.
+> You can remove `--use-graphql-file=True` to fetch the mapping rules directly from the [pyrog](https://github.com/arkhn/pyrog) api instead of using a static file. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
 
 You can also run the pipe on a single FHIR resource:
 
