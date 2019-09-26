@@ -26,7 +26,8 @@ available_resources_query = """
 query($sourceId: ID!) {
     availableResources(sourceId: $sourceId) {
         id
-        name
+        fhirType
+        label
     }
 }
 """
@@ -183,16 +184,16 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
             available_resources_query, variables={"sourceId": source_id}
         )
         assert resource_name in list(
-            map(lambda x: x["name"], available_resources["data"]["availableResources"])
+            map(lambda x: x["fhirType"], available_resources["data"]["availableResources"])
         ), f"Resource {resource_name} doesn't exist for Source {source_name}"
 
         # Deduce Resource id from Resource name
         resource_id = list(
             filter(
-                lambda x: x["name"] == resource_name,
+                lambda x: x["fhirType"] == resource_name,
                 available_resources["data"]["availableResources"],
             )
-        )[0]["id"]
+        )[0]["id"]  # TODO: multiple resources can exists for a given fhirType
 
         # Get Resource mapping
         resource = run_graphql_query(
