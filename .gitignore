@@ -1,4 +1,3 @@
-config.yml
 .DS_Store
 data/*
 .idea/*
@@ -29,6 +28,8 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+bin/
+include/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

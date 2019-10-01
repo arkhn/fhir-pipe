@@ -5,8 +5,7 @@ services:
       context: .
     container_name: fhir-pipe
     image: arkhn/fhir-pipe:latest
-    command: fhirpipe-run --config=/app/fhirpipe/config_docker.yml --project=Mimic
-    # command: tail -F anything
+    command: fhirpipe-run --project=Mimic
     depends_on:
       - fhirbase
 
