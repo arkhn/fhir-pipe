@@ -5,6 +5,7 @@
 !.dockerignore
 !Dockerfile
 !fhirpipe/
+!test/
 !setup.py
 !requirements.txt
 !config_docker.yml
