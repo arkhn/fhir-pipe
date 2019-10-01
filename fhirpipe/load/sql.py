@@ -15,11 +15,11 @@ def save_in_fhirbase(instances):
         instances (list): list of instances
     """
     with psycopg2.connect(
-        dbname=fhirpipe.config.config.sql.fhirbase.kwargs.database,
-        user=fhirpipe.config.config.sql.fhirbase.kwargs.user,
-        host=fhirpipe.config.config.sql.fhirbase.kwargs.host,
-        port=fhirpipe.config.config.sql.fhirbase.kwargs.port,
-        password=fhirpipe.config.config.sql.fhirbase.kwargs.password
+        dbname=fhirpipe.global_config.sql.fhirbase.kwargs.database,
+        user=fhirpipe.global_config.sql.fhirbase.kwargs.user,
+        host=fhirpipe.global_config.sql.fhirbase.kwargs.host,
+        port=fhirpipe.global_config.sql.fhirbase.kwargs.port,
+        password=fhirpipe.global_config.sql.fhirbase.kwargs.password
     ) as connection:
         fb = fhirbase.FHIRBase(connection)
         for instance in instances:
@@ -39,7 +39,7 @@ def get_connection(connection_type: str = None):
     return:
         a sql connexion
     """
-    sql_config = fhirpipe.config.config.sql.to_dict()
+    sql_config = fhirpipe.global_config.sql.to_dict()
     if connection_type is None:
         connection_type = sql_config["default"]
     connection = sql_config[connection_type]
@@ -85,7 +85,7 @@ def batch_run(query, batch_size, offset=0, connection=None):
         )
 
     # Adapt the offset and limit depending of oracle or postgre db
-    database_type = fhirpipe.config.config.sql.default
+    database_type = fhirpipe.global_config.sql.default
     if database_type == "oracle":
         offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
     elif database_type == "postgre":
