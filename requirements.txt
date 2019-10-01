@@ -9,7 +9,7 @@ ipaddr==2.2.0
 lxml==4.3.2
 mock==2.0.0
 ordereddict==1.1
-psycopg2==2.7.7
+psycopg2-binary==2.8.3
 simplejson==3.16.0
 wincertstore==0.2
 PyYAML==5.1

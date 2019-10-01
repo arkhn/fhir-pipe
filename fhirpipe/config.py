@@ -14,7 +14,7 @@ class Config:
         self._config = {}
         config_path = path
         if not os.path.isabs(config_path):
-            config_path = os.path.join(os.path.dirname(__file__), config_path)
+            config_path = os.path.join(os.getcwd(), config_path)
         with open(config_path) as config_file:
             config = yaml.safe_load(config_file)
             if key is not None:

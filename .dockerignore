@@ -1,0 +1,11 @@
+# ignore everything
+**/*
+
+# except
+!.dockerignore
+!Dockerfile
+!fhirpipe/
+!setup.py
+!requirements.txt
+!config_docker.yml
+!README.md
