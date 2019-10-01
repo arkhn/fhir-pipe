@@ -2,15 +2,14 @@ import json
 import os
 import requests
 
-from fhirpipe.config import Config
+import fhirpipe
 
 
-config = Config("graphql")
-SERVER = config.server
-HEADERS = {
-    "content-type": "application/json",
-    "Authorization": f"Bearer {config.token}",
-}
+def get_headers():
+    return {
+        "content-type": "application/json",
+        "Authorization": f"Bearer {fhirpipe.global_config.graphql.token}",
+    }
 
 
 source_info_query = """
@@ -126,9 +125,10 @@ def run_graphql_query(graphql_query, variables=None):
     and returns a json parsed response.
     """
     request = requests.post(
-        SERVER, headers=HEADERS, json={"query": graphql_query, "variables": variables}
+        fhirpipe.global_config.graphql.server, headers=get_headers(), json={
+            "query": graphql_query, "variables": variables}
     )
-
+    print(request.json())
     if request.status_code == 200:
         return request.json()
     else:
