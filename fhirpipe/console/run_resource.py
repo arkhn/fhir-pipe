@@ -1,13 +1,13 @@
 import json
 import time
 import random
-import argparse
 
 import fhirpipe
+from fhirpipe.config import Config
 from fhirpipe.console import parse_args
 
 
-def run_resource(from_console=True, args=None):
+def run_resource(args=None):
     """
     Perform in a single query the processing of a resource and the insertion
     of the fhir data created into the fhir api.
@@ -17,24 +17,20 @@ def run_resource(from_console=True, args=None):
         Some arguments must be provided to set the run task
     """
     # Parse arguments if needed
-    if from_console:
-        args = parse_args("project", "resource", "main-table", "use-graphql-file")
+    if not args:
+        args = parse_args()
+        fhirpipe.set_global_config(Config(path=args.config))
 
     # Launch timer
     start_time = time.time()
-
-    # Define config variables
-    project = args.project
-    resource = args.resource
 
     if args.use_graphql_file:
         path = "../../test/integration/fixtures/graphql_mimic.json"
     else:
         path = None
-
     # Load mapping rules
     resource_structure = fhirpipe.load.graphql.get_fhir_resource(
-        project, resource, from_file=path
+        args.project, args.resource, from_file=path
     )
 
     # Get main table
@@ -42,7 +38,7 @@ def run_resource(from_console=True, args=None):
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
-        project, resource_structure, info=main_table
+        args.project, resource_structure, info=main_table
     )
 
     # Run it
@@ -62,7 +58,7 @@ def run_resource(from_console=True, args=None):
             print("Progress... {} %".format(progression))
         row = list(row)
         fhir_object = fhirpipe.parse.fhir.create_fhir_object(
-            row, resource, resource_structure
+            row, args.resource, resource_structure
         )
         fhir_objects.append(fhir_object)
         # print(json.dumps(tree, indent=2, ensure_ascii=False))
@@ -84,9 +80,8 @@ def batch_run_resource():
         Some arguments must be provided to set the run task
     """
     # Parse arguments
-    args = parse_args(
-        "project", "resource", "main-table", "batch-size", "use-graphql-file"
-    )
+    args = parse_args()
+    fhirpipe.set_global_config(Config(path=args.config))
 
     # Launch timer
     start_time = time.time()
@@ -97,7 +92,8 @@ def batch_run_resource():
     batch_size = args.batch_size
 
     # Load data
-    resource_structure = fhirpipe.graphql.get_fhir_resource(project, resource)
+    resource_structure = fhirpipe.graphql.get_fhir_resource(project,
+                                                            resource)
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(

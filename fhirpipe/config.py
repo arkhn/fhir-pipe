@@ -1,18 +1,21 @@
 import os
 import yaml
 
+DEFAULT_CONFIG_PATH = "config.yml"
+
 
 class Config:
     """
     Config is used to load the config of config.yml conveniently in an object
     """
 
-    def __init__(self, key=None):
+    def __init__(self, path=DEFAULT_CONFIG_PATH, key=None):
         self._dict = {}
         self._config = {}
-        path = os.path.dirname(__file__)
-        filename = "config.yml"
-        with open(os.path.join(path, filename)) as config_file:
+        config_path = path
+        if not os.path.isabs(config_path):
+            config_path = os.path.join(os.path.dirname(__file__), config_path)
+        with open(config_path) as config_file:
             config = yaml.safe_load(config_file)
             if key is not None:
                 config = config[key]
