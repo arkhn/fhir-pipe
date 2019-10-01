@@ -10,6 +10,7 @@ WORKDIR /app
 
 # Copy the current directory contents into the container at /app
 COPY ./fhirpipe /app/fhirpipe
+COPY ./test /app/test
 COPY requirements.txt /app
 COPY config_docker.yml /app/config.yml
 COPY setup.py /app

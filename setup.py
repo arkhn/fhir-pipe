@@ -15,7 +15,9 @@ def read(fname):
 requirements = read("requirements.txt").split()
 
 data_files = [
-    'config.yml'
+    'config.yml',
+    'test/integration/fixtures/graphql_mimic.json',
+    'test/integration/fixtures/graphql_mimic_patient.json'
 ]
 
 setup(
