@@ -128,7 +128,6 @@ def run_graphql_query(graphql_query, variables=None):
         fhirpipe.global_config.graphql.server, headers=get_headers(), json={
             "query": graphql_query, "variables": variables}
     )
-    print(request.json())
     if request.status_code == 200:
         return request.json()
     else:

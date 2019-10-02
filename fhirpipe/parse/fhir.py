@@ -174,7 +174,8 @@ def bind_reference(fhir_object, fhir_spec):
         try:
             resource_types = re.search('\((.*)\)', fhir_spec["type"]).group(1).split('|')
         except AttributeError:
-            raise ReferenceError(f"No FHIR Resource type provided for the reference {fhir_spec['name']}")
+            raise ReferenceError(
+                f"No FHIR Resource type provided for the reference {fhir_spec['name']}")
 
         # Search for a fhir instance among the listed resources and exit when one is found
         fhir_uri = None
@@ -234,15 +235,10 @@ def search_for_input_columns(obj, targets):
         if 'inputColumns' in obj and len(obj['inputColumns']) > 0:
             input_cols = obj['inputColumns']
             for input_col in input_cols:
-                targets.append(input_col['table'])
+                if input_col['table']:
+                    targets.append(input_col['table'])
         elif 'attributes' in obj:
             search_for_input_columns(obj['attributes'], targets)
     elif isinstance(obj, list):
         for o in obj:
             search_for_input_columns(o, targets)
-
-
-
-
-
-

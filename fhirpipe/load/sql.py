@@ -3,6 +3,7 @@ import psycopg2
 import cx_Oracle
 import logging
 import fhirbase
+from tqdm import tqdm
 
 import fhirpipe
 
@@ -22,7 +23,7 @@ def save_in_fhirbase(instances):
         password=fhirpipe.global_config.sql.fhirbase.kwargs.password
     ) as connection:
         fb = fhirbase.FHIRBase(connection)
-        for instance in instances:
+        for instance in tqdm(instances):
             fb.create(instance)
 
 

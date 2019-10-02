@@ -44,7 +44,8 @@ def build_sql_query(project, resource, info=None):
             Don't forget to provide the owner if it applies"
         )
 
-    table_name = get_table_name(info.upper() + ".*")
+    table_name = get_table_name(info + ".*")
+    # table_name = get_table_name(info.upper() + ".*")
 
     # Get the info about the columns and joins to query
     cols, joins = dfs_find_sql_cols_joins(

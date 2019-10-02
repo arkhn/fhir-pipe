@@ -25,7 +25,7 @@ def run():
     # Parse arguments
     args = parse_args()
 
-    print(WELCOME_MSG)
+    print(WELCOME_MSG, flush=True)
 
     # Launch timer
     start_time = time.time()

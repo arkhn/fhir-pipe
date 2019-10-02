@@ -18,8 +18,8 @@ install:
 	)
 
 # == build ====================================================================
-build:
-	docker build --no-cache -t $(DOCKER_IMAGE):$(DOCKER_TAG) -f Dockerfile .
+build: Dockerfile
+	docker build -t $(DOCKER_IMAGE):$(DOCKER_TAG) -f Dockerfile .
 
 # == publish ====================================================================
 publish:
