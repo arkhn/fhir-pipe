@@ -171,25 +171,16 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
             f"Resource {resource_name} not found in the graphql json resource"
         )
     else:
-        # Get Source id from Source name
-        source = run_graphql_query(
-            source_info_query, variables={"sourceName": source_name}
-        )
-        source_id = source["data"]["sourceInfo"]["id"]
-
-        # Check that Resource exists for given Source
-        available_resources = run_graphql_query(
-            available_resources_query, variables={"sourceId": source_id}
-        )
+        available_resources = get_available_resources(source_name)
         assert resource_name in list(
-            map(lambda x: x["name"], available_resources["data"]["availableResources"])
+            map(lambda x: x["name"], available_resources)
         ), f"Resource {resource_name} doesn't exist for Source {source_name}"
 
         # Deduce Resource id from Resource name
         resource_id = list(
             filter(
                 lambda x: x["name"] == resource_name,
-                available_resources["data"]["availableResources"],
+                available_resources,
             )
         )[0]["id"]
 
@@ -199,3 +190,17 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
         )
 
         return resource["data"]["resource"]
+
+
+def get_available_resources(source_name):
+    # Get Source id from Source name
+    source = run_graphql_query(
+        source_info_query, variables={"sourceName": source_name}
+    )
+    source_id = source["data"]["sourceInfo"]["id"]
+
+    # Check that Resource exists for given Source
+    available_resources = run_graphql_query(
+        available_resources_query, variables={"sourceId": source_id}
+    )
+    return available_resources["data"]["availableResources"]

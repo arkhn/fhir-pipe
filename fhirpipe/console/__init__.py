@@ -1,4 +1,3 @@
-from .parse_args import LIST_RESOURCES
 from .parse_args import parse_args
 
 WELCOME_MSG = """

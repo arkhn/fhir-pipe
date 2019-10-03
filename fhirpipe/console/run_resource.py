@@ -34,7 +34,6 @@ def run_resource(args=None):
     resource_structure = fhirpipe.load.graphql.get_fhir_resource(
         args.project, args.resource, from_file=path
     )
-    print(2, flush=True)
 
     # Get main table
     main_table = fhirpipe.parse.fhir.get_identifier_table(resource_structure)
@@ -58,13 +57,14 @@ def run_resource(args=None):
 
     # Build a fhir object for each resource instance
     fhir_objects = []
-    for i, row in enumerate(tqdm(rows)):
+    rows = tqdm(rows)
+    for i, row in enumerate(rows):
         row = list(row)
         fhir_object = fhirpipe.parse.fhir.create_fhir_object(
             row, args.resource, resource_structure
         )
         fhir_objects.append(fhir_object)
-        # print(json.dumps(tree, indent=2, ensure_ascii=False))
+        rows.refresh()
 
     # Save instances in fhirbase
     print("Saving in fhirbase...", flush=True)
@@ -122,15 +122,14 @@ def batch_run_resource():
 
         # Hydrate FHIR objects
         fhir_objects = []
+        rows = tqdm(rows)
         for i, row in enumerate(rows):
-            if i % 1000 == 0:
-                progression = round(i / len(rows) * 100, 2)
-                print("batch {} %".format(progression))
             row = list(row)
             fhir_object = fhirpipe.parse.fhir.create_fhir_object(
                 row, resource, resource_structure
             )
             fhir_objects.append(fhir_object)
+            rows.refresh()
 
         # Save instances in fhirbase
         print("Saving in fhirbase...")

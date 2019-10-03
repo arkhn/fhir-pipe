@@ -8,7 +8,7 @@ from tqdm import tqdm
 import fhirpipe
 
 
-def save_in_fhirbase(instances):
+def save_in_fhirbase(instance):
     """
     Save instances of FHIR resources in the fhirbase
 
@@ -23,8 +23,10 @@ def save_in_fhirbase(instances):
         password=fhirpipe.global_config.sql.fhirbase.kwargs.password
     ) as connection:
         fb = fhirbase.FHIRBase(connection)
-        for instance in tqdm(instances):
+        instances = tqdm(instances)
+        for instance in instances:
             fb.create(instance)
+            instances.refresh()
 
 
 def get_connection(connection_type: str = None):

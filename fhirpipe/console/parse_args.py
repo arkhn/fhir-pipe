@@ -1,16 +1,6 @@
 import argparse
 
 
-# TODO fetch names somewhere
-LIST_RESOURCES = [
-    "Patient",
-    "Practitioner",
-    "Encounter",
-    "MedicationRequest",
-    "Procedure",
-]
-
-
 def parse_args():
     """
     Read all the arguments which should describe the run task
@@ -37,7 +27,6 @@ def parse_args():
         "--resource",
         type=str,
         default="Patient",
-        choices=set(LIST_RESOURCES),
         help="Resource type to process (default: Patient)",
     )
 
