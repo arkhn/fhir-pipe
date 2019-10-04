@@ -11,7 +11,7 @@ def test_adapted_run():
     resource = "Patient"
 
     # Load LOCAL mapping rules
-    path = "../../test/integration/fixtures/graphql_mimic_patient.json"
+    path = "test/integration/fixtures/graphql_mimic_patient.json"
     resource_structure = fhirpipe.load.graphql.get_fhir_resource(
         project, resource, from_file=path
     )

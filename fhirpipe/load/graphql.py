@@ -151,11 +151,10 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
 
     if from_file is not None:
         path = from_file
-        real_path = "/".join(
-            os.path.abspath(__file__).split("/")[:-1] + path.split("/")
-        )
+        if not os.path.isabs(path):
+            path = os.path.join(os.getcwd(), path)
 
-        with open(real_path) as json_file:
+        with open(path) as json_file:
             resources = json.load(json_file)
         source_json = resources["data"]["database"]
 
@@ -192,15 +191,27 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
         return resource["data"]["resource"]
 
 
-def get_available_resources(source_name):
-    # Get Source id from Source name
-    source = run_graphql_query(
-        source_info_query, variables={"sourceName": source_name}
-    )
-    source_id = source["data"]["sourceInfo"]["id"]
+def get_available_resources(source_name, from_file=None):
+    if from_file:
+        path = from_file
+        if not os.path.isabs(path):
+            path = os.path.join(os.getcwd(), path)
 
-    # Check that Resource exists for given Source
-    available_resources = run_graphql_query(
-        available_resources_query, variables={"sourceId": source_id}
-    )
-    return available_resources["data"]["availableResources"]
+        with open(path) as json_file:
+            resources = json.load(json_file)
+        source_json = resources["data"]["database"]
+
+        return source_json["resources"]
+
+    else:
+        # Get Source id from Source name
+        source = run_graphql_query(
+            source_info_query, variables={"sourceName": source_name}
+        )
+        source_id = source["data"]["sourceInfo"]["id"]
+
+        # Check that Resource exists for given Source
+        available_resources = run_graphql_query(
+            available_resources_query, variables={"sourceId": source_id}
+        )
+        return available_resources["data"]["availableResources"]

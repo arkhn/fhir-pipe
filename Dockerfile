@@ -13,7 +13,6 @@ COPY requirements.txt /app
 RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 # Copy the current directory contents into the container at /app
-COPY ./test /app/test
 COPY config_docker.yml /app/config.yml
 COPY setup.py /app
 COPY README.md /app

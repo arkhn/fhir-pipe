@@ -25,25 +25,18 @@ def run_resource(args=None):
     # Launch timer
     start_time = time.time()
 
-    print(1, flush=True)
-    if args.use_graphql_file:
-        path = "../../test/integration/fixtures/graphql_mimic.json"
-    else:
-        path = None
     # Load mapping rules
     resource_structure = fhirpipe.load.graphql.get_fhir_resource(
-        args.project, args.resource, from_file=path
+        args.project, args.resource, from_file=args.mock_pyrog_mapping
     )
 
     # Get main table
     main_table = fhirpipe.parse.fhir.get_identifier_table(resource_structure)
-    print(3, flush=True)
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
         args.project, resource_structure, info=main_table
     )
-    print(4, flush=True)
 
     # Run it
     print("Launching query...", flush=True)
@@ -53,7 +46,6 @@ def run_resource(args=None):
 
     # Apply join rule to merge some lines from the same resource
     rows = fhirpipe.load.sql.apply_joins(rows, squash_rules)
-    print(5, flush=True)
 
     # Build a fhir object for each resource instance
     fhir_objects = []
@@ -95,8 +87,10 @@ def batch_run_resource():
     batch_size = args.batch_size
 
     # Load data
-    resource_structure = fhirpipe.graphql.get_fhir_resource(project,
-                                                            resource)
+    resource_structure = fhirpipe.graphql.\
+        get_fhir_resource(project,
+                          resource,
+                          from_file=args.mock_pyrog_mapping)
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(

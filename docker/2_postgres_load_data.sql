@@ -70,7 +70,7 @@
 --  Load Data for Table D_CPT
 --------------------------------------------------------
 
-\copy D_CPT from 'd_pt.csv' delimiter ',' csv header NULL ''
+\copy D_CPT from 'd_cpt.csv' delimiter ',' csv header NULL ''
 
 --------------------------------------------------------
 --  Load Data for Table D_ICD_DIAGNOSES
@@ -124,7 +124,7 @@
 --  Load Data for Table MICROBIOLOGYEVENTS
 --------------------------------------------------------
 
-\copy MICROBIOLOGYEVENTS from 'microbilogyevents.csv' delimiter ',' csv header NULL ''
+\copy MICROBIOLOGYEVENTS from 'microbiologyevents.csv' delimiter ',' csv header NULL ''
 
 --------------------------------------------------------
 --  Load Data for Table NOTEEVENTS
@@ -154,7 +154,7 @@
 --  Load Data for Table PROCEDUREEVENTS_MV
 --------------------------------------------------------
 
-\copy PROCEDUREEVENTS_MV from 'procedureevents.csv' delimiter ',' csv header NULL ''
+\copy PROCEDUREEVENTS_MV from 'procedureevents_mv.csv' delimiter ',' csv header NULL ''
 
 --------------------------------------------------------
 --  Load Data for Table PROCEDURES_ICD

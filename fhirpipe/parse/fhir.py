@@ -24,7 +24,8 @@ def create_fhir_object(row, resource, resource_structure):
         a dictionary with a the structure of a fhir object
     """
     # Identify the fhir object
-    fhir_object = {"id": int(random.random() * 10e10), "resourceType": resource}
+    fhir_object = {"id": int(random.random() * 10e10),
+                   "resourceType": resource}
 
     # The first node has a different structure so iterate outside the
     # dfs_create_fhir function
@@ -97,7 +98,8 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):
                         row.insert(0, join_rows_remaining)
                 else:
                     fhir_obj_list_el = dict()
-                    dfs_create_fhir_object(fhir_obj_list_el, fhir_spec_attr, row)
+                    dfs_create_fhir_object(
+                        fhir_obj_list_el, fhir_spec_attr, row)
                     fhir_obj_list.append(fhir_obj_list_el)
             fhir_obj[fhir_spec["name"]] = fhir_obj_list
         # 2. It's a profile: we don't keep this layer in the fhir object and put
@@ -109,7 +111,8 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):
         else:
             fhir_obj[fhir_spec["name"]] = dict()
             for fhir_spec_attr in fhir_spec["attributes"]:
-                dfs_create_fhir_object(fhir_obj[fhir_spec["name"]], fhir_spec_attr, row)
+                dfs_create_fhir_object(
+                    fhir_obj[fhir_spec["name"]], fhir_spec_attr, row)
 
             # If the object is a Reference, to we give it to bind_reference
             if fhir_spec["type"].startswith("Reference"):
@@ -172,7 +175,8 @@ def bind_reference(fhir_object, fhir_spec):
 
         # Collect all the resource_types which could be referenced
         try:
-            resource_types = re.search('\((.*)\)', fhir_spec["type"]).group(1).split('|')
+            resource_types = re.search(
+                '\((.*)\)', fhir_spec["type"]).group(1).split('|')
         except AttributeError:
             raise ReferenceError(
                 f"No FHIR Resource type provided for the reference {fhir_spec['name']}")
@@ -210,7 +214,8 @@ def get_identifier_table(resource_structure, extended_get=False):
 
     if len(targets) < 1:
         if extended_get:
-            raise AttributeError("There is no mapping rule for the identifier of this resource")
+            raise AttributeError(
+                "There is no mapping rule for the identifier of this resource")
         else:
             return get_identifier_table(resource_structure, extended_get=True)
     else:

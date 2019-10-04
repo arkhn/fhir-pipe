@@ -8,7 +8,7 @@ from tqdm import tqdm
 import fhirpipe
 
 
-def save_in_fhirbase(instance):
+def save_in_fhirbase(instances):
     """
     Save instances of FHIR resources in the fhirbase
 
@@ -94,7 +94,8 @@ def batch_run(query, batch_size, offset=0, connection=None):
     elif database_type == "postgre":
         offset_batch_size_instruction = " OFFSET {} LIMIT {}"
     else:
-        raise RuntimeError(f"{database_type} is not a supported database type.")
+        raise RuntimeError(
+            f"{database_type} is not a supported database type.")
 
     while call_next_batch:
         batch_query = query + offset_batch_size_instruction.format(offset,
@@ -132,7 +133,8 @@ def run(query, connection: str = None):
         for el in row:
             if el is None:
                 new_row.append("")
-            else:  # Force conversion to str if not already (ex: datetime, int, etc)
+            # Force conversion to str if not already (ex: datetime, int, etc)
+            else:
                 new_row.append(str(el))
         rows[i] = new_row
     return rows

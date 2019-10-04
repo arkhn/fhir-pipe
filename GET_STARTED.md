@@ -87,7 +87,7 @@ And to run to whole pipe
 fhirpipe-run --project=Mimic
 ```
 
-> You can use the option `--use-graphql-file=True` to fetch the mapping rules directly from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
+> You can use the option `--mock-pyrog-mapping=path/to/response.json` to fetch the mapping rules directly from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
 
 You can also run the pipe on a single FHIR resource:
 
@@ -202,8 +202,8 @@ Let's now run locally the pipeline!
 You are all set! Run:
 
 ```
-fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --use-graphql-file=True
+fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --mock-pyrog-mapping=test/integration/fixtures/graphql_mimic.json
 ```
 
-Remove `--use-graphql-file=True` to get the latest mapping rules from the pyrog api.
+Remove `--mock-pyrog-mapping` to get the latest mapping rules from the pyrog api.
 

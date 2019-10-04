@@ -14,12 +14,6 @@ def read(fname):
 
 requirements = read("requirements.txt").split()
 
-data_files = [
-    'config.yml',
-    'test/integration/fixtures/graphql_mimic.json',
-    'test/integration/fixtures/graphql_mimic_patient.json'
-]
-
 setup(
     name='fhirpipe',
     version='0.1',
@@ -30,7 +24,6 @@ setup(
     license='Apache License 2.0',
     packages=find_packages(exclude=["docs", "examples", "dist"]),
     include_package_data=True,
-    data_files=[('', data_files)],
     long_description=read("README.md"),
     long_description_content_type="text/markdown",
     install_requires=requirements,

@@ -46,9 +46,9 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--use-graphql-file",
-        type=bool,
-        default=False,
+        "--mock-pyrog-mapping",
+        type=str,
+        default=None,
         help="Use graphql file response instead of the API",
         required=False,
     )

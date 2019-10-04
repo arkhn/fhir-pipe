@@ -31,9 +31,11 @@ def run():
     set_global_config(Config(path=args.config))
 
     # Get all resources available in the pyrog mapping for a given source
-    list_resources = [r["name"] for r in get_available_resources(args.project)]
-    n = len(list_resources)
+    list_resources = [r["name"] for r in get_available_resources(
+        args.project,
+        from_file=args.mock_pyrog_mapping)]
 
+    n = len(list_resources)
     for i, resource in enumerate(list_resources):
         print(f"Integrating FHIR resource {resource} ({i+1}/{n})")
 
@@ -46,7 +48,7 @@ def run():
                 self.resource = resource
                 self.main_table = main_table
                 self.project = args.project
-                self.use_graphql_file = args.use_graphql_file
+                self.mock_pyrog_mapping = args.mock_pyrog_mapping
 
         run_resource(args=Parser())
 
