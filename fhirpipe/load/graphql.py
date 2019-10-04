@@ -192,6 +192,16 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
 
 
 def get_available_resources(source_name, from_file=None):
+    """
+    Get all available resources from a pyrog mapping.
+    The mapping may either come from a static file or from
+    a pyrog graphql API.
+
+    Args:
+        source_name: name of the project (eg: Mimic)
+        from_file (optional): path to the static file to mock
+                              the pyrog API response.
+    """
     if from_file:
         path = from_file
         if not os.path.isabs(path):
