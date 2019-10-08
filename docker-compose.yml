@@ -6,6 +6,8 @@ services:
     container_name: arkhn-pipe-mimic
     image: arkhn/pipe-mimic:latest
     command: tail -F anything
+    volumes:
+      - ./test:/app/test
     depends_on:
       - mimic-db
       - fhirbase

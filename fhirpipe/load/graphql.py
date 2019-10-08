@@ -128,7 +128,6 @@ def run_graphql_query(graphql_query, variables=None):
         fhirpipe.global_config.graphql.server, headers=get_headers(), json={
             "query": graphql_query, "variables": variables}
     )
-    print(request.json())
     if request.status_code == 200:
         return request.json()
     else:
@@ -152,11 +151,10 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
 
     if from_file is not None:
         path = from_file
-        real_path = "/".join(
-            os.path.abspath(__file__).split("/")[:-1] + path.split("/")
-        )
+        if not os.path.isabs(path):
+            path = os.path.join(os.getcwd(), path)
 
-        with open(real_path) as json_file:
+        with open(path) as json_file:
             resources = json.load(json_file)
         source_json = resources["data"]["database"]
 
@@ -172,6 +170,50 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
             f"Resource {resource_name} not found in the graphql json resource"
         )
     else:
+        available_resources = get_available_resources(source_name)
+        assert resource_name in list(
+            map(lambda x: x["name"], available_resources)
+        ), f"Resource {resource_name} doesn't exist for Source {source_name}"
+
+        # Deduce Resource id from Resource name
+        resource_id = list(
+            filter(
+                lambda x: x["name"] == resource_name,
+                available_resources,
+            )
+        )[0]["id"]
+
+        # Get Resource mapping
+        resource = run_graphql_query(
+            resource_query, variables={"resourceId": resource_id}
+        )
+
+        return resource["data"]["resource"]
+
+
+def get_available_resources(source_name, from_file=None):
+    """
+    Get all available resources from a pyrog mapping.
+    The mapping may either come from a static file or from
+    a pyrog graphql API.
+
+    Args:
+        source_name: name of the project (eg: Mimic)
+        from_file (optional): path to the static file to mock
+                              the pyrog API response.
+    """
+    if from_file:
+        path = from_file
+        if not os.path.isabs(path):
+            path = os.path.join(os.getcwd(), path)
+
+        with open(path) as json_file:
+            resources = json.load(json_file)
+        source_json = resources["data"]["database"]
+
+        return source_json["resources"]
+
+    else:
         # Get Source id from Source name
         source = run_graphql_query(
             source_info_query, variables={"sourceName": source_name}
@@ -182,21 +224,4 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
         available_resources = run_graphql_query(
             available_resources_query, variables={"sourceId": source_id}
         )
-        assert resource_name in list(
-            map(lambda x: x["name"], available_resources["data"]["availableResources"])
-        ), f"Resource {resource_name} doesn't exist for Source {source_name}"
-
-        # Deduce Resource id from Resource name
-        resource_id = list(
-            filter(
-                lambda x: x["name"] == resource_name,
-                available_resources["data"]["availableResources"],
-            )
-        )[0]["id"]
-
-        # Get Resource mapping
-        resource = run_graphql_query(
-            resource_query, variables={"resourceId": resource_id}
-        )
-
-        return resource["data"]["resource"]
+        return available_resources["data"]["availableResources"]

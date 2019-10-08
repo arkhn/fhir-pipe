@@ -1,6 +1,7 @@
 import json
 import time
 import random
+from tqdm import tqdm
 
 import fhirpipe
 from fhirpipe.config import Config
@@ -24,13 +25,9 @@ def run_resource(args=None):
     # Launch timer
     start_time = time.time()
 
-    if args.use_graphql_file:
-        path = "../../test/integration/fixtures/graphql_mimic.json"
-    else:
-        path = None
     # Load mapping rules
     resource_structure = fhirpipe.load.graphql.get_fhir_resource(
-        args.project, args.resource, from_file=path
+        args.project, args.resource, from_file=args.mock_pyrog_mapping
     )
 
     # Get main table
@@ -42,7 +39,7 @@ def run_resource(args=None):
     )
 
     # Run it
-    print("Launching query...")
+    print("Launching query...", flush=True)
     rows = fhirpipe.load.sql.run(sql_query)
 
     print(len(rows), "results")
@@ -52,22 +49,20 @@ def run_resource(args=None):
 
     # Build a fhir object for each resource instance
     fhir_objects = []
+    rows = tqdm(rows)
     for i, row in enumerate(rows):
-        if i % 1000 == 0:
-            progression = round(i / len(rows) * 100, 2)
-            print("Progress... {} %".format(progression))
         row = list(row)
         fhir_object = fhirpipe.parse.fhir.create_fhir_object(
             row, args.resource, resource_structure
         )
         fhir_objects.append(fhir_object)
-        # print(json.dumps(tree, indent=2, ensure_ascii=False))
+        rows.refresh()
 
     # Save instances in fhirbase
-    print("Saving in fhirbase...")
+    print("Saving in fhirbase...", flush=True)
     fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
 
-    print(round((time.time() - start_time), 2), "seconds\n")
+    print(round((time.time() - start_time), 2), "seconds\n", flush=True)
 
 
 def batch_run_resource():
@@ -92,8 +87,10 @@ def batch_run_resource():
     batch_size = args.batch_size
 
     # Load data
-    resource_structure = fhirpipe.graphql.get_fhir_resource(project,
-                                                            resource)
+    resource_structure = fhirpipe.graphql.\
+        get_fhir_resource(project,
+                          resource,
+                          from_file=args.mock_pyrog_mapping)
 
     # Build the sql query
     sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
@@ -119,15 +116,14 @@ def batch_run_resource():
 
         # Hydrate FHIR objects
         fhir_objects = []
+        rows = tqdm(rows)
         for i, row in enumerate(rows):
-            if i % 1000 == 0:
-                progression = round(i / len(rows) * 100, 2)
-                print("batch {} %".format(progression))
             row = list(row)
             fhir_object = fhirpipe.parse.fhir.create_fhir_object(
                 row, resource, resource_structure
             )
             fhir_objects.append(fhir_object)
+            rows.refresh()
 
         # Save instances in fhirbase
         print("Saving in fhirbase...")

@@ -8,15 +8,14 @@ RUN apt-get update \
 # Set the working directory to /app
 WORKDIR /app
 
-# Copy the current directory contents into the container at /app
-COPY ./fhirpipe /app/fhirpipe
-COPY ./test /app/test
+# Install any needed packages specified in requirements.txt
 COPY requirements.txt /app
+RUN pip install --trusted-host pypi.python.org -r requirements.txt
+
+# Copy the current directory contents into the container at /app
 COPY config_docker.yml /app/config.yml
 COPY setup.py /app
 COPY README.md /app
-
-# Install any needed packages specified in requirements.txt
-RUN pip install --trusted-host pypi.python.org -r requirements.txt
+COPY ./fhirpipe /app/fhirpipe
 
 RUN python setup.py install
