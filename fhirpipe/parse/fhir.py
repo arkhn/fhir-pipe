@@ -24,8 +24,10 @@ def create_fhir_object(row, resource, resource_structure):
         a dictionary with a the structure of a fhir object
     """
     # Identify the fhir object
-    fhir_object = {"id": int(random.random() * 10e10),
-                   "resourceType": resource}
+    fhir_object = {
+        "id": int(random.random() * 10e10),
+        "resourceType": resource
+    }
 
     # The first node has a different structure so iterate outside the
     # dfs_create_fhir function

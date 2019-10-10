@@ -10,7 +10,7 @@ services:
       - ./test:/app/test
     depends_on:
       - mimic-db
-      - fhirbase
+      - mongo
 
   mimic-db:
     env_file: .env
@@ -31,17 +31,17 @@ services:
     ports:
       - '5431:5432'
 
-  fhirbase:
-    image: fhirbase/fhirbase:latest
-    container_name: fhir-pipe-fhirbase
+  mongo:
+    image: mongo
     restart: always
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      MONGO_INITDB_DATABASE: fhirstore
     ports:
-      - '3000:3000'
-      - '5433:5432'
+      - 27017:27017
+    volumes:
+      - fhirstore-db:/data/db
 
 volumes:
   mimic-db:
     name: fhir-pipe-mimic-db
+  fhirstore-db:
