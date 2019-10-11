@@ -13,8 +13,8 @@ fhirstore:
   host: 'localhost'
   port: 27017
   database: 'fhirstore'
-  user: ''
-  password: ''
+  user: null
+  password: null
 
 graphql:
   server: 'https://graphql.pyrog.staging.arkhn.org/'

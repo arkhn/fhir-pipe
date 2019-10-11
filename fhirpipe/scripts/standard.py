@@ -32,7 +32,7 @@ def format_date_from_yyyymmdd(raw_input):
         date = datetime.datetime.strptime(raw_input, "%Y-%m-%d %H:%M:%S")
         iso_date = date.strftime("%Y-%m-%d")
         return iso_date
-    except ValueError as err:
+    except ValueError:
         return raw_input
 
 

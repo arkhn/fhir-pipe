@@ -15,8 +15,8 @@ def get_mongo_client():
         _client = MongoClient(
             host=fhirpipe.global_config.fhirstore.host,
             port=fhirpipe.global_config.fhirstore.port,
-            # username=fhirpipe.global_config.fhirstore.user,
-            # password=fhirpipe.global_config.fhirstore.password,
+            username=fhirpipe.global_config.fhirstore.user,
+            password=fhirpipe.global_config.fhirstore.password,
         )
     return _client
 
@@ -47,6 +47,9 @@ def save_many(instances):
         instances.refresh()
 
 
+fhir_ids = {}
+
+
 def find_fhir_resource(resource_type, identifier):
     """
     Return the first FHIR instance of some resource_type where the
@@ -63,14 +66,20 @@ def find_fhir_resource(resource_type, identifier):
         else None
     """
     db_client = get_mongo_client()[fhirpipe.global_config.fhirstore.database]
-    results = db_client[resource_type].find({
-        "identifier": {
-            "$elemMatch": {
-                "value": identifier
+    if resource_type not in fhir_ids:
+        results = db_client[resource_type].find({
+            "identifier": {
+                "$elemMatch": {
+                    "value": {
+                        "$exists": True
+                    }
+                }
             }
-        }
-    }, ["id", "identifier"])
+        }, ["id", "identifier"])
 
-    if results.count() == 1:
-        return results[0]["id"]
-    return None
+        fhir_ids[resource_type] = {}
+        for r in results:
+            r_identifier = r["identifier"][0]["value"]
+            fhir_ids[resource_type][r_identifier] = r["id"]
+
+    return fhir_ids[resource_type].get(identifier)
