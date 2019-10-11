@@ -43,7 +43,7 @@ docker-compose up
 Then, switch to another tab and connect to the pipeline container:
 
 ```
-docker exec -ti arkhn-pipe-mimic /bin/bash
+docker exec -ti fhir-pipe /bin/bash
 ```
 
 You can now directly go to **[3 Launch the pipe](#3-launch-the-pipe)**.

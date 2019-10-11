@@ -8,6 +8,7 @@ from fhirpipe.config import Config
 from fhirpipe.console import parse_args, WELCOME_MSG
 from fhirpipe.console.run_resource import run_resource
 from fhirpipe.load.graphql import get_available_resources
+from fhirpipe.load.fhirstore import get_fhirstore
 
 
 def run():
@@ -29,6 +30,10 @@ def run():
 
     # Define global config
     set_global_config(Config(path=args.config))
+
+    fhirstore = get_fhirstore()
+    fhirstore.reset()
+    fhirstore.bootstrap(depth=5)
 
     # Get all resources available in the pyrog mapping for a given source
     list_resources = [r["name"] for r in get_available_resources(

@@ -1,10 +1,9 @@
 version: '3.7'
 services:
-  arkhn-pipe-mimic:
+  fhir-pipe:
     build:
       context: .
-    container_name: arkhn-pipe-mimic
-    image: arkhn/pipe-mimic:latest
+    image: arkhn/fhir-pipe:latest
     command: tail -F anything
     volumes:
       - ./test:/app/test
