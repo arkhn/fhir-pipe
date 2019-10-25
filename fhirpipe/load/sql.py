@@ -11,7 +11,7 @@ def get_connection(connection_type: str = None):
     """
     Return a sql connexion depending on the configuration provided in
     config.yml (see root of the project)
-    It should be used in a context environment(with get_connection(c) as ...)
+    It should be used in a context environment (with get_connection(c) as ...)
 
     args:
         connection_type (str): a string like "postgre", "oracle". See your

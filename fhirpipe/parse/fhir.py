@@ -169,6 +169,9 @@ def clean_fhir(fhir_object):
             return fhir_object, 1
 
 
+resourceTypeRegexp = re.compile("\((.*)\)")
+
+
 def bind_reference(fhir_object, fhir_spec):
     """
     Analyse a reference and replace the provided identifier
@@ -188,7 +191,8 @@ def bind_reference(fhir_object, fhir_spec):
         # Collect all the resource_types which could be referenced
         try:
             resource_types = (
-                re.search("\((.*)\)", fhir_spec["type"]).group(1).split("|")
+                re.search(resourceTypeRegexp,
+                          fhir_spec["type"]).group(1).split("|")
             )
         except AttributeError:
             raise ReferenceError(

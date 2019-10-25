@@ -9,6 +9,10 @@ sql:
       database: 'mimic'
       user: 'mimicuser'
       password: 'mimicuser'
+    oracle:
+      lib: 'cx_Oracle'
+      args: ['user/password@database']
+      kwargs: {}
 fhirstore:
   host: 'mongo'
   port: 27017
