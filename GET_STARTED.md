@@ -3,6 +3,14 @@
 
 Learn how to standardize data using the pipe!
 
+## Cheatsheet
+
+```shell
+make install # creates a virtual environment and install the dependencies
+make build # build the docker image
+make publish # publish the docker image to the docker hub
+```
+
 ## 1 Configuration
 
 But first, you need some data! We will use the MIMIC III Clinical Database Demo, for which you need to get credentials. It's quite straightforward: register [on the Physionet website](https://mimic.physionet.org/gettingstarted/demo/) to get access to the demo data, it takes 30 seconds and you will get a username and a password. Then, access [this page](https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/) to sign the agreement needed to download the data (_you don't need to download the data yourself_) or click on this button:
@@ -22,15 +30,14 @@ source .env
 
 You can use Docker to start quickly playing with demos. Alternatively, the **[2.B Manual Setup](#2-b-manual-setup)** section explains how to install the pipeline step by step.
 
-In the `fhirpipe` directory, copy `config_docker.yml` into `config.yml`.
+Start [or install](https://docs.docker.com/install/#supported-platforms) Docker, and then build the docker images.
+```
+docker-compose build
+```
 
+Then start the services:
 ```
-cp fhirpipe/config_docker.yml fhirpipe/config.yml
-```
-
-Start [or install](https://docs.docker.com/install/#supported-platforms) Docker, and then build the container.
-```
-docker-compose up --build arkhn-pipe-mimic
+docker-compose up
 ```
 
 Then, switch to another tab and connect to the pipeline container:
@@ -56,18 +63,15 @@ docker-compose up --build mimic-db
 docker-compose up --build fhirbase
 ```
 
-In the `fhirpipe` directory, copy `config_local.yml` (from the `fhirpipe` directory) into `config.yml` and check that the container ports match with those specified in `docker-compose.yml`
+Check that the container ports defined in `config.yml` match with those specified in `docker-compose.yml`
 
 ```
-cd fhirpipe
-cp config_local.yml config.yml
 vi config.yml
 ```
 
 Run the python setup to use our commands in the terminal:
 
 ```
-cd  ..
 # you might need to install packages manually:
 pip install -r requirements.txt
 
@@ -80,15 +84,15 @@ python setup.py install
 And to run to whole pipe
 
 ```
-fhirpipe-run --project=Mimic --use-graphql-file=True
+fhirpipe-run --project=Mimic
 ```
 
-> You can remove `--use-graphql-file=True` to fetch the mapping rules directly from the [pyrog](https://github.com/arkhn/pyrog) api instead of using a static file. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
+> You can use the option `--mock-pyrog-mapping=path/to/response.json` to fetch the mapping rules directly from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
 
 You can also run the pipe on a single FHIR resource:
 
 ```
-fhirpipe-run-resource --project=Mimic --resource=Patient --use-graphql-file=True
+fhirpipe-run-resource --project=Mimic --resource=Patient
 ```
 
 Et voilà!
@@ -198,8 +202,8 @@ Let's now run locally the pipeline!
 You are all set! Run:
 
 ```
-fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --use-graphql-file=True
+fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --mock-pyrog-mapping=test/integration/fixtures/graphql_mimic.json
 ```
 
-Remove `--use-graphql-file=True` to get the latest mapping rules from the pyrog api.
+Remove `--mock-pyrog-mapping` to get the latest mapping rules from the pyrog api.
 

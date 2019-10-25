@@ -3,13 +3,11 @@ import time
 import random
 import argparse
 
-import fhirpipe
-from fhirpipe.console import parse_args
-from fhirpipe.console import LIST_RESOURCES
-
-from fhirpipe.console import WELCOME_MSG
-
+from fhirpipe import set_global_config
+from fhirpipe.config import Config
+from fhirpipe.console import parse_args, WELCOME_MSG
 from fhirpipe.console.run_resource import run_resource
+from fhirpipe.load.graphql import get_available_resources
 
 
 def run():
@@ -22,19 +20,22 @@ def run():
         Some arguments must be provided to set the run task
     """
     # Parse arguments
-    args = parse_args("project", "use-graphql-file")
+    args = parse_args()
 
-    print(WELCOME_MSG)
+    print(WELCOME_MSG, flush=True)
 
     # Launch timer
     start_time = time.time()
 
-    # Define config variables
-    project = args.project
+    # Define global config
+    set_global_config(Config(path=args.config))
 
-    list_resources = LIST_RESOURCES
+    # Get all resources available in the pyrog mapping for a given source
+    list_resources = [r["name"] for r in get_available_resources(
+        args.project,
+        from_file=args.mock_pyrog_mapping)]
+
     n = len(list_resources)
-
     for i, resource in enumerate(list_resources):
         print(f"Integrating FHIR resource {resource} ({i+1}/{n})")
 
@@ -44,12 +45,12 @@ def run():
             """Parameters for the testing"""
 
             def __init__(self):
-                self.project = project
                 self.resource = resource
                 self.main_table = main_table
-                self.use_graphql_file = args.use_graphql_file
+                self.project = args.project
+                self.mock_pyrog_mapping = args.mock_pyrog_mapping
 
-        run_resource(from_console=False, args=Parser())
+        run_resource(args=Parser())
 
     print(round((time.time() - start_time), 2), "seconds")
 

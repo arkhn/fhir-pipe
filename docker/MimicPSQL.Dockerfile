@@ -6,13 +6,16 @@ RUN apt-get update \
 WORKDIR /tmp
 ARG MIMIC_USER
 ARG MIMIC_PASSWORD
+
 RUN wget --user $MIMIC_USER --password $MIMIC_PASSWORD \
-    -A csv.gz -m -p -E -k -K -np \
-    https://physionet.org/works/MIMICIIIClinicalDatabaseDemo/files/
+    -r -N -c -np  \
+    https://alpha.physionet.org/files/mimiciii-demo/1.4/
 
 WORKDIR /mimic_data
-RUN mv /tmp/physionet.org/works/MIMICIIIClinicalDatabaseDemo/files/version_1_4/* . \
-    && gzip -d *.gz
+
+RUN mv /tmp/alpha.physionet.org/files/mimiciii-demo/1.4/* .
+
+RUN ls
 
 # WORKDIR /tmp/mimic_scripts
 # # Clone MIMIC PostgreSQL build scripts in directory containing scripts executed automatically by PSQL

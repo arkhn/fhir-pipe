@@ -3,8 +3,9 @@ import psycopg2
 import cx_Oracle
 import logging
 import fhirbase
+from tqdm import tqdm
 
-from fhirpipe.config import Config
+import fhirpipe
 
 
 def save_in_fhirbase(instances):
@@ -14,13 +15,18 @@ def save_in_fhirbase(instances):
     args:
         instances (list): list of instances
     """
-    config = Config("sql").fhirbase.kwargs
     with psycopg2.connect(
-        dbname=config.database, user=config.user, host=config.host, port=config.port, password=config.password
+        dbname=fhirpipe.global_config.sql.fhirbase.kwargs.database,
+        user=fhirpipe.global_config.sql.fhirbase.kwargs.user,
+        host=fhirpipe.global_config.sql.fhirbase.kwargs.host,
+        port=fhirpipe.global_config.sql.fhirbase.kwargs.port,
+        password=fhirpipe.global_config.sql.fhirbase.kwargs.password
     ) as connection:
         fb = fhirbase.FHIRBase(connection)
+        instances = tqdm(instances)
         for instance in instances:
             fb.create(instance)
+            instances.refresh()
 
 
 def get_connection(connection_type: str = None):
@@ -30,13 +36,13 @@ def get_connection(connection_type: str = None):
     Note: should be used in a context environment (with get_connection(c) as ...)
 
     args:
-        connection_type (str): a string like "postgre", "oracle". See your config
-            file for available values
+        connection_type (str): a string like "postgre", "oracle". See your
+            config file for available values
 
     return:
         a sql connexion
     """
-    sql_config = Config("sql").to_dict()
+    sql_config = fhirpipe.global_config.sql.to_dict()
     if connection_type is None:
         connection_type = sql_config["default"]
     connection = sql_config[connection_type]
@@ -82,16 +88,18 @@ def batch_run(query, batch_size, offset=0, connection=None):
         )
 
     # Adapt the offset and limit depending of oracle or postgre db
-    database_type = Config("sql").default
+    database_type = fhirpipe.global_config.sql.default
     if database_type == "oracle":
         offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
     elif database_type == "postgre":
         offset_batch_size_instruction = " OFFSET {} LIMIT {}"
     else:
-        raise RuntimeError(f"{database_type} is not a supported database type.")
+        raise RuntimeError(
+            f"{database_type} is not a supported database type.")
 
     while call_next_batch:
-        batch_query = query + offset_batch_size_instruction.format(offset, batch_size)
+        batch_query = query + offset_batch_size_instruction.format(offset,
+                                                                   batch_size)
         batch = run(batch_query, connection)
 
         call_next_batch = len(batch) >= batch_size
@@ -125,7 +133,8 @@ def run(query, connection: str = None):
         for el in row:
             if el is None:
                 new_row.append("")
-            else:  # Force conversion to str if not already (ex: datetime, int, etc)
+            # Force conversion to str if not already (ex: datetime, int, etc)
+            else:
                 new_row.append(str(el))
         rows[i] = new_row
     return rows
