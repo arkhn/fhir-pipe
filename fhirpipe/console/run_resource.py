@@ -58,9 +58,9 @@ def run_resource(args=None):
         fhir_objects.append(fhir_object)
         rows.refresh()
 
-    # Save instances in fhirbase
-    print("Saving in fhirbase...", flush=True)
-    fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
+    # Save instances in fhirstore
+    print("Saving in fhirstore...", flush=True)
+    fhirpipe.load.fhirstore.save_many(fhir_objects)
 
     print(round((time.time() - start_time), 2), "seconds\n", flush=True)
 
@@ -125,9 +125,9 @@ def batch_run_resource():
             fhir_objects.append(fhir_object)
             rows.refresh()
 
-        # Save instances in fhirbase
-        print("Saving in fhirbase...")
-        fhirpipe.load.sql.save_in_fhirbase(fhir_objects)
+        # Save instances in fhirstore
+        print("Saving in fhirstore...", flush=True)
+        fhirpipe.load.fhirstore.save_many(fhir_objects)
 
         # Log offset to restart in case of a crash
         fhirpipe.write.log.set("pipe.processing.offset", offset)

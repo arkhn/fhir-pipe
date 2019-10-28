@@ -43,7 +43,7 @@ docker-compose up
 Then, switch to another tab and connect to the pipeline container:
 
 ```
-docker exec -ti arkhn-pipe-mimic /bin/bash
+docker exec -ti fhir-pipe /bin/bash
 ```
 
 You can now directly go to **[3 Launch the pipe](#3-launch-the-pipe)**.
@@ -60,7 +60,7 @@ vi docker-compose.yml
 Run in specific tabs the two database containers we depend on:
 ```
 docker-compose up --build mimic-db
-docker-compose up --build fhirbase
+docker-compose up mongo
 ```
 
 Check that the container ports defined in `config.yml` match with those specified in `docker-compose.yml`
@@ -101,13 +101,13 @@ Et voilà!
 
 ## Miscellaneous
 
-#### Check the fhirbase
+#### Check the mongo database
 
-You can check fhirbase to see if the data was correctly loaded (_make sure the port is correct_):
+You can check mongo to see if the data was correctly loaded (_make sure the port is correct_):
 
 ```
-psql -h 0.0.0.0 -p 5433 -U postgres -d fhirbase
-fhirbase=# select count(*) from patient;
+mongo --port 27017 --host localhost fhirstore
+> db.Patient.find({})
 ```
 
 #### Check for data in the mimic container
@@ -153,24 +153,6 @@ docker-compose build mimic-db
 > :warning: You may experience trouble if the postgres port is already taken. You can modify it in `docker-compose.yml`
 
 
-
-#### Manual setup of fhirbase
-
-Get the image and fill the database
-
-```
-docker pull fhirbase/fhirbase:latest
-
-docker run --rm -p 3000:3000 -p 5433:5432 -d --name fhir-pipe-fhirbase fhirbase/fhirbase:latest
-
-# Wait a few seconds...
-docker exec fhir-pipe-fhirbase psql -c "CREATE DATABASE fhirbase"
-
-# Fill the db
-docker exec fhir-pipe-fhirbase fhirbase -d fhirbase --fhir=3.0.1 init # if it fails => it's already good, skip it
-docker exec fhir-pipe-fhirbase fhirbase -d fhirbase --fhir=3.0.1 load /bundle.ndjson.gzip
-```
-
 #### Install the pipe locally
 
 You should install it in an isolated virtual environment, by using virtualenv or Pipenv for example.
@@ -180,7 +162,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
- Make sure you already have the docker containers with mimic and fhirbase running.
+ Make sure you already have the docker containers with mimic and mongo running.
 
 Copy `config_local.yml` (from the `fhirpipe` directory) into `config.yml` and put there your credentials. (Don't forget to change the postgres ports if needed).
 

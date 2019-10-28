@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+from distutils.util import strtobool
 from enum import Enum
 
 # Utility functions (not callable)
@@ -11,6 +12,9 @@ from fhirpipe.scripts import utils
 
 
 # From now on, standard scripts
+
+def to_boolean(raw_input):
+    return bool(strtobool(raw_input))
 
 
 def make_title(raw_input):
@@ -25,8 +29,8 @@ def format_date_from_yyyymmdd(raw_input):
     if utils.is_empty(raw_input):
         return ""
     try:
-        date = datetime.datetime.strptime(raw_input, "%Y%m%d")
-        iso_date = date.isoformat()
+        date = datetime.datetime.strptime(raw_input, "%Y-%m-%d %H:%M:%S")
+        iso_date = date.strftime("%Y-%m-%d")
         return iso_date
     except ValueError:
         return raw_input
@@ -72,6 +76,7 @@ def if_valid(process, callback):
 
 
 functions = {
+    "to_boolean": to_boolean,
     "make_title": make_title,
     "split_space": split_space,
     "format_date_from_yyyymmdd": format_date_from_yyyymmdd,

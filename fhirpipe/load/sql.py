@@ -2,38 +2,16 @@ import datetime
 import psycopg2
 import cx_Oracle
 import logging
-import fhirbase
 from tqdm import tqdm
 
 import fhirpipe
 
 
-def save_in_fhirbase(instances):
-    """
-    Save instances of FHIR resources in the fhirbase
-
-    args:
-        instances (list): list of instances
-    """
-    with psycopg2.connect(
-        dbname=fhirpipe.global_config.sql.fhirbase.kwargs.database,
-        user=fhirpipe.global_config.sql.fhirbase.kwargs.user,
-        host=fhirpipe.global_config.sql.fhirbase.kwargs.host,
-        port=fhirpipe.global_config.sql.fhirbase.kwargs.port,
-        password=fhirpipe.global_config.sql.fhirbase.kwargs.password
-    ) as connection:
-        fb = fhirbase.FHIRBase(connection)
-        instances = tqdm(instances)
-        for instance in instances:
-            fb.create(instance)
-            instances.refresh()
-
-
 def get_connection(connection_type: str = None):
     """
-    Return a sql connexion depending on the configuration provided in config.yml
-    (see root of the project)
-    Note: should be used in a context environment (with get_connection(c) as ...)
+    Return a sql connexion depending on the configuration provided in
+    config.yml (see root of the project)
+    It should be used in a context environment (with get_connection(c) as ...)
 
     args:
         connection_type (str): a string like "postgre", "oracle". See your
@@ -90,16 +68,20 @@ def batch_run(query, batch_size, offset=0, connection=None):
     # Adapt the offset and limit depending of oracle or postgre db
     database_type = fhirpipe.global_config.sql.default
     if database_type == "oracle":
-        offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
+        offset_batch_size_instruction = (
+            " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
+        )
     elif database_type == "postgre":
         offset_batch_size_instruction = " OFFSET {} LIMIT {}"
     else:
         raise RuntimeError(
-            f"{database_type} is not a supported database type.")
+            f"{database_type} is not a supported database type."
+        )
 
     while call_next_batch:
-        batch_query = query + offset_batch_size_instruction.format(offset,
-                                                                   batch_size)
+        batch_query = query + offset_batch_size_instruction.format(
+            offset, batch_size
+        )
         batch = run(batch_query, connection)
 
         call_next_batch = len(batch) >= batch_size
@@ -147,26 +129,27 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
 
     args:
         rows (list<str>): all the results returned from a sql query
-        squash_rule (tuple<list>): which columns should serve as identifier to merge
-        the rows
+        squash_rule (tuple<list>): which columns should serve as identifier to
+        merge the rows
         parent_cols (list): param used for recursive call
 
     Example:
-        if you join people with bank accounts on guy.id = account.owner_id, you want at
-        the end to have for a single guy to have a single instance with an attribute
-        accounts.
+        if you join people with bank accounts on guy.id = account.owner_id,
+        you want at the end to have for a single guy to have a single instance
+        with an attribute accounts.
         ROWS:
         GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
         Robert              21          Compte courant      17654
         Robert              21          Compte d'epargne    123456789
         David               51          Ibiza summer        100
 
-        Squash rule: ('GUY', 'ACCOUNT') or in terms of columns ([0, ..., 5], [6, 7])
+        Squash rule:
+        ('GUY', 'ACCOUNT') or in terms of columns ([0, ..., 5], [6, 7])
 
         Output:
         GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
-        Robert              21        [(Compte courant   ,  17654            )
-                                       (Compte d'epargne ,  123456789         )]
+        Robert              21        [(Compte courant   ,  17654         )
+                                       (Compte d'epargne ,  123456789     )]
         David               51          Ibiza summer        100
     """
     cols, child_rules = squash_rule
@@ -174,14 +157,16 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
     for child_rule in child_rules:
         rows = apply_joins(rows, child_rule, cols)
 
-    # The dict is used to store for each unique element of pivot column, all the
-    # many_cols to put together. Note that pivot.before (many) and pivot.after is used
-    # to keep the order of the elems in rows, which is crucial for `dfs_create_fhir`
+    # The dict is used to store for each unique element of pivot column, all
+    # the many_cols to put together. Note that pivot.before (many) and
+    # pivot.after is used to keep the order of the elems in rows, which is
+    # crucial for `dfs_create_fhir`
     new_row_dict = {}
     for row in rows:
         # a sanity check
         assert all([e in range(len(row)) for e in cols])
-        # As we work on the whole row, we add the parent left parts transmitted recursively
+        # As we work on the whole row, we add the parent left parts
+        # transmitted recursively
         pivot_cols, many_cols = (
             parent_cols + cols,
             leave(range(len(row)), parent_cols + cols),
@@ -252,75 +237,3 @@ def leave(l, indices):
         if i not in indices:
             took.append(e)
     return took
-
-
-def find_single_fhir_resource(resource_type, identifier):
-    """
-    This is the slow version of find_fhir_resource, where we do a
-    sql query per reference found, which is highly inefficient
-
-    args:
-        resource_type (str): name of the Fhir resource to search for
-        identifier (str): the provided id which could be an identifier of
-            some instance of the resource_type
-
-    return:
-        the fhir id of the instance is there is one found of resource_type
-        which has an identifier matching the provided identifier,
-        else None
-    """
-
-    query = f"""
-            SELECT id
-            FROM {resource_type}
-            WHERE resource->'identifier'->0->>'value' = '{identifier}'
-            LIMIT 1;
-            """
-
-    results = run(query, "fhirbase")
-    if len(results) > 0:
-        return results[0][0]
-    else:
-        return None
-
-
-fhir_ids = {}
-
-
-def find_fhir_resource(resource_type, identifier):
-    """
-    Return the first FHIR instance of some resource_type where the
-    identifier matches some identifier, if any is found.
-
-    This is based on caching results in RAM to limit sql queries and
-    preserve efficiency, note that it could cause a problem if the
-    cached registries grow too big.
-
-    args:
-        resource_type (str): name of the Fhir resource to search for
-        identifier (str): the provided id which could be an identifier of
-            some instance of the resource_type
-
-    return:
-        the fhir id of the instance is there is one found of resource_type
-        which has an identifier matching the provided identifier,
-        else None
-    """
-
-    if resource_type not in fhir_ids:
-        query = f"""
-                SELECT id, resource->'identifier'->0->>'value'
-                FROM {resource_type};
-                """
-
-        results = run(query, "fhirbase")
-        bindings = {}
-        for fhir_id, provided_id in results:
-            bindings[provided_id] = fhir_id
-
-        fhir_ids[resource_type] = bindings
-
-    try:
-        return fhir_ids[resource_type][identifier]
-    except KeyError:
-        return None

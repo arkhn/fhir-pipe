@@ -9,19 +9,16 @@ sql:
       database: 'mimic'
       user: 'mimicuser'
       password: 'mimicuser'
-  fhirbase:
-    lib: 'psycopg2'
-    args: []
-    kwargs:
-      host: 'fhir-pipe-fhirbase'
-      port: 5432
-      database: 'fhirbase'
-      user: 'postgres'
-      password: 'postgres'
-  oracle:
-    lib: 'cx_Oracle'
-    args: ['user/password@database']
-    kwargs: {}
+    oracle:
+      lib: 'cx_Oracle'
+      args: ['user/password@database']
+      kwargs: {}
+fhirstore:
+  host: 'mongo'
+  port: 27017
+  database: 'fhirstore'
+  user: null
+  password: null
 
 graphql:
   server: 'https://graphql.pyrog.staging.arkhn.org/'
