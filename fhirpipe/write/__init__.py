@@ -1,1 +1,1 @@
-from fhirpipe.write.log import log
+from fhirpipe.write.log import log  # noqa

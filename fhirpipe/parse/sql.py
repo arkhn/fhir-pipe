@@ -1,5 +1,3 @@
-import json
-
 from fhirpipe.parse.graph import DependencyGraph
 
 

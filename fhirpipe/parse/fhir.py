@@ -1,5 +1,4 @@
 import re
-import random
 from uuid import uuid4
 
 from fhirpipe import scripts
@@ -41,7 +40,7 @@ def create_fhir_object(row, resource, resource_structure):
     return fhir_object
 
 
-def dfs_create_fhir_object(fhir_obj, fhir_spec, row):
+def dfs_create_fhir_object(fhir_obj, fhir_spec, row):  # noqa
     """
         For each instance of a Resource,
         Run through the dict/tree of a Resource (and the references to templates)
@@ -169,7 +168,7 @@ def clean_fhir(fhir_object):
             return fhir_object, 1
 
 
-resourceTypeRegexp = re.compile("\((.*)\)")
+resourceTypeRegexp = re.compile("\((.*)\)")  # noqa
 
 
 def bind_reference(fhir_object, fhir_spec):
@@ -244,7 +243,8 @@ def get_identifier_table(resource_structure, extended_get=False):
     else:
         if len(targets) > 1:
             print(
-                "Warning: Too many choices for the right main table for building SQL request, taking the first one."
+                "Warning: Too many choices for the right main table for building SQL request,\
+taking the first one."
             )
         return targets[0]
 

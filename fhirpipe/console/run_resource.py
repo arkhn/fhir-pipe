@@ -1,6 +1,4 @@
-import json
 import time
-import random
 from tqdm import tqdm
 
 import fhirpipe

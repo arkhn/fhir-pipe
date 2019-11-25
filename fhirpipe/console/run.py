@@ -1,7 +1,4 @@
-import json
 import time
-import random
-import argparse
 
 from fhirpipe import set_global_config
 from fhirpipe.config import Config

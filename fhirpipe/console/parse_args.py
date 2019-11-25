@@ -34,7 +34,8 @@ def parse_args():
         "--main-table",
         type=str,
         default="Patients",
-        help="SQL table name (with owner if relevant) of reference for this resource (default: Patients)",
+        help="SQL table name (with owner if relevant) of reference\
+or this resource (default: Patients)",
     )
 
     parser.add_argument(

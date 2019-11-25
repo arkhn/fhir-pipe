@@ -1,1 +1,1 @@
-from .standard import get_script
+from .standard import get_script  # noqa

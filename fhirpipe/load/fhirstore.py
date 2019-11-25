@@ -1,4 +1,3 @@
-import json
 import fhirstore
 from pymongo import MongoClient
 from tqdm import tqdm

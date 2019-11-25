@@ -1,7 +1,7 @@
-from fhirpipe import parse
-from fhirpipe import load
-from fhirpipe import scripts
-from fhirpipe import write
+from fhirpipe import parse  # noqa
+from fhirpipe import load  # noqa
+from fhirpipe import scripts  # noqa
+from fhirpipe import write  # noqa
 
 global_config = None
 

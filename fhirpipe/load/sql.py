@@ -1,8 +1,6 @@
-import datetime
-import psycopg2
-import cx_Oracle
+import psycopg2  # noqa
+import cx_Oracle  # noqa
 import logging
-from tqdm import tqdm
 
 import fhirpipe
 

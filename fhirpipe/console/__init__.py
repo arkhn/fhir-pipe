@@ -1,4 +1,4 @@
-from .parse_args import parse_args
+from .parse_args import parse_args  # noqa
 
 WELCOME_MSG = """
  (        )  (    (      (    (    (         
@@ -11,4 +11,4 @@ WELCOME_MSG = """
 |_|   |_||_||___||_|_\  |_|  |___||_|  |___| 
 
 ---------------- Arkhn Core ----------------
-"""
+"""  # noqa

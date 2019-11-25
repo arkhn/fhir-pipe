@@ -21,7 +21,7 @@ def assert_has_sql_type(name_type, value):
     elif name_type.startswith("code"):
         if "=" in name_type:
             options = name_type.split("=")[1].split("|")
-            if not _is_empty(value) and not value in options:
+            if not _is_empty(value) and value not in options:
                 raise TypeError(
                     "{} <{}> should be in .".format(value, type(value)), options
                 )
