@@ -28,6 +28,7 @@ jobs:
           flake8 fhirpipe --count --max-complexity=10 --max-line-length=100 --statistics
       - name: Test with pytest
         run: |
+          docker-compose -f docker-compose.test.yml up -d
           python -m pytest -svv test/
 
   publish:
