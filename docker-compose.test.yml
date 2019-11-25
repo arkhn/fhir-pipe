@@ -1,7 +1,6 @@
 version: '3.7'
 services:
   mimic-db:
-    env_file: .env
     build:
       context: ./docker
       dockerfile: MimicPSQL.Dockerfile

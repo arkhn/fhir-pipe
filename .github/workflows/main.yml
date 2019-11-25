@@ -27,6 +27,9 @@ jobs:
           flake8 fhirpipe --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 fhirpipe --count --max-complexity=10 --max-line-length=100 --statistics
       - name: Test with pytest
+        env:
+          MIMIC_USER: ${{ secrets.MIMIC_USER }}
+          MIMIC_PASSWORD: ${{ secrets.MIMIC_PASSWORD }}
         run: |
           docker-compose -f docker-compose.test.yml up -d
           python -m pytest -svv test/
