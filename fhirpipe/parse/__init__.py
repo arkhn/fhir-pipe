@@ -1,2 +1,2 @@
-from fhirpipe.parse import fhir
-from fhirpipe.parse import sql
+from fhirpipe.parse import fhir  # noqa
+from fhirpipe.parse import sql  # noqa

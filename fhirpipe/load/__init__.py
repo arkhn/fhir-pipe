@@ -1,3 +1,3 @@
-from fhirpipe.load import sql
-from fhirpipe.load import graphql
-from fhirpipe.load import fhirstore
+from fhirpipe.load import sql  # noqa
+from fhirpipe.load import graphql  # noqa
+from fhirpipe.load import fhirstore  # noqa

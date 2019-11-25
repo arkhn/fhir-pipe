@@ -5,22 +5,14 @@ def parse_args():
     """
     Read all the arguments which should describe the run task
     """
-    parser = argparse.ArgumentParser(
-        description="The smart ETL to standardize health data"
+    parser = argparse.ArgumentParser(description="The smart ETL to standardize health data")
+
+    parser.add_argument(
+        "--config", type=str, default="config.yml", help="Path to the configuration file"
     )
 
     parser.add_argument(
-        "--config",
-        type=str,
-        default="config.yml",
-        help="Path to the configuration file",
-    )
-
-    parser.add_argument(
-        "--project",
-        type=str,
-        default="Mimic",
-        help="Project to run (default: Mimic)",
+        "--project", type=str, default="Mimic", help="Project to run (default: Mimic)"
     )
 
     parser.add_argument(
@@ -34,7 +26,8 @@ def parse_args():
         "--main-table",
         type=str,
         default="Patients",
-        help="SQL table name (with owner if relevant) of reference for this resource (default: Patients)",
+        help="SQL table name (with owner if relevant) of reference\
+or this resource (default: Patients)",
     )
 
     parser.add_argument(

@@ -1,6 +1,4 @@
-import json
 import time
-import random
 from tqdm import tqdm
 
 import fhirpipe
@@ -52,9 +50,7 @@ def run_resource(args=None):
     rows = tqdm(rows)
     for i, row in enumerate(rows):
         row = list(row)
-        fhir_object = fhirpipe.parse.fhir.create_fhir_object(
-            row, args.resource, resource_structure
-        )
+        fhir_object = fhirpipe.parse.fhir.create_fhir_object(row, args.resource, resource_structure)
         fhir_objects.append(fhir_object)
         rows.refresh()
 
@@ -87,15 +83,12 @@ def batch_run_resource():
     batch_size = args.batch_size
 
     # Load data
-    resource_structure = fhirpipe.graphql.\
-        get_fhir_resource(project,
-                          resource,
-                          from_file=args.mock_pyrog_mapping)
+    resource_structure = fhirpipe.graphql.get_fhir_resource(
+        project, resource, from_file=args.mock_pyrog_mapping
+    )
 
     # Build the sql query
-    sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(
-        project, resource_structure
-    )
+    sql_query, squash_rules, graph = fhirpipe.parse.sql.build_sql_query(project, resource_structure)
 
     # Run it
     print("Launching query batch per batch...")
@@ -119,9 +112,7 @@ def batch_run_resource():
         rows = tqdm(rows)
         for i, row in enumerate(rows):
             row = list(row)
-            fhir_object = fhirpipe.parse.fhir.create_fhir_object(
-                row, resource, resource_structure
-            )
+            fhir_object = fhirpipe.parse.fhir.create_fhir_object(row, resource, resource_structure)
             fhir_objects.append(fhir_object)
             rows.refresh()
 

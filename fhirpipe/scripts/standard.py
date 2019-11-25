@@ -1,8 +1,6 @@
 import datetime
-import logging
 import re
 from distutils.util import strtobool
-from enum import Enum
 
 # Utility functions (not callable)
 from fhirpipe.scripts import patient
@@ -12,6 +10,7 @@ from fhirpipe.scripts import utils
 
 
 # From now on, standard scripts
+
 
 def to_boolean(raw_input):
     return bool(strtobool(raw_input))
@@ -43,7 +42,7 @@ def equal(raw_input):
 
 
 def clean_phone(raw_input):
-    pattern = re.compile("(\d{2})" + "[\.\-\s]*(\d{2})" * 4)
+    pattern = re.compile("(\d{2})" + "[\.\-\s]*(\d{2})" * 4)  # noqa
     occurrences = pattern.findall(raw_input)
     if len(occurrences) > 0:
         phone = " ".join(occurrences[0])

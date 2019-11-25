@@ -1,4 +1,3 @@
-import datetime
 import logging
 from enum import Enum
 
@@ -68,9 +67,7 @@ def family_situation(code):
     if code in mapping.keys():
         return mapping[code]
     else:
-        logging.warning(
-            "In {}, args {} not recognised".format("family_situation", code)
-        )
+        logging.warning("In {}, args {} not recognised".format("family_situation", code))
         return code
 
 
