@@ -17,7 +17,7 @@ jobs:
         run: |
           # postgres is required to build fhir-pipe
           sudo apt update
-          sudo apt install postgresql
+          sudo apt install postgresql libpq-dev
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Lint with flake8
