@@ -15,6 +15,9 @@ jobs:
           python-version: '3.7'
       - name: Install dependencies
         run: |
+          # postgres is required to build fhir-pipe
+          sudo apt update
+          sudo apt install postgresql
           python -m pip install --upgrade pip
           pip install -r requirements.txt
       - name: Lint with flake8
