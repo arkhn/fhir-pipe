@@ -4,3 +4,4 @@ tqdm==4.36.1
 fhirstore==0.0.4
 pymongo==3.9.0
 PyYAML==5.1.2
+requests==2.22.0
