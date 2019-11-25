@@ -11,6 +11,7 @@ from fhirpipe.scripts import utils
 
 # From now on, standard scripts
 
+
 def to_boolean(raw_input):
     return bool(strtobool(raw_input))
 

@@ -126,16 +126,15 @@ def run_graphql_query(graphql_query, variables=None):
     and returns a json parsed response.
     """
     request = requests.post(
-        fhirpipe.global_config.graphql.server, headers=get_headers(), json={
-            "query": graphql_query, "variables": variables}
+        fhirpipe.global_config.graphql.server,
+        headers=get_headers(),
+        json={"query": graphql_query, "variables": variables},
     )
     if request.status_code == 200:
         return request.json()
     else:
         raise Exception(
-            "Query failed with returning code {}\n{}.".format(
-                request.status_code, request.reason
-            )
+            "Query failed with returning code {}\n{}.".format(request.status_code, request.reason)
         )
 
 
@@ -167,9 +166,7 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
             if resource_json["name"] == resource_name:
                 return resource_json
 
-        raise FileNotFoundError(
-            f"Resource {resource_name} not found in the graphql json resource"
-        )
+        raise FileNotFoundError(f"Resource {resource_name} not found in the graphql json resource")
     else:
         available_resources = get_available_resources(source_name)
         assert resource_name in list(
@@ -182,12 +179,12 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
                 lambda x: x["fhirType"] == resource_name,
                 available_resources["data"]["availableResources"],
             )
-        )[0]["id"]  # TODO: multiple resources can exists for a given fhirType
+        )[0][
+            "id"
+        ]  # TODO: multiple resources can exists for a given fhirType
 
         # Get Resource mapping
-        resource = run_graphql_query(
-            resource_query, variables={"resourceId": resource_id}
-        )
+        resource = run_graphql_query(resource_query, variables={"resourceId": resource_id})
 
         return resource["data"]["resource"]
 
@@ -216,9 +213,7 @@ def get_available_resources(source_name, from_file=None):
 
     else:
         # Get Source id from Source name
-        source = run_graphql_query(
-            source_info_query, variables={"sourceName": source_name}
-        )
+        source = run_graphql_query(source_info_query, variables={"sourceName": source_name})
         source_id = source["data"]["sourceInfo"]["id"]
 
         # Check that Resource exists for given Source

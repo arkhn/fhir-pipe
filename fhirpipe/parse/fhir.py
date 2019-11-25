@@ -24,10 +24,7 @@ def create_fhir_object(row, resource, resource_structure):
         a dictionary with a the structure of a fhir object
     """
     # Identify the fhir object
-    fhir_object = {
-        "id": str(uuid4()),
-        "resourceType": resource,
-    }
+    fhir_object = {"id": str(uuid4()), "resourceType": resource}
 
     # The first node has a different structure so iterate outside the
     # dfs_create_fhir function
@@ -58,10 +55,7 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):  # noqa
             None, but the initial dict provided as fhir_obj is now filled.
     """
     # if there are columns specified
-    if (
-        "inputColumns" in fhir_spec.keys()
-        and len(fhir_spec["inputColumns"]) > 0
-    ):
+    if "inputColumns" in fhir_spec.keys() and len(fhir_spec["inputColumns"]) > 0:
         values = []
         for inputs in fhir_spec["inputColumns"]:
             # If a sql location is provided, then a sql value has been returned
@@ -94,9 +88,7 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):  # noqa
                     join_rows_remaining = []
                     for i, join_row in enumerate(join_rows):
                         fhir_obj_list_el = dict()
-                        dfs_create_fhir_object(
-                            fhir_obj_list_el, fhir_spec_attr, join_row
-                        )
+                        dfs_create_fhir_object(fhir_obj_list_el, fhir_spec_attr, join_row)
                         fhir_obj_list.append(fhir_obj_list_el)
                         # Not everything has been consumed: we need to
                         # keep what's remaining
@@ -107,9 +99,7 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):  # noqa
                         row.insert(0, join_rows_remaining)
                 else:
                     fhir_obj_list_el = dict()
-                    dfs_create_fhir_object(
-                        fhir_obj_list_el, fhir_spec_attr, row
-                    )
+                    dfs_create_fhir_object(fhir_obj_list_el, fhir_spec_attr, row)
                     fhir_obj_list.append(fhir_obj_list_el)
             fhir_obj[fhir_spec["name"]] = fhir_obj_list
         # 2. It's a profile: we don't keep this layer in the fhir object and
@@ -121,9 +111,7 @@ def dfs_create_fhir_object(fhir_obj, fhir_spec, row):  # noqa
         else:
             fhir_obj[fhir_spec["name"]] = dict()
             for fhir_spec_attr in fhir_spec["attributes"]:
-                dfs_create_fhir_object(
-                    fhir_obj[fhir_spec["name"]], fhir_spec_attr, row
-                )
+                dfs_create_fhir_object(fhir_obj[fhir_spec["name"]], fhir_spec_attr, row)
 
             # If the object is a Reference, to we give it to bind_reference
             if fhir_spec["type"].startswith("Reference"):
@@ -189,10 +177,7 @@ def bind_reference(fhir_object, fhir_spec):
 
         # Collect all the resource_types which could be referenced
         try:
-            resource_types = (
-                re.search(resourceTypeRegexp,
-                          fhir_spec["type"]).group(1).split("|")
-            )
+            resource_types = re.search(resourceTypeRegexp, fhir_spec["type"]).group(1).split("|")
         except AttributeError:
             raise ReferenceError(
                 f"No FHIR Resource type provided for the reference {fhir_spec['name']}"
@@ -202,9 +187,7 @@ def bind_reference(fhir_object, fhir_spec):
         # resources and exit when one is found
         fhir_uri = None
         for resource_type in resource_types:
-            fhir_uri = load.fhirstore.find_fhir_resource(
-                resource_type, identifier
-            )
+            fhir_uri = load.fhirstore.find_fhir_resource(resource_type, identifier)
             if fhir_uri is not None:
                 break
 
@@ -235,9 +218,7 @@ def get_identifier_table(resource_structure, extended_get=False):
 
     if len(targets) < 1:
         if extended_get:
-            raise AttributeError(
-                "There is no mapping rule for the identifier of this resource"
-            )
+            raise AttributeError("There is no mapping rule for the identifier of this resource")
         else:
             return get_identifier_table(resource_structure, extended_get=True)
     else:

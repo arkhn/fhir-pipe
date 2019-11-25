@@ -45,9 +45,7 @@ def build_sql_query(project, resource, info=None):
     table_name = get_table_name(info + ".*")
 
     # Get the info about the columns and joins to query
-    cols, joins = dfs_find_sql_cols_joins(
-        resource, source_table=table_name, project=project
-    )
+    cols, joins = dfs_find_sql_cols_joins(resource, source_table=table_name, project=project)
 
     # Format the sql arguments
     col_names = cols
@@ -56,10 +54,7 @@ def build_sql_query(project, resource, info=None):
         ", ".join(col_names),
         table_name,
         " ".join(
-            [
-                "LEFT JOIN {} ON {}".format(join_table, join_bind)
-                for join_table, join_bind in joins
-            ]
+            ["LEFT JOIN {} ON {}".format(join_table, join_bind) for join_table, join_bind in joins]
         ),
     )
     # Reference for each table the columns which belongs to it: {table1: [col1, ...]}
@@ -167,14 +162,10 @@ def find_cols_joins_in_object(tree, source_table, project):
                     # Add the join
                     join_type = "OneToMany"  # TODO: infer type ?
                     join_args = "{}{}.{}={}{}.{}".format(
-                        join["sourceOwner"] + "."
-                        if join["sourceOwner"] is not None
-                        else "",
+                        join["sourceOwner"] + "." if join["sourceOwner"] is not None else "",
                         join["sourceTable"],
                         join["sourceColumn"],
-                        join["targetOwner"] + "."
-                        if join["targetOwner"] is not None
-                        else "",
+                        join["targetOwner"] + "." if join["targetOwner"] is not None else "",
                         join["targetTable"],
                         join["targetColumn"],
                     )
@@ -193,9 +184,7 @@ def find_cols_joins_in_object(tree, source_table, project):
         return column_names, list(joins)
     # Else, we have no join and no col referenced: just a json node (ex: name.given)
     else:
-        cols, joins = dfs_find_sql_cols_joins(
-            tree["attributes"], source_table, project=project
-        )
+        cols, joins = dfs_find_sql_cols_joins(tree["attributes"], source_table, project=project)
         return cols, joins
 
 
@@ -220,8 +209,7 @@ def build_squash_rule(node, table_col_idx):
     unifying_col_idx = table_col_idx[node.name]
     for join_node in node.one_to_one:
         # print(node.name, "---", join_node.name)
-        join_cols, join_child_rules = build_squash_rule(
-            join_node, table_col_idx)
+        join_cols, join_child_rules = build_squash_rule(join_node, table_col_idx)
         unifying_col_idx += join_cols
         if len(join_child_rules) > 0:
             print("ERROR", join_child_rules, "not handled")

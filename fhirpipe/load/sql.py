@@ -25,9 +25,7 @@ def get_connection(connection_type: str = None):
     try:
         lib = eval(connection["lib"])
     except NameError:
-        logging.warning(
-            f"NameError found, did you import the lib {connection['lib']} ?"
-        )
+        logging.warning(f"NameError found, did you import the lib {connection['lib']} ?")
         raise ImportError
     args = connection["args"]
     kwargs = connection["kwargs"]
@@ -66,20 +64,14 @@ def batch_run(query, batch_size, offset=0, connection=None):
     # Adapt the offset and limit depending of oracle or postgre db
     database_type = fhirpipe.global_config.sql.default
     if database_type == "oracle":
-        offset_batch_size_instruction = (
-            " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
-        )
+        offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
     elif database_type == "postgre":
         offset_batch_size_instruction = " OFFSET {} LIMIT {}"
     else:
-        raise RuntimeError(
-            f"{database_type} is not a supported database type."
-        )
+        raise RuntimeError(f"{database_type} is not a supported database type.")
 
     while call_next_batch:
-        batch_query = query + offset_batch_size_instruction.format(
-            offset, batch_size
-        )
+        batch_query = query + offset_batch_size_instruction.format(offset, batch_size)
         batch = run(batch_query, connection)
 
         call_next_batch = len(batch) >= batch_size
@@ -165,19 +157,14 @@ def apply_joins(rows, squash_rule, parent_cols=tuple()):
         assert all([e in range(len(row)) for e in cols])
         # As we work on the whole row, we add the parent left parts
         # transmitted recursively
-        pivot_cols, many_cols = (
-            parent_cols + cols,
-            leave(range(len(row)), parent_cols + cols),
-        )
+        pivot_cols, many_cols = (parent_cols + cols, leave(range(len(row)), parent_cols + cols))
         # Build an identifier for the 'left' part of the join
         hash_key = hash("".join(take(row, pivot_cols)))
         if hash_key not in new_row_dict:
             # Add the key if needed
             new_row_dict[hash_key] = {
                 "pivot": {
-                    "before": take(row, range(many_cols[0]))
-                    if len(many_cols) > 0
-                    else list(row),
+                    "before": take(row, range(many_cols[0])) if len(many_cols) > 0 else list(row),
                     "after": take(row, range(many_cols[-1] + 1, len(row)))
                     if len(many_cols) > 0
                     else [],

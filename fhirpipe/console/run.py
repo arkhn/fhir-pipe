@@ -33,9 +33,9 @@ def run():
     fhirstore.bootstrap(depth=5)
 
     # Get all resources available in the pyrog mapping for a given source
-    list_resources = [r["name"] for r in get_available_resources(
-        args.project,
-        from_file=args.mock_pyrog_mapping)]
+    list_resources = [
+        r["name"] for r in get_available_resources(args.project, from_file=args.mock_pyrog_mapping)
+    ]
 
     n = len(list_resources)
     for i, resource in enumerate(list_resources):
