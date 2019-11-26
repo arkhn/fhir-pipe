@@ -3,7 +3,7 @@ name: fhir-pipe
 on: [push]
 
 jobs:
-  build:
+  tests:
     name: Lint and test
     runs-on: ubuntu-18.04
 
@@ -34,16 +34,20 @@ jobs:
           docker-compose -f docker-compose.test.yml up -d
           ./scripts/wait_for_db.sh localhost 5431 mimicuser mimicuser mimic
           python -m pytest -svv test/
+      - name: echo
+        run: echo {{ github.ref }}
 
   publish:
     name: Build and publish
+    runs-on: ubuntu-18.04
+
+    needs: tests
+    if: github.ref == 'ref/heads/actions-publish'
+
     env:
       GITHUB_REGISTRY: docker.pkg.github.com
       IMAGE: arkhn/fhir-pipe
       TAG: latest
-    runs-on: ubuntu-18.04
-    needs: build
-    if: github.ref == 'ref/heads/master'
     steps:
       - uses: actions/checkout@v1
       - name: Set up Python
