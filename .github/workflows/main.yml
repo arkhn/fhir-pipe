@@ -34,15 +34,13 @@ jobs:
           docker-compose -f docker-compose.test.yml up -d
           ./scripts/wait_for_db.sh localhost 5431 mimicuser mimicuser mimic
           python -m pytest -svv test/
-      - name: echo
-        run: echo {{ github.ref }}
 
   publish:
     name: Build and publish
     runs-on: ubuntu-18.04
 
     needs: tests
-    if: github.ref == 'ref/heads/actions-publish'
+    if: github.ref == 'refs/heads/master'
 
     env:
       GITHUB_REGISTRY: docker.pkg.github.com
