@@ -53,18 +53,16 @@ def build_sql_query(columns, joins, info=None):
     """
 
 
-def build_squash_rules(columns, joins, info=None):
+def build_squash_rules(columns, joins, main_table):
     """
     """
-    if info is None or not isinstance(info, str):
+    if not isinstance(main_table, str):
         raise AttributeError(
             "Please specify the main table for this FHIR Resource,\
             usually for example for the resource fhir Patient you would\
             provide a sql table OWNER.Patients or something like this.\
             Don't forget to provide the owner if it applies"
         )
-
-    table_name = get_table_name(info + ".*")
 
     # Build a dependcy graph
     dependency_graph = build_graph(joins)
@@ -77,7 +75,7 @@ def build_squash_rules(columns, joins, info=None):
             table_col_idx[table] = []
         table_col_idx[table].append(col.split(".")[-1].lower())
 
-    head_node = dependency_graph.get(table_name)
+    head_node = dependency_graph.get(main_table)
     squash_rules = build_squash_rule(head_node, table_col_idx)
 
     return squash_rules
@@ -218,54 +216,6 @@ def get_connection(connection_type: str = None):
     return lib.connect(*args, **kwargs)
 
 
-def batch_run(query, batch_size, offset=0, connection=None):
-    """
-    Run a query batch per batch, when the query is too big
-
-    args:
-        query (str): the query to batch
-        batch_size (int): the size of the batch
-        offset (int): initial offset (used when restarting a job which stopped
-            in the middle)
-        connection (str): the connection type / database to use
-
-    return:
-        an iterator which computes and returns the results batch per batch
-    """
-    call_next_batch = True
-    batch_idx = 0
-
-    # Remove the ending ';' if any
-    if query[-1] == ";":
-        query = query[:-1]
-    # A query with a limit can't be batch run
-    limit_words = ["limit", "fetch next"]
-    if any(limit_word in query.lower() for limit_word in limit_words):
-        raise NotImplementedError(
-            "You currently can't run by batch a query which already has a limit"
-            "statement. Error in {}".format(query)
-        )
-
-    # Adapt the offset and limit depending of oracle or postgre db
-    database_type = fhirpipe_clean.global_config.sql.default
-    if database_type == "oracle":
-        offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
-    elif database_type == "postgre":
-        offset_batch_size_instruction = " OFFSET {} LIMIT {}"
-    else:
-        raise RuntimeError(f"{database_type} is not a supported database type.")
-
-    while call_next_batch:
-        batch_query = query + offset_batch_size_instruction.format(offset, batch_size)
-        batch = run(batch_query, connection)
-
-        call_next_batch = len(batch) >= batch_size
-        offset += batch_size
-        batch_idx += 1
-
-        yield batch_idx, offset, batch
-
-
 def run_sql_query(query, connection: str = None):
     """
     Run a sql query after opening a sql connection
@@ -277,16 +227,7 @@ def run_sql_query(query, connection: str = None):
     return:
         the result of the sql query run on the specified connection
     """
-    # with get_connection(connection) as connection:
-    #     with connection.cursor() as cursor:
-    #         cursor.execute(query)
-    #         rows = cursor.fetchall()
-
-    #     connection.commit()
-
-    # # Replace None values with '' AND replace date with str representation
-    # rows[:] = [[str(el) if el is not None else "" for el in row] for row in rows]
     pd_query = pd.read_sql_query(query, get_connection(connection))
     df = pd.DataFrame(pd_query)
-    print(df)
+
     return df
