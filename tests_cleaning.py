@@ -38,14 +38,11 @@ if __name__ == "__main__":
   cols, joins = find_cols_and_joins(resource_structure)
 
   # Build the sql query
-  sql_query = build_sql_query(
-    cols, joins, info=main_table
-  )
+  sql_query = build_sql_query(cols, joins, main_table)
   print(sql_query)
+
   # Build squash rules
-  squash_rules = build_squash_rules(
-    cols, joins, info=main_table
-  )
+  squash_rules = build_squash_rules(cols, joins, main_table)
 
   # Run the sql query
   print("Launching query...")

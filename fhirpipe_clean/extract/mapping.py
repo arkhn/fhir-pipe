@@ -24,7 +24,7 @@ def get_resources(source_name, from_file=None):
 
         return source_json["resources"]
 
-    else:
+    else: # TODO not cleaned
         # Get Source id from Source name
         source = run_graphql_query(source_info_query, variables={"sourceName": source_name})
         source_id = source["data"]["sourceInfo"]["id"]
