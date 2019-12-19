@@ -12,7 +12,11 @@ from fhirpipe_clean.extract.mapping import get_identifier_table
 from fhirpipe_clean.extract.sql import find_cols_and_joins, build_sql_query, build_squash_rules, run_sql_query
 from fhirpipe_clean.transform.transform import squash_rows, create_fhir_object
 
+import logging
+
 if __name__ == "__main__":
+  logging.basicConfig(filename='fhirpipe.log', level=logging.INFO)
+
   project = "Mimic"
   mock_pyrog_mapping = "test/integration/fixtures/graphql_mimic.json"
 
@@ -32,7 +36,7 @@ if __name__ == "__main__":
 
   # Get main table
   main_table = get_identifier_table(resource_structure)
-  print(main_table)
+  print("main_table", main_table)
 
   # Extract cols and joins
   cols, joins = find_cols_and_joins(resource_structure)

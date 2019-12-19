@@ -1,6 +1,6 @@
 sql:
-  default: 'postgre'
-  postgre:
+  default: 'postgres'
+  postgres:
     lib: 'psycopg2'
     args: []
     kwargs:
@@ -9,10 +9,10 @@ sql:
       database: 'mimic'
       user: 'mimicuser'
       password: 'mimicuser'
-    oracle:
-      lib: 'cx_Oracle'
-      args: ['user/password@database']
-      kwargs: {}
+  oracle:
+    lib: 'cx_Oracle'
+    args: ['user/password@database']
+    kwargs: {}
 fhirstore:
   host: 'localhost'
   port: 27017
