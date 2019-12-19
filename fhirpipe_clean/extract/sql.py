@@ -31,19 +31,9 @@ def get_table_name(name):
         return None
 
 
-def build_sql_query(columns, joins, info=None):
+def build_sql_query(columns, joins, table_name):
     """
     """
-    if info is None or not isinstance(info, str):
-        raise AttributeError(
-            "Please specify the main table for this FHIR Resource,\
-            usually for example for the resource fhir Patient you would\
-            provide a sql table OWNER.Patients or something like this.\
-            Don't forget to provide the owner if it applies"
-        )
-
-    table_name = get_table_name(info + ".*")
-
     return f"""
         SELECT {", ".join(columns)}
         FROM {table_name}
@@ -165,17 +155,21 @@ def build_squash_rule(node, table_col_idx):
     Using the dependency graph of the joins on the tables (accessed through the
     head node), regroup (using the id) the columns which should be squashed (ie
     those accessed through a OneToMany join)
-    :param node: the node of the source table (which can be relative in recursive calls)
-    :param table_col_idx: a dict [table_name]: list of idx of cols in the SQL response
-        which come from this table
-    :return: [
-        (idx cols for source_table),
+
+    Args:
+        node: the node of the source table (which can be relative in recursive calls)
+        table_col_idx: a dict [table_name]: list of idx of cols in the SQL response
+            which come from this table
+
+    Return:
         [
-            (idx cols for join OneToMany n1, []),
-            (idx cols for join OneToMany n2, []),
-            ...
+            (idx cols for source_table),
+            [
+                (idx cols for join OneToMany n1, [...]),
+                (idx cols for join OneToMany n2, [...]),
+                ...
+            ]
         ]
-    ]
     """
     # We refer the col indices of the table
     unifying_col_idx = table_col_idx[node.name]
@@ -195,7 +189,7 @@ def get_connection(connection_type: str = None):
     It should be used in a context environment (with get_connection(c) as ...)
 
     args:
-        connection_type (str): a string like "postgre", "oracle". See your
+        connection_type (str): a string like "postgres", "oracle". See your
             config file for available values
 
     return:
@@ -205,29 +199,34 @@ def get_connection(connection_type: str = None):
     if connection_type is None:
         connection_type = sql_config["default"]
     connection = sql_config[connection_type]
-    try:
-        lib = eval(connection["lib"])
-    except NameError:
-        logging.warning(f"NameError found, did you import the lib {connection['lib']} ?")
-        raise ImportError
+
     args = connection["args"]
     kwargs = connection["kwargs"]
 
-    return lib.connect(*args, **kwargs)
+    if connection_type == "postgres":
+        return psycopg2.connect(*args, **kwargs)
+    elif connection_type == "oracle":
+        return cx_Oracle.connect(*args, **kwargs)
+    else:
+        raise ValueError('Config specifies a wrong database type. \
+            The only types supported are "postgres" and "oracle".')
 
 
-def run_sql_query(query, connection: str = None):
+def run_sql_query(query, connection: str = None, chunksize: int = None):
     """
     Run a sql query after opening a sql connection
 
     args:
         query (str): a sql query to run
         connection (str): the connection type / database to use
+        chunksize: If specified, return an iterator where chunksize
+            is the number of rows to include in each chunk.
 
     return:
         the result of the sql query run on the specified connection
+            or an iterator if chunksize is specified
     """
-    pd_query = pd.read_sql_query(query, get_connection(connection))
+    pd_query = pd.read_sql_query(query, get_connection(connection), chunksize)
     df = pd.DataFrame(pd_query)
 
     return df

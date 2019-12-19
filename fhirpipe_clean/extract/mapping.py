@@ -1,6 +1,8 @@
-import json
 import os
-import requests
+import logging
+
+from fhirpipe_clean.extract.graphql import *
+
 
 def get_resources(source_name, from_file=None):
     """
@@ -24,7 +26,7 @@ def get_resources(source_name, from_file=None):
 
         return source_json["resources"]
 
-    else: # TODO not cleaned
+    else:
         # Get Source id from Source name
         source = run_graphql_query(source_info_query, variables={"sourceName": source_name})
         source_id = source["data"]["sourceInfo"]["id"]
@@ -88,7 +90,7 @@ def get_identifier_table(resource_structure, extended_get=False):
             return get_identifier_table(resource_structure, extended_get=True)
     else:
         if len(targets) > 1:
-            print(
+            logging.warning(
                 "Warning: Too many choices for the right main table for building SQL request,\
 taking the first one."
             )
