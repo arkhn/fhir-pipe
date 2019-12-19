@@ -1,6 +1,6 @@
 sql:
-  default: 'postgre'
-  postgre:
+  default: 'postgres'
+  postgres:
     lib: 'psycopg2'
     args: []
     kwargs:
