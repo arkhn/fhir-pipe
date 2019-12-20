@@ -9,8 +9,8 @@ from fhirpipe_clean.config import Config
 
 from fhirpipe_clean.extract.mapping import get_resources, prune_fhir_resource
 from fhirpipe_clean.extract.mapping import get_identifier_table
-from fhirpipe_clean.extract.sql import find_cols_and_joins, build_sql_query, build_squash_rules, run_sql_query
-from fhirpipe_clean.transform.transform import squash_rows, create_fhir_object
+from fhirpipe_clean.extract.sql import find_cols_joins_and_scripts, build_sql_query, build_squash_rules, run_sql_query
+from fhirpipe_clean.transform.transform import squash_rows, apply_scripts, create_fhir_object
 
 import logging
 
@@ -39,8 +39,7 @@ if __name__ == "__main__":
   print("main_table", main_table)
 
   # Extract cols and joins
-  cols, joins = find_cols_and_joins(resource_structure)
-
+  cols, joins, cleaning_scripts, merging_scripts = find_cols_joins_and_scripts(resource_structure)
   # Build the sql query
   sql_query = build_sql_query(cols, joins, main_table)
   print(sql_query)
@@ -51,19 +50,20 @@ if __name__ == "__main__":
   # Run the sql query
   print("Launching query...")
   df = run_sql_query(sql_query)
-  #for row in rows[10:30]:
-  #  print(row)
+  df.columns = cols
+  print(df)
   print("Before squash: ", len(df))
 
   # Apply join rule to merge some lines from the same resource
   print("Squashing rows...")
   start = time.time()
   df = squash_rows(df, squash_rules)
-  for row in df[10:30]:
-   print(row)
   print("After squash: ", len(df))
   print("squash duration: ", time.time() - start)
   print(df)
+
+  # Apply cleaning and merging scripts on df
+  apply_scripts(df, cleaning_scripts, merging_scripts)
 
   start = time.time()
 
