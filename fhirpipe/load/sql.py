@@ -12,7 +12,7 @@ def get_connection(connection_type: str = None):
     It should be used in a context environment (with get_connection(c) as ...)
 
     args:
-        connection_type (str): a string like "postgre", "oracle". See your
+        connection_type (str): a string like "postgres", "oracle". See your
             config file for available values
 
     return:
@@ -61,11 +61,11 @@ def batch_run(query, batch_size, offset=0, connection=None):
             "statement. Error in {}".format(query)
         )
 
-    # Adapt the offset and limit depending of oracle or postgre db
+    # Adapt the offset and limit depending of oracle or postgres db
     database_type = fhirpipe.global_config.sql.default
     if database_type == "oracle":
         offset_batch_size_instruction = " OFFSET {} ROWS FETCH NEXT {} ROWS ONLY"
-    elif database_type == "postgre":
+    elif database_type == "postgres":
         offset_batch_size_instruction = " OFFSET {} LIMIT {}"
     else:
         raise RuntimeError(f"{database_type} is not a supported database type.")
