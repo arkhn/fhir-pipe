@@ -2,34 +2,11 @@ import psycopg2  # noqa
 import cx_Oracle  # noqa
 import logging
 import pandas as pd
+from collections import defaultdict
 
 import fhirpipe_clean
 from fhirpipe_clean.extract.graph import DependencyGraph
-
-def build_col_name(table, column, owner=None):
-    return "{}{}.{}".format(
-        owner + "." if owner is not None else "",
-        table,
-        column,
-    )
-def get_table_name(name):
-    """
-    Extract the table_name from a column specification
-
-    Example:
-        Case 1
-            OWNER.TABLE.COLUMN -> OWNER.TABLE
-        Case 2
-            TABLE.COLUMN -> TABLE
-    """
-    elems = name.split(".")
-    if len(elems) == 3:
-        return ".".join(name.split(".")[:2])
-    elif len(elems) == 2:
-        return name.split(".")[0]
-    else:
-        return None
-
+from fhirpipe_clean.utils import get_table_name, build_col_name, new_col_name
 
 def build_sql_query(columns, joins, table_name):
     """
@@ -63,7 +40,7 @@ def build_squash_rules(columns, joins, main_table):
         table = get_table_name(col)
         if table not in table_col_idx:
             table_col_idx[table] = []
-        table_col_idx[table].append(col.split(".")[-1].lower())
+        table_col_idx[table].append(col)
 
     head_node = dependency_graph.get(main_table)
     squash_rules = build_squash_rule(head_node, table_col_idx)
@@ -71,7 +48,7 @@ def build_squash_rules(columns, joins, main_table):
     return squash_rules
 
 
-def find_cols_and_joins(tree):
+def find_cols_joins_and_scripts(tree):
     """
     Run through the dict/tree of a Resource
     To find:
@@ -87,37 +64,87 @@ def find_cols_and_joins(tree):
         a tuple containing all the columns referenced in the tree and all the joins
         to perform to access those columns
     """
-    columns = []
+    columns = set()
     joins = set()
+    # The following dicts are used to store script names and on which columns
+    # they are used.
+    # cleaning_scripts has the form
+    # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
+    cleaning_scripts = defaultdict(list)
+    # cleaning_scripts has the form
+    # {"script1": (["col1", "col3", ...], [static3]),
+    #  "script4": ([col2], [static1, static3, ...]),
+    #  ...}
+    merging_scripts = defaultdict(list)
     if isinstance(tree, dict):
+        # If there are some inputs, we can build the objects to output
         if "inputColumns" in tree.keys() and tree["inputColumns"]:
+
+            # Check if we need to build the object to put in merging_scripts
+            need_merge = tree["mergingScript"] is not None
+            if need_merge:
+                cols_to_merge = ([], [])
+
             for col in tree["inputColumns"]:
-                # Check if table and column target are defined
-                if col["table"] is not None and col["column"] is not None:
+
+                # If table and column are defined, we have an sql input
+                if col["table"] and col["column"]:
                     column_name = build_col_name(col["table"], col["column"], col["owner"])
-                    columns.append(column_name)
+                    columns.add(column_name)
 
-                # If there is a join
-                if "joins" in col.keys() and len(col["joins"]) > 0:
+                    # If there are joins, add them to the output
                     for join in col["joins"]:
-                        # Add the join
-                        source_col = build_col_name(join["sourceTable"], join["sourceColumn"], join["sourceOwner"])
-                        target_col = build_col_name(join["targetTable"], join["targetColumn"], join["targetOwner"])
+                        source_col = build_col_name(
+                            join["sourceTable"], join["sourceColumn"], join["sourceOwner"]
+                        )
+                        target_col = build_col_name(
+                            join["targetTable"], join["targetColumn"], join["targetOwner"]
+                        )
                         joins.add((source_col, target_col))
-                # Else it's a static value and there is nothing to do
 
-        else:  # Recurse in child
-            cols_child, joins_child = find_cols_and_joins(tree["attributes"])
-            columns += cols_child
-            joins = joins.union(joins_child)
+                    # If there is a cleaning script
+                    if col["script"]:
+                        column_name = build_col_name(
+                            col["table"], col["column"], col["owner"]
+                        )
+                        cleaning_scripts[col["script"]].append(column_name)
+                        if need_merge:
+                            cols_to_merge[0].append(new_col_name(col["script"], column_name))
+                    # Otherwise, simply add the column name
+                    elif need_merge:
+                        cols_to_merge[0].append(column_name)
 
+                # If it's a static value add it in case we need it for the merging
+                elif col["staticValue"] and need_merge:
+                    cols_to_merge[1].append(col["staticValue"])
+
+            # Add merging script to scripts dict if needed
+            if tree["mergingScript"]:
+                merging_scripts[tree["mergingScript"]].append(cols_to_merge)
+
+        # If no input, we recurse in child
+        else:
+            return find_cols_joins_and_scripts(
+                tree["attributes"]
+            )
+
+    # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(tree, list) and len(tree) > 0:
         for t in tree:
-            cols_children, joins_children = find_cols_and_joins(t)
-            columns += cols_children
-            joins = joins.union(joins_children)
+            (
+                c_children,
+                j_children,
+                cs_children,
+                ms_children,
+            ) = find_cols_joins_and_scripts(t)
+            columns = columns.union(c_children)
+            joins = joins.union(j_children)
+            for scr, scr_cols in cs_children.items():
+                cleaning_scripts[scr] += scr_cols
+            for scr, scr_cols in ms_children.items():
+                merging_scripts[scr] += scr_cols
 
-    return columns, joins
+    return columns, joins, cleaning_scripts, merging_scripts
 
 
 def build_graph(joins):
@@ -132,8 +159,6 @@ def build_graph(joins):
         ), ... ],
         graph of dependency of type DependencyGraph
     """
-    print("build graph")
-    print(joins)
     joins_elems = dict()
     graph = DependencyGraph()
     for join in joins:
@@ -208,8 +233,10 @@ def get_connection(connection_type: str = None):
     elif connection_type == "oracle":
         return cx_Oracle.connect(*args, **kwargs)
     else:
-        raise ValueError('Config specifies a wrong database type. \
-            The only types supported are "postgres" and "oracle".')
+        raise ValueError(
+            'Config specifies a wrong database type. \
+            The only types supported are "postgres" and "oracle".'
+        )
 
 
 def run_sql_query(query, connection: str = None, chunksize: int = None):
