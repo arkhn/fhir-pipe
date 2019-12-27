@@ -66,6 +66,13 @@ def apply_scripts(df, cleaning_scripts, merging_scripts):
             df[new_col_name(merging_script, (cols, statics))] = func(*args)
 
 
+def create_resource(chunk, resource_structure):
+    res = []
+    for _, row in chunk.iterrows():
+        res.append(create_fhir_object(row, resource_structure, resource_structure["name"]))
+    return res
+
+
 def create_fhir_object(row, resource_structure, resource_name):
     # Identify the fhir object
     fhir_object = {"id": str(uuid4()), "resourceType": resource_name}
