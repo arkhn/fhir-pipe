@@ -1,7 +1,7 @@
 import os
 import logging
 
-from fhirpipe_clean.extract.graphql import *
+from fhirpipe.extract.graphql import *
 
 
 def get_resources(source_name=None, from_file=None):

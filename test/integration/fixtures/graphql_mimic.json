@@ -816,7 +816,7 @@
                             "id": "cjtygm07000fs07660h9zhut2",
                             "comment": "male | female | other | unknown",
                             "name": "gender",
-                            "mergingScript": null,
+                            "mergingScript": "fake_merging_script",
                             "isProfile": null,
                             "type": "code",
                             "inputColumns": [
@@ -827,6 +827,24 @@
                                     "column": "GENDER",
                                     "script": "map_gender",
                                     "staticValue": null,
+                                    "joins": []
+                                },
+                                {
+                                    "id": "cjtykdszt046607mzbv9z3",
+                                    "owner": null,
+                                    "table": "PATIENTS",
+                                    "column": "EXPIRE_FLAG",
+                                    "script": null,
+                                    "staticValue": null,
+                                    "joins": []
+                                },
+                                {
+                                    "id": "fakeid",
+                                    "owner": null,
+                                    "table": null,
+                                    "column": null,
+                                    "script": null,
+                                    "staticValue": "fake static value",
                                     "joins": []
                                 }
                             ],

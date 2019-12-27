@@ -3,9 +3,9 @@ import cx_Oracle  # noqa
 import pandas as pd
 from collections import defaultdict
 
-import fhirpipe_clean
-from fhirpipe_clean.extract.graph import DependencyGraph
-from fhirpipe_clean.utils import get_table_name, build_col_name, new_col_name
+import fhirpipe
+from fhirpipe.extract.graph import DependencyGraph
+from fhirpipe.utils import get_table_name, build_col_name, new_col_name
 
 def build_sql_query(columns, joins, table_name):
     """
@@ -219,7 +219,7 @@ def get_connection(connection_type: str = None):
     return:
         a sql connexion
     """
-    sql_config = fhirpipe_clean.global_config["sql"]
+    sql_config = fhirpipe.global_config["sql"]
     if connection_type is None:
         connection_type = sql_config["default"]
     connection = sql_config[connection_type]
