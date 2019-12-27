@@ -29,7 +29,7 @@ def parse_args():
         "-c",
         "--chunksize",
         type=int,
-        default=100000,
+        default=None,
         help="Batch size if applicable (default: 100000)",
     )
 
@@ -47,6 +47,21 @@ def parse_args():
         type=str,
         default="Mimic",
         help="Project to run (default: Mimic)",
+    )
+
+    parser.add_argument(
+        "--reset_store",
+        action="store_true",
+        default=False,
+        help="Reset fhirstore before writing into it.",
+    )
+
+    parser.add_argument(
+        "-mp",
+        "--multiprocessing",
+        action="store_true",
+        default=False,
+        help="Use multiprocessing to build and save fhir objects.",
     )
 
     return parser.parse_args()

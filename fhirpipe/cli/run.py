@@ -7,8 +7,11 @@ from fhirpipe import set_global_config
 
 from fhirpipe.cli import parse_args, WELCOME_MSG
 
-from fhirpipe.extract.mapping import get_resources, prune_fhir_resource
-from fhirpipe.extract.mapping import get_identifier_table
+from fhirpipe.extract.mapping import (
+    get_resources,
+    prune_fhir_resource,
+    get_identifier_table,
+)
 from fhirpipe.extract.sql import (
     find_cols_joins_and_scripts,
     build_sql_query,
@@ -35,9 +38,11 @@ def run():
     # Define global config
     set_global_config(config_path=args.config)
 
-    # fhirstore = get_fhirstore()
-    # fhirstore.reset()
-    # fhirstore.bootstrap(depth=5)
+    fhirstore = get_fhirstore()
+    if args.reset_store:
+        fhirstore.reset()
+    for r in args.resources:
+        fhirstore.bootstrap(resource=r)
 
     # Get all resources available in the pyrog mapping for a given source
     resources = get_resources(from_file=args.mapping, source_name=args.source)
@@ -77,9 +82,11 @@ def run():
         df = run_sql_query(sql_query, chunksize=args.chunksize)
 
         for chunk in df:
-            print(chunk)
+            # Change not string value to strings (to be validated by jsonSchema for resource)
+            chunk = chunk.applymap(str)
+
+            # Force names of dataframe cols to be the same as in SQL query
             chunk.columns = cols
-            print(chunk)
             print("Before squash: ", len(chunk))
 
             # Apply join rule to merge some lines from the same resource
@@ -88,30 +95,43 @@ def run():
             chunk = squash_rows(chunk, squash_rules)
             print("After squash: ", len(chunk))
             print("squash duration: ", time.time() - start)
-            print(chunk)
 
             # Apply cleaning and merging scripts on chunk
             apply_scripts(chunk, cleaning_scripts, merging_scripts)
 
             start = time.time()
 
-            fhir_objects_chunks = pool.map(
-                partial(create_resource, resource_structure=resource_structure),
-                np.array_split(chunk, n_workers),
-            )
+            if args.multiprocessing:
+                fhir_objects_chunks = pool.map(
+                    partial(create_resource, resource_structure=resource_structure),
+                    np.array_split(chunk, n_workers),
+                )
 
-            for o in fhir_objects_chunks[0][:5]:
-                print(o)
-            print(len(fhir_objects_chunks[0]))
+                # FIXME hot fix for identifier to be validated by jsonSchema
+                for c in fhir_objects_chunks:
+                    for instance in c:
+                        instance["identifier"] = list(instance["identifier"].values())
+                        instance["maritalStatus"] = list(instance["maritalStatus"].values())
+                        del instance["communication"]
 
-            print("obj creation duration: ", time.time() - start)
+                print("obj creation duration: ", time.time() - start)
 
-            # start = time.time()
-            # Save instances in fhirstore
-            # print("Saving in fhirstore...")
-            # pool.map(save_many, fhir_objects_chunks)
+                start = time.time()
+                # Save instances in fhirstore
+                print("Saving in fhirstore...")
+                pool.map(save_many, fhir_objects_chunks)
 
-            # print("saving duration: ", time.time() - start)
+                print("saving duration: ", time.time() - start)
+            else:
+                instances = create_resource(chunk, resource_structure)
+
+                # FIXME hot fix for identifier to be validated by jsonSchema
+                for instance in instances:
+                    instance["identifier"] = list(instance["identifier"].values())
+                    instance["maritalStatus"] = list(instance["maritalStatus"].values())
+                    del instance["communication"]
+
+                save_many(instances)
 
     pool.close()
     pool.join()

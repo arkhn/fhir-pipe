@@ -36,9 +36,8 @@ class Table:
         self.connections = []
 
     def __repr__(self):
-        string = "[{} O2O:({}) O2M:({})]".format(
+        string = "[{} connections:({})]".format(
             self.name,
-            ",".join([j.name for j in self.one_to_one]),
             ",".join([j.name for j in self.connections]),
         )
         return string
@@ -52,4 +51,4 @@ class Table:
             self.connections.append(table)
 
     def connected(self, table):
-        return table in (self.one_to_one + self.connections)
+        return table in (self.connections)
