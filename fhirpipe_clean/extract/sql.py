@@ -1,6 +1,5 @@
 import psycopg2  # noqa
 import cx_Oracle  # noqa
-import logging
 import pandas as pd
 from collections import defaultdict
 
@@ -220,7 +219,7 @@ def get_connection(connection_type: str = None):
     return:
         a sql connexion
     """
-    sql_config = fhirpipe_clean.global_config.sql.to_dict()
+    sql_config = fhirpipe_clean.global_config["sql"]
     if connection_type is None:
         connection_type = sql_config["default"]
     connection = sql_config[connection_type]
