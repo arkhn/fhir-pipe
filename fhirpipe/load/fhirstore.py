@@ -12,10 +12,10 @@ def get_mongo_client():
     global _client
     if _client is None:
         _client = MongoClient(
-            host=fhirpipe.global_config.fhirstore.host,
-            port=fhirpipe.global_config.fhirstore.port,
-            username=fhirpipe.global_config.fhirstore.user,
-            password=fhirpipe.global_config.fhirstore.password,
+            host=fhirpipe.global_config["fhirstore"]["host"],
+            port=fhirpipe.global_config["fhirstore"]["port"],
+            username=fhirpipe.global_config["fhirstore"]["user"],
+            password=fhirpipe.global_config["fhirstore"]["password"],
         )
     return _client
 
@@ -27,7 +27,7 @@ def get_fhirstore():
     global _fhirstore
     if _fhirstore is None:
         _fhirstore = fhirstore.FHIRStore(
-            get_mongo_client(), fhirpipe.global_config.fhirstore.database
+            get_mongo_client(), fhirpipe.global_config["fhirstore"]["database"]
         )
     return _fhirstore
 
@@ -64,7 +64,7 @@ def find_fhir_resource(resource_type, identifier):
         which has an identifier matching the provided identifier,
         else None
     """
-    db_client = get_mongo_client()[fhirpipe.global_config.fhirstore.database]
+    db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
     if resource_type not in fhir_ids:
         results = db_client[resource_type].find(
             {"identifier": {"$elemMatch": {"value": {"$exists": True}}}}, ["id", "identifier"]

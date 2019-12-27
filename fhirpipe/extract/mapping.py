@@ -12,8 +12,8 @@ def get_resources(from_file=None, source_name=None):
 
     Args:
         source_name: name of the project (eg: Mimic)
-        from_file (optional): path to the static file to mock
-                              the pyrog API response.
+        from_file: path to the static file to mock
+            the pyrog API response.
     """
     if source_name is None and from_file is None:
         raise ValueError("You should provide source_name or from_file")

@@ -117,6 +117,10 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
                 result = [row[c] for c in cols_to_fetch[0]]
                 result.extend(cols_to_fetch[1])
 
+            # Unlist
+            if len(result) == 1:
+                result = result[0]
+
             fhir_obj[attribute_structure["name"]] = result
 
         else:
