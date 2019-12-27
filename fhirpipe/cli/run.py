@@ -107,13 +107,6 @@ def run():
                     np.array_split(chunk, n_workers),
                 )
 
-                # FIXME hot fix for identifier to be validated by jsonSchema
-                for c in fhir_objects_chunks:
-                    for instance in c:
-                        instance["identifier"] = list(instance["identifier"].values())
-                        instance["maritalStatus"] = list(instance["maritalStatus"].values())
-                        del instance["communication"]
-
                 print("obj creation duration: ", time.time() - start)
 
                 start = time.time()
@@ -124,12 +117,6 @@ def run():
                 print("saving duration: ", time.time() - start)
             else:
                 instances = create_resource(chunk, resource_structure)
-
-                # FIXME hot fix for identifier to be validated by jsonSchema
-                for instance in instances:
-                    instance["identifier"] = list(instance["identifier"].values())
-                    instance["maritalStatus"] = list(instance["maritalStatus"].values())
-                    del instance["communication"]
 
                 save_many(instances)
 

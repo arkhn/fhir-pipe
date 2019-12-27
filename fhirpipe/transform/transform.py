@@ -47,9 +47,12 @@ def squash_rows(df, squash_rule, parent_cols=[]):
     for child_rule in child_rules:
         df = squash_rows(df, child_rule, pivot_cols)
 
-    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(list)
+    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(squash_agg_first)
 
     return df
+
+def squash_agg_first(x):
+    return list(x)[0]
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts):
@@ -124,9 +127,27 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
             fhir_obj[attribute_structure["name"]] = result
 
         else:
-            fhir_obj[attribute_structure["name"]] = dict()
-            for attr in attribute_structure["attributes"]:
-                rec_create_fhir_object(fhir_obj[attribute_structure["name"]], attr, row)
+            if attribute_structure["type"] == "list":
+                fhir_obj[attribute_structure["name"]] = []
+                for attr in attribute_structure["attributes"]:
+                    child = {}
+                    rec_create_fhir_object(child, attr, row)
+                    fhir_obj[attribute_structure["name"]].append(child)
+
+            elif attribute_structure["type"].startswith("list"):
+                fhir_obj[attribute_structure["name"]] = []
+                for attr in attribute_structure["attributes"]:
+                    child = {}
+                    rec_create_fhir_object(child, attr, row)
+                    values = list(child.values())
+                    if len(values) == 1:
+                        values = values[0]
+                    fhir_obj[attribute_structure["name"]].append(values)
+
+            else:
+                fhir_obj[attribute_structure["name"]] = dict()
+                for attr in attribute_structure["attributes"]:
+                    rec_create_fhir_object(fhir_obj[attribute_structure["name"]], attr, row)
 
         # TODO reference
         # If the object is a Reference, to we give it to bind_reference
