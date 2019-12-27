@@ -2,7 +2,7 @@ import json
 import os
 import requests
 
-import fhirpipe_clean
+import fhirpipe
 
 
 source_info_query = """
@@ -116,7 +116,7 @@ query($resourceId: ID!) {
 def get_headers():
     return {
         "content-type": "application/json",
-        "Authorization": f"Bearer {fhirpipe_clean.global_config.graphql.token}",
+        "Authorization": f"Bearer {fhirpipe.global_config.graphql.token}",
     }
 
 
@@ -126,7 +126,7 @@ def run_graphql_query(graphql_query, variables=None):
     and returns a json parsed response.
     """
     request = requests.post(
-        fhirpipe_clean.global_config.graphql.server,
+        fhirpipe.global_config.graphql.server,
         headers=get_headers(),
         json={"query": graphql_query, "variables": variables},
     )

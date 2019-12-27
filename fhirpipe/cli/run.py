@@ -3,17 +3,17 @@ import numpy as np
 import multiprocessing as mp
 from functools import partial
 
-from fhirpipe_clean import set_global_config
+from fhirpipe import set_global_config
 
-from fhirpipe_clean.cli import parse_args, WELCOME_MSG
+from fhirpipe.cli import parse_args, WELCOME_MSG
 
-from fhirpipe_clean.extract.mapping import get_resources, prune_fhir_resource
-from fhirpipe_clean.extract.mapping import get_identifier_table
-from fhirpipe_clean.extract.sql import find_cols_joins_and_scripts, build_sql_query, build_squash_rules, run_sql_query
+from fhirpipe.extract.mapping import get_resources, prune_fhir_resource
+from fhirpipe.extract.mapping import get_identifier_table
+from fhirpipe.extract.sql import find_cols_joins_and_scripts, build_sql_query, build_squash_rules, run_sql_query
 
-from fhirpipe_clean.transform.transform import squash_rows, apply_scripts, create_resource
+from fhirpipe.transform.transform import squash_rows, apply_scripts, create_resource
 
-from fhirpipe_clean.load.fhirstore import get_fhirstore, save_many
+from fhirpipe.load.fhirstore import get_fhirstore, save_many
 
 
 def run(selected_resources: list = None):

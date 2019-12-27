@@ -13,7 +13,7 @@ from fhirpipe.scripts import utils
 
 
 def to_boolean(raw_input):
-    return bool(strtobool(raw_input))
+    return bool(raw_input)
 
 
 def make_title(raw_input):
@@ -25,6 +25,8 @@ def split_space(raw_input):
 
 
 def format_date_from_yyyymmdd(raw_input):
+    if not isinstance(raw_input, str):
+        raw_input = str(raw_input)
     if utils.is_empty(raw_input):
         return ""
     try:
@@ -73,6 +75,8 @@ def if_valid(process, callback):
 
     return if_valid_func
 
+def fake_merging_script(*values):
+    return values[0]
 
 functions = {
     "to_boolean": to_boolean,
@@ -81,6 +85,7 @@ functions = {
     "format_date_from_yyyymmdd": format_date_from_yyyymmdd,
     "equal": equal,
     "clean_phone": clean_phone,
+    "fake_merging_script": fake_merging_script,
 }
 # Add the function declared in the specific resource files
 resources = [patient]

@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 from uuid import uuid4
 
-from fhirpipe_clean.utils import build_col_name, new_col_name
-from fhirpipe_clean.scripts import get_script
+from fhirpipe.utils import build_col_name, new_col_name
+from fhirpipe.scripts import get_script
 
 
 def squash_rows(df, squash_rule, parent_cols=[]):
