@@ -4,7 +4,7 @@ import logging
 from fhirpipe.extract.graphql import *
 
 
-def get_resources(source_name=None, from_file=None):
+def get_resources(from_file=None, source_name=None):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -31,7 +31,9 @@ def get_resources(source_name=None, from_file=None):
 
     else:
         # Get Source id from Source name
-        source = run_graphql_query(source_info_query, variables={"sourceName": source_name})
+        source = run_graphql_query(
+            source_info_query, variables={"sourceName": source_name}
+        )
         source_id = source["data"]["sourceInfo"]["id"]
 
         # Check that Resource exists for given Source
@@ -40,32 +42,43 @@ def get_resources(source_name=None, from_file=None):
         )
         return available_resources["data"]["availableResources"]
 
+
 def prune_fhir_resource(resource_structure):
     """ Remove FHIR attributes that have not been mapped
     from resource structure object.
     """
-    resource_structure["attributes"][:] = [attr for attr in resource_structure["attributes"] if rec_prune_resource(attr)]
+    resource_structure["attributes"][:] = [
+        attr for attr in resource_structure["attributes"] if rec_prune_resource(attr)
+    ]
     return resource_structure
+
 
 def rec_prune_resource(attr_structure):
     """ Helper recursive function called by prune_fhir_resource.
     """
     if isinstance(attr_structure, dict):
         if attr_structure["attributes"]:
-            attr_structure["attributes"][:] = [attr for attr in attr_structure["attributes"] if rec_prune_resource(attr)]
+            attr_structure["attributes"][:] = [
+                attr
+                for attr in attr_structure["attributes"]
+                if rec_prune_resource(attr)
+            ]
             return len(attr_structure["attributes"]) > 0
         elif attr_structure["inputColumns"]:
             return True
         else:
             del attr_structure
             return False
-        
+
     elif isinstance(attr_structure, list):
-        attr_structure[:] = [attr for attr in attr_structure if rec_prune_resource(attr)]
+        attr_structure[:] = [
+            attr for attr in attr_structure if rec_prune_resource(attr)
+        ]
         return len(attr_structure) > 0
-    
+
     else:
         raise Exception("attr_structure not a dict nor a list.")
+
 
 def get_identifier_table(resource_structure, extended_get=False):
     """
@@ -88,7 +101,9 @@ def get_identifier_table(resource_structure, extended_get=False):
 
     if len(targets) < 1:
         if extended_get:
-            raise AttributeError("There is no mapping rule for the identifier of this resource")
+            raise AttributeError(
+                "There is no mapping rule for the identifier of this resource"
+            )
         else:
             return get_identifier_table(resource_structure, extended_get=True)
     else:
@@ -98,6 +113,7 @@ def get_identifier_table(resource_structure, extended_get=False):
 taking the first one."
             )
         return targets[0]
+
 
 def search_for_input_columns(obj, targets):
     """

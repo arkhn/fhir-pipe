@@ -116,7 +116,7 @@ query($resourceId: ID!) {
 def get_headers():
     return {
         "content-type": "application/json",
-        "Authorization": f"Bearer {fhirpipe.global_config.graphql.token}",
+        "Authorization": f"Bearer {fhirpipe.global_config['graphql']['token']}",
     }
 
 
@@ -126,7 +126,7 @@ def run_graphql_query(graphql_query, variables=None):
     and returns a json parsed response.
     """
     request = requests.post(
-        fhirpipe.global_config.graphql.server,
+        fhirpipe.global_config["graphql"]["server"],
         headers=get_headers(),
         json={"query": graphql_query, "variables": variables},
     )
@@ -134,5 +134,7 @@ def run_graphql_query(graphql_query, variables=None):
         return request.json()
     else:
         raise Exception(
-            "Query failed with returning code {}\n{}.".format(request.status_code, request.reason)
+            "Query failed with returning code {}\n{}.".format(
+                request.status_code, request.reason
+            )
         )
