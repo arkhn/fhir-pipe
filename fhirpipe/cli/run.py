@@ -9,14 +9,19 @@ from fhirpipe.cli import parse_args, WELCOME_MSG
 
 from fhirpipe.extract.mapping import get_resources, prune_fhir_resource
 from fhirpipe.extract.mapping import get_identifier_table
-from fhirpipe.extract.sql import find_cols_joins_and_scripts, build_sql_query, build_squash_rules, run_sql_query
+from fhirpipe.extract.sql import (
+    find_cols_joins_and_scripts,
+    build_sql_query,
+    build_squash_rules,
+    run_sql_query,
+)
 
 from fhirpipe.transform.transform import squash_rows, apply_scripts, create_resource
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
 
 
-def run(selected_resources: list = None):
+def run():
     """
     """
     # Parse arguments
@@ -29,23 +34,23 @@ def run(selected_resources: list = None):
 
     # Define global config
     set_global_config(config_path=args.config)
-    mock_pyrog_mapping = "test/integration/fixtures/graphql_mimic.json"
-    selected_resources = ["Patient"]
 
     # fhirstore = get_fhirstore()
     # fhirstore.reset()
     # fhirstore.bootstrap(depth=5)
 
     # Get all resources available in the pyrog mapping for a given source
-    resources = get_resources(from_file=mock_pyrog_mapping)
+    resources = get_resources(from_file=args.mapping, source_name=args.source)
     print("resources: ", [r["name"] for r in resources])
 
     n_workers = mp.cpu_count()
     pool = mp.Pool(n_workers)
 
+    print(f"Will run for: {args.resources}")
+
     for resource_structure in resources:
-        if selected_resources is not None:
-            if resource_structure["name"] not in selected_resources:
+        if args.resources is not None:
+            if resource_structure["name"] not in args.resources:
                 continue
 
         print(len(resource_structure["attributes"]))
@@ -57,7 +62,9 @@ def run(selected_resources: list = None):
         print("main_table", main_table)
 
         # Extract cols and joins
-        cols, joins, cleaning_scripts, merging_scripts = find_cols_joins_and_scripts(resource_structure)
+        cols, joins, cleaning_scripts, merging_scripts = find_cols_joins_and_scripts(
+            resource_structure
+        )
         # Build the sql query
         sql_query = build_sql_query(cols, joins, main_table)
         print(sql_query)
@@ -67,41 +74,44 @@ def run(selected_resources: list = None):
 
         # Run the sql query
         print("Launching query...")
-        df = run_sql_query(sql_query)
-        df.columns = cols
-        print(df)
-        print("Before squash: ", len(df))
+        df = run_sql_query(sql_query, chunksize=args.chunksize)
 
-        # Apply join rule to merge some lines from the same resource
-        print("Squashing rows...")
-        start = time.time()
-        df = squash_rows(df, squash_rules)
-        print("After squash: ", len(df))
-        print("squash duration: ", time.time() - start)
-        print(df)
+        for chunk in df:
+            print(chunk)
+            chunk.columns = cols
+            print(chunk)
+            print("Before squash: ", len(chunk))
 
-        # Apply cleaning and merging scripts on df
-        apply_scripts(df, cleaning_scripts, merging_scripts)
+            # Apply join rule to merge some lines from the same resource
+            print("Squashing rows...")
+            start = time.time()
+            chunk = squash_rows(chunk, squash_rules)
+            print("After squash: ", len(chunk))
+            print("squash duration: ", time.time() - start)
+            print(chunk)
 
-        start = time.time()
+            # Apply cleaning and merging scripts on chunk
+            apply_scripts(chunk, cleaning_scripts, merging_scripts)
 
-        fhir_objects_chunks = pool.map(
-            partial(create_resource, resource_structure=resource_structure),
-            np.array_split(df, n_workers)
-        )
+            start = time.time()
 
-        for o in fhir_objects_chunks[0][:5]:
-            print(o)
-        print(len(fhir_objects_chunks[0]))
+            fhir_objects_chunks = pool.map(
+                partial(create_resource, resource_structure=resource_structure),
+                np.array_split(chunk, n_workers),
+            )
 
-        print("obj creation duration: ", time.time() - start)
+            for o in fhir_objects_chunks[0][:5]:
+                print(o)
+            print(len(fhir_objects_chunks[0]))
 
-        # start = time.time()
-        # Save instances in fhirstore
-        # print("Saving in fhirstore...")
-        # pool.map(save_many, fhir_objects_chunks)
+            print("obj creation duration: ", time.time() - start)
 
-        # print("saving duration: ", time.time() - start)
+            # start = time.time()
+            # Save instances in fhirstore
+            # print("Saving in fhirstore...")
+            # pool.map(save_many, fhir_objects_chunks)
+
+            # print("saving duration: ", time.time() - start)
 
     pool.close()
     pool.join()

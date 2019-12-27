@@ -7,6 +7,7 @@ import fhirpipe
 from fhirpipe.extract.graph import DependencyGraph
 from fhirpipe.utils import get_table_name, build_col_name, new_col_name
 
+
 def build_sql_query(columns, joins, table_name):
     """
     """
@@ -88,16 +89,22 @@ def find_cols_joins_and_scripts(tree):
 
                 # If table and column are defined, we have an sql input
                 if col["table"] and col["column"]:
-                    column_name = build_col_name(col["table"], col["column"], col["owner"])
+                    column_name = build_col_name(
+                        col["table"], col["column"], col["owner"]
+                    )
                     columns.add(column_name)
 
                     # If there are joins, add them to the output
                     for join in col["joins"]:
                         source_col = build_col_name(
-                            join["sourceTable"], join["sourceColumn"], join["sourceOwner"]
+                            join["sourceTable"],
+                            join["sourceColumn"],
+                            join["sourceOwner"],
                         )
                         target_col = build_col_name(
-                            join["targetTable"], join["targetColumn"], join["targetOwner"]
+                            join["targetTable"],
+                            join["targetColumn"],
+                            join["targetOwner"],
                         )
                         joins.add((source_col, target_col))
 
@@ -108,7 +115,9 @@ def find_cols_joins_and_scripts(tree):
                         )
                         cleaning_scripts[col["script"]].append(column_name)
                         if need_merge:
-                            cols_to_merge[0].append(new_col_name(col["script"], column_name))
+                            cols_to_merge[0].append(
+                                new_col_name(col["script"], column_name)
+                            )
                     # Otherwise, simply add the column name
                     elif need_merge:
                         cols_to_merge[0].append(column_name)
@@ -123,9 +132,7 @@ def find_cols_joins_and_scripts(tree):
 
         # If no input, we recurse in child
         else:
-            return find_cols_joins_and_scripts(
-                tree["attributes"]
-            )
+            return find_cols_joins_and_scripts(tree["attributes"])
 
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(tree, list) and len(tree) > 0:
@@ -238,21 +245,30 @@ def get_connection(connection_type: str = None):
         )
 
 
-def run_sql_query(query, connection: str = None, chunksize: int = None):
+def run_sql_query(query, connection_type: str = None, chunksize: int = None):
     """
     Run a sql query after opening a sql connection
 
     args:
         query (str): a sql query to run
-        connection (str): the connection type / database to use
+        connection_type (str): the connection type / database to use
         chunksize: If specified, return an iterator where chunksize
             is the number of rows to include in each chunk.
 
     return:
-        the result of the sql query run on the specified connection
+        the result of the sql query run on the specified connection type
             or an iterator if chunksize is specified
     """
-    pd_query = pd.read_sql_query(query, get_connection(connection), chunksize)
-    df = pd.DataFrame(pd_query)
+    pd_query = pd.read_sql_query(
+        query, get_connection(connection_type), chunksize=chunksize
+    )
 
-    return df
+    # If chunksize if None, we return a dataframe
+    if chunksize is None:
+        df = pd.DataFrame(pd_query)
+        return df
+    # Otherwise, we return an iterator
+    else:
+        for chunk_query in pd_query:
+            chunk = pd.DataFrame(chunk_query)
+            yield chunk
