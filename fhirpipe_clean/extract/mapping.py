@@ -4,7 +4,7 @@ import logging
 from fhirpipe_clean.extract.graphql import *
 
 
-def get_resources(source_name, from_file=None):
+def get_resources(source_name=None, from_file=None):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -15,6 +15,9 @@ def get_resources(source_name, from_file=None):
         from_file (optional): path to the static file to mock
                               the pyrog API response.
     """
+    if source_name is None and from_file is None:
+        raise ValueError("You should provide source_name or from_file")
+
     if from_file:
         path = from_file
         if not os.path.isabs(path):
