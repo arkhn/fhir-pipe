@@ -1,6 +1,7 @@
 version: '3.7'
 services:
   fhir-pipe:
+    name: fhir-pipe
     build:
       context: .
     image: arkhn/fhir-pipe:latest
@@ -9,7 +10,6 @@ services:
       - ./test:/app/test
     depends_on:
       - mimic-db
-      - mongo
 
   mimic-db:
     env_file: .env
@@ -29,16 +29,6 @@ services:
       - mimic-db:/var/lib/postgresql/data
     ports:
       - '5431:5432'
-
-  mongo:
-    image: mongo
-    restart: always
-    environment:
-      MONGO_INITDB_DATABASE: fhirstore
-    ports:
-      - 27017:27017
-    volumes:
-      - fhirstore-db:/data/db
 
 volumes:
   mimic-db:
