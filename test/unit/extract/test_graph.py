@@ -1,4 +1,4 @@
-from fhirpipe.parse.graph import DependencyGraph, Table
+from fhirpipe.extract.graph import DependencyGraph, Table
 
 
 def test_graph():
@@ -18,5 +18,5 @@ def test_graph():
     tata = graph.get("titi")
 
     assert not tutu.connected(tata)
-    tutu.connect(tata, "OneToOne")
+    tutu.connect(tata)
     assert tutu.connected(tata)
