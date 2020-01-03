@@ -6,15 +6,13 @@ from fhirpipe.utils import build_col_name, new_col_name
 def create_resource(chunk, resource_structure):
     res = []
     for _, row in chunk.iterrows():
-        res.append(
-            create_fhir_object(row, resource_structure, resource_structure["name"])
-        )
+        res.append(create_fhir_object(row, resource_structure))
     return res
 
 
-def create_fhir_object(row, resource_structure, resource_name):
+def create_fhir_object(row, resource_structure):
     # Identify the fhir object
-    fhir_object = {"id": str(uuid4()), "resourceType": resource_name}
+    fhir_object = {"id": str(uuid4()), "resourceType": resource_structure["name"]}
 
     # The first node has a different structure so iterate outside the
     # dfs_create_fhir function

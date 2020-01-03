@@ -1,4 +1,6 @@
 import json
+import pandas as pd
+
 import fhirpipe.transform.fhir as fhir
 
 from test.unit.transform import PATIENT_LIGHT_RESOURCE
@@ -12,17 +14,51 @@ def test_create_fhir_object():
         "ICSF.PATIENT.PREPATSUITE": "François",
         "ICSF.PATIENT.SEXE": "M",
     }
-    resource = "Patient"
-    resource_patient_structure = json.loads(PATIENT_LIGHT_RESOURCE)
-    fhir_object = fhir.create_fhir_object(
-        row, resource_patient_structure, resource
-    )
-    fhir_id = fhir_object["id"]
-    print(fhir_object)
-    assert fhir_object == {
-        "id": fhir_id,
+    resource_structure = json.loads(PATIENT_LIGHT_RESOURCE)
+    actual = fhir.create_fhir_object(row, resource_structure)
+
+    assert actual == {
+        "id": actual["id"],
         "resourceType": "Patient",
         "identifier": [{"value": "100092"}],
         "name": [{"family": "Chirac", "given": ["Jacques", "François"]}],
         "gender": "M",
     }
+
+
+def test_create_resource():
+    rows = pd.DataFrame([
+        {
+            "ICSF.PATIENT.NOPAT": "100092",
+            "ICSF.PATIENT.NOMPAT": "Chirac",
+            "ICSF.PATIENT.PREPAT": "Jacques",
+            "ICSF.PATIENT.PREPATSUITE": "François",
+            "ICSF.PATIENT.SEXE": "M",
+        },
+        {
+            "ICSF.PATIENT.NOPAT": "100093",
+            "ICSF.PATIENT.NOMPAT": "Mitterrand",
+            "ICSF.PATIENT.PREPAT": "François",
+            "ICSF.PATIENT.PREPATSUITE": "Maurice",
+            "ICSF.PATIENT.SEXE": "M",
+        },
+    ])
+    resource_structure = json.loads(PATIENT_LIGHT_RESOURCE)
+    actual = fhir.create_resource(rows, resource_structure)
+
+    assert actual == [
+        {
+            "id": actual[0]["id"],
+            "resourceType": "Patient",
+            "identifier": [{"value": "100092"}],
+            "name": [{"family": "Chirac", "given": ["Jacques", "François"]}],
+            "gender": "M",
+        },
+        {
+            "id": actual[1]["id"],
+            "resourceType": "Patient",
+            "identifier": [{"value": "100093"}],
+            "name": [{"family": "Mitterrand", "given": ["François", "Maurice"]}],
+            "gender": "M",
+        },
+    ]
