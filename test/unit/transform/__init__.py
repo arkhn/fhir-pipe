@@ -53,20 +53,6 @@ PATIENT_LIGHT_RESOURCE = """{
               ]
             },
             {
-              "id": "cjpicvbmmuso70a57cs3gclss",
-              "comment": "Whether this patient's record is in active use",
-              "name": "active",
-              "mergingScript": null,
-              "isProfile": null,
-              "type": "boolean",
-              "inputColumns": [
-
-              ],
-              "attributes": [
-
-              ]
-            },
-            {
               "id": "cjpicvbmouso90a57p8irnpx6",
               "comment": "A name associated with the patient",
               "name": "name",
@@ -88,20 +74,6 @@ PATIENT_LIGHT_RESOURCE = """{
 
                   ],
                   "attributes": [
-                    {
-                      "id": "cjpicvbmuusod0a572zcixgqn",
-                      "comment": "usual | official | temp | nickname | anonymous | old | maiden",
-                      "name": "use",
-                      "mergingScript": null,
-                      "isProfile": null,
-                      "type": "code",
-                      "inputColumns": [
-
-                      ],
-                      "attributes": [
-
-                      ]
-                    },
                     {
                       "id": "cjpicvbmyusoh0a579qvwoi1p",
                       "comment": "Family name (often called 'Surname')",
@@ -248,20 +220,6 @@ PATIENT_MEDIUM_RESOURCE = """{
               ]
             },
             {
-              "id": "cjpicvbmmuso70a57cs3gclss",
-              "comment": "Whether this patient's record is in active use",
-              "name": "active",
-              "mergingScript": null,
-              "isProfile": null,
-              "type": "boolean",
-              "inputColumns": [
-
-              ],
-              "attributes": [
-
-              ]
-            },
-            {
               "id": "cjpicvbmouso90a57p8irnpx6",
               "comment": "A name associated with the patient",
               "name": "name",
@@ -283,20 +241,6 @@ PATIENT_MEDIUM_RESOURCE = """{
 
                   ],
                   "attributes": [
-                    {
-                      "id": "cjpicvbmuusod0a572zcixgqn",
-                      "comment": "usual | official | temp | nickname | anonymous | old | maiden",
-                      "name": "use",
-                      "mergingScript": null,
-                      "isProfile": null,
-                      "type": "code",
-                      "inputColumns": [
-
-                      ],
-                      "attributes": [
-
-                      ]
-                    },
                     {
                       "id": "cjpicvbmyusoh0a579qvwoi1p",
                       "comment": "Family name (often called 'Surname')",
@@ -406,48 +350,6 @@ PATIENT_MEDIUM_RESOURCE = """{
 
                   ],
                   "attributes": [
-                    {
-                      "id": "cjpicvboquspp0a576a5mx1eo",
-                      "comment": "home | work | temp | old - purpose of this address",
-                      "name": "use",
-                      "mergingScript": null,
-                      "isProfile": null,
-                      "type": "code",
-                      "inputColumns": [
-
-                      ],
-                      "attributes": [
-
-                      ]
-                    },
-                    {
-                      "id": "cjpicvbouuspr0a5794vlsskt",
-                      "comment": "postal | physical | both",
-                      "name": "type",
-                      "mergingScript": null,
-                      "isProfile": null,
-                      "type": "code",
-                      "inputColumns": [
-
-                      ],
-                      "attributes": [
-
-                      ]
-                    },
-                    {
-                      "id": "cjpicvbowuspt0a570rorisiw",
-                      "comment": "Text representation of the address",
-                      "name": "text",
-                      "mergingScript": null,
-                      "isProfile": null,
-                      "type": "string",
-                      "inputColumns": [
-
-                      ],
-                      "attributes": [
-
-                      ]
-                    },
                     {
                       "id": "cjpicvbozuspv0a57c846ssu5",
                       "comment": "Street name, number, direction & P.O. Box etc.",
