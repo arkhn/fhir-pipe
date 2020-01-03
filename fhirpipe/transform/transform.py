@@ -36,11 +36,13 @@ def squash_rows(df, squash_rule, parent_cols=[]):
                                        (Compte d'epargne ,  123456789     )]
         David               51          Ibiza summer        100
     """
-    cols, child_rules = squash_rule
-    # As we work on the whole row, we add the parent left parts
-    # transmitted recursively
-    pivot_cols = parent_cols + cols
+    table, child_rules = squash_rule
+
+    new_cols = [col for col in df.columns if col.startswith(f"{table}.")]
+    pivot_cols = parent_cols + new_cols
+
     to_squash = [col for col in df.columns if col not in pivot_cols]
+
     if not to_squash:
         return df
 

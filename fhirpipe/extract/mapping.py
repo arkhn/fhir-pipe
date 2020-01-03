@@ -79,7 +79,6 @@ def rec_prune_resource(attr_structure):
         elif attr_structure["inputColumns"]:
             return True
         else:
-            del attr_structure
             return False
 
     elif isinstance(attr_structure, list):
@@ -257,38 +256,6 @@ def find_cols_joins_and_scripts(tree):
     return columns, joins, cleaning_scripts, merging_scripts
 
 
-def build_squash_rule(node, table_col_idx):
-    """
-    Using the dependency graph of the joins on the tables (accessed through the
-    head node), regroup (using the id) the columns which should be squashed (ie
-    those accessed through a OneToMany join)
-
-    Args:
-        node: the node of the source table (which can be relative in recursive calls)
-        table_col_idx: a dict [table_name]: list of idx of cols in the SQL response
-            which come from this table
-
-    Return:
-        [
-            (idx cols for source_table),
-            [
-                (idx cols for join OneToMany n1, [...]),
-                (idx cols for join OneToMany n2, [...]),
-                ...
-            ]
-        ]
-    """
-    # We refer the col indices of the table
-    unifying_col_idx = table_col_idx[node.name]
-
-    # Now parse the col indices for each table joined with a OneToMany
-    child_rules = []
-    for join_node in node.connections:
-        # print(node.name, "-<=", join_node.name)
-        child_rules.append(build_squash_rule(join_node, table_col_idx))
-    return [unifying_col_idx, child_rules]
-
-
 def build_squash_rules(columns, joins, main_table):
     """
     """
@@ -303,18 +270,36 @@ def build_squash_rules(columns, joins, main_table):
     # Build a dependcy graph
     dependency_graph = build_graph(joins)
 
-    # Reference for each table the columns which belongs to it: {table1: [col1, ...]}
-    table_col_idx = {}
-    for i, col in enumerate(columns):
-        table = get_table_name(col)
-        if table not in table_col_idx:
-            table_col_idx[table] = []
-        table_col_idx[table].append(col)
-
     head_node = dependency_graph.get(main_table)
-    squash_rules = build_squash_rule(head_node, table_col_idx)
+    squash_rules = build_squash_rule(head_node)
 
     return squash_rules
+
+
+def build_squash_rule(node):
+    """
+    Using the dependency graph of the joins on the tables (accessed through the
+    head node), regroup (using the id) the columns which should be squashed (ie
+    those accessed through a OneToMany join)
+
+    Args:
+        node: the node of the source table (which can be relative in recursive calls)
+
+    Return:
+        [
+            main table name,
+            [
+                table1 joined on parent, [...],
+                table2 joined on parent, [...],
+                ...
+            ]
+        ]
+    """
+    child_rules = []
+    for join_node in node.connections:
+        child_rules.append(build_squash_rule(join_node))
+
+    return [node.name, child_rules]
 
 
 def build_graph(joins):
@@ -342,4 +327,5 @@ def build_graph(joins):
         source_node = graph.get(source_table)
         target_node = graph.get(target_table)
         source_node.connect(target_node)
+
     return graph
