@@ -69,7 +69,7 @@ fragment a on Attribute {
 query($resourceId: ID!) {
     resource(where: {id: $resourceId}) {
         id
-        name
+        label
         attributes {
             ...a
             attributes {
@@ -170,14 +170,14 @@ def get_fhir_resource(source_name, resource_name, from_file=None):
     else:
         available_resources = get_available_resources(source_name)
         assert resource_name in list(
-            map(lambda x: x["fhirType"], available_resources["data"]["availableResources"])
+            map(lambda x: x["fhirType"], available_resources)
         ), f"Resource {resource_name} doesn't exist for Source {source_name}"
 
         # Deduce Resource id from Resource name
         resource_id = list(
             filter(
                 lambda x: x["fhirType"] == resource_name,
-                available_resources["data"]["availableResources"],
+                available_resources,
             )
         )[0][
             "id"
