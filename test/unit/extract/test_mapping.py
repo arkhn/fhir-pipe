@@ -3,31 +3,10 @@ from unittest import mock
 
 import fhirpipe.extract.mapping as mapping
 
+from test.unit.extract import MOCK_FILE, RAW_FHIR_RESOURCE, PRUNED_FHIR_RESOURCE
 
-DATA = """
-{
-    "data": {
-        "database": {
-            "id": "cjpiarhzxmfmu0a611t9zwqgm",
-            "name": "Mimic",
-            "resources": [
-                {
-                    "id": "cjtyglzyd00bh0766w42omeb9",
-                    "name": "Patient",
-                    "attributes": []
-                },
-                {
-                    "id": "cjtyglzyd00bh0766w42omeb9",
-                    "name": "Encounter",
-                    "attributes": []
-                }
-            ]
-        }
-    }
-}
-"""
 
-mock_open = mock.mock_open(read_data=DATA)
+mock_open = mock.mock_open(read_data=MOCK_FILE)
 
 
 def test_get_mapping_from_file():
@@ -45,178 +24,31 @@ def test_get_mapping_from_file():
 
 
 def test_prune_fhir_resource():
-    fhir_resource = {
-        "id": "cjtyglzyd00bh0766w42omeb9",
-        "name": "Patient",
-        "attributes": [
-            {
-                "id": "cjtyglzz300bi0766tjms54pu",
-                "comment": "An identifier for this patient",
-                "name": "identifier",
-                "mergingScript": None,
-                "isProfile": None,
-                "type": "list: :Identifier",
-                "inputColumns": [],
-                "attributes": [],
-            },
-            {
-                "id": "cjtygm07900fy0766v9bkg2lo",
-                "comment": "",
-                "name": "deceasedDateTime",
-                "mergingScript": None,
-                "isProfile": None,
-                "type": "dateTime",
-                "inputColumns": [
-                    {
-                        "id": "cjtykdfd3045u07661y1d58am",
-                        "owner": None,
-                        "table": "PATIENTS",
-                        "column": "DOD",
-                        "script": "format_date_from_yyyymmdd",
-                        "staticValue": None,
-                        "joins": [],
-                    }
-                ],
-                "attributes": [],
-            },
-        ],
-    }
+    actual = mapping.prune_fhir_resource(RAW_FHIR_RESOURCE)
 
-    expected = {
-        "id": "cjtyglzyd00bh0766w42omeb9",
-        "name": "Patient",
-        "attributes": [
-            {
-                "id": "cjtygm07900fy0766v9bkg2lo",
-                "comment": "",
-                "name": "deceasedDateTime",
-                "mergingScript": None,
-                "isProfile": None,
-                "type": "dateTime",
-                "inputColumns": [
-                    {
-                        "id": "cjtykdfd3045u07661y1d58am",
-                        "owner": None,
-                        "table": "PATIENTS",
-                        "column": "DOD",
-                        "script": "format_date_from_yyyymmdd",
-                        "staticValue": None,
-                        "joins": [],
-                    }
-                ],
-                "attributes": [],
-            }
-        ],
-    }
-
-    actual = mapping.prune_fhir_resource(fhir_resource)
-
-    assert actual == expected
+    assert actual == PRUNED_FHIR_RESOURCE
 
 
 def test_find_cols_joins_and_scripts():
-    fhir_resource = {
-        "id": "cjtyglzyd00bh0766w42omeb9",
-        "name": "Patient",
-        "attributes": [
-            {
-                "id": "cjtyglzz300bi0766tjms54pu",
-                "comment": "An identifier for this patient",
-                "name": "identifier",
-                "mergingScript": None,
-                "isProfile": None,
-                "type": "list: :Identifier",
-                "inputColumns": [],
-                "attributes": [
-                    {
-                        "id": "cjtyglzzd00bk076690zuwn0p",
-                        "comment": None,
-                        "name": "Identifier_0",
-                        "mergingScript": None,
-                        "isProfile": True,
-                        "type": "Identifier",
-                        "inputColumns": [],
-                        "attributes": [
-                            {
-                                "id": "cjtygm00x00c807662i1y484t",
-                                "comment": "The value that is unique",
-                                "name": "value",
-                                "mergingScript": None,
-                                "isProfile": None,
-                                "type": "string",
-                                "inputColumns": [
-                                    {
-                                        "id": "cjtyiyk9500q707661w96ml2j",
-                                        "owner": None,
-                                        "table": "PATIENTS",
-                                        "column": "SUBJECT_ID",
-                                        "script": None,
-                                        "staticValue": None,
-                                        "joins": [],
-                                    }
-                                ],
-                                "attributes": [],
-                            }
-                        ],
-                    }
-                ],
-            },
-            {
-                "id": "cjtygm07000fs07660h9zhut2",
-                "comment": "male | female | other | unknown",
-                "name": "gender",
-                "mergingScript": "fake_merging_script",
-                "isProfile": None,
-                "type": "code",
-                "inputColumns": [
-                    {
-                        "id": "cjtykdszt046607664mzbv9z3",
-                        "owner": None,
-                        "table": "PATIENTS",
-                        "column": "GENDER",
-                        "script": "map_gender",
-                        "staticValue": None,
-                        "joins": [],
-                    },
-                    {
-                        "id": "cjtykdszt046607mzbv9z3",
-                        "owner": None,
-                        "table": "PATIENTS",
-                        "column": "EXPIRE_FLAG",
-                        "script": None,
-                        "staticValue": None,
-                        "joins": [
-                            {
-                                "id": "cjtykucjh047d0766hopqaa5s",
-                                "sourceOwner": None,
-                                "sourceTable": "PATIENTS",
-                                "sourceColumn": "SUBJECT_ID",
-                                "targetOwner": None,
-                                "targetTable": "ADMISSIONS",
-                                "targetColumn": "SUBJECT_ID",
-                            }
-                        ],
-                    },
-                    {
-                        "id": "fakeid",
-                        "owner": None,
-                        "table": None,
-                        "column": None,
-                        "script": None,
-                        "staticValue": "fake static value",
-                        "joins": [],
-                    },
-                ],
-                "attributes": [],
-            },
-        ],
-    }
+    fhir_resource = PRUNED_FHIR_RESOURCE
 
     cols, joins, cleaning, merging = mapping.find_cols_joins_and_scripts(fhir_resource)
 
-    assert cols == {"PATIENTS.SUBJECT_ID", "PATIENTS.EXPIRE_FLAG", "PATIENTS.GENDER"}
+    assert cols == {
+        "PATIENTS.DOB",
+        "PATIENTS.SUBJECT_ID",
+        "PATIENTS.EXPIRE_FLAG",
+        "PATIENTS.GENDER",
+        "ADMISSIONS.MARITAL_STATUS",
+        "ADMISSIONS.LANGUAGE",
+        "PATIENTS.DOD",
+    }
     assert joins == {("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID")}
-    assert cleaning == {"map_gender": ["PATIENTS.GENDER"]}
+    assert cleaning == {
+        "map_gender": ["PATIENTS.GENDER"],
+        "format_date_from_yyyymmdd": ["PATIENTS.DOB", "PATIENTS.DOD"],
+        "to_boolean": ["PATIENTS.EXPIRE_FLAG"],
+    }
     assert merging == {
         "fake_merging_script": [
             (
@@ -226,3 +58,17 @@ def test_find_cols_joins_and_scripts():
         ]
     }
 
+
+def test_build_squash_rules():
+    cols = [
+        "ADMISSIONS.LANGUAGE",
+        "PATIENTS.DOD",
+        "PATIENTS.SUBJECT_ID",
+    ]  # NOTE: I use a list instead of a set to keep the order of elements
+    joins = {("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID")}
+    table = "PATIENTS"
+
+    actual = mapping.build_squash_rules(cols, joins, table)
+    print(actual)
+
+    assert actual == ["PATIENTS", [["ADMISSIONS", []]]]
