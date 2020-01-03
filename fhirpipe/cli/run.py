@@ -19,7 +19,8 @@ from fhirpipe.extract.sql import (
     run_sql_query,
 )
 
-from fhirpipe.transform.transform import squash_rows, apply_scripts, create_resource
+from fhirpipe.transform.dataframe import squash_rows, apply_scripts
+from fhirpipe.transform.fhir import create_resource
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
 

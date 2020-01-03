@@ -1,5 +1,5 @@
 import json
-import fhirpipe.transform.transform as transform
+import fhirpipe.transform.fhir as fhir
 
 from test.unit.transform import PATIENT_LIGHT_RESOURCE
 
@@ -14,7 +14,7 @@ def test_create_fhir_object():
     }
     resource = "Patient"
     resource_patient_structure = json.loads(PATIENT_LIGHT_RESOURCE)
-    fhir_object = transform.create_fhir_object(
+    fhir_object = fhir.create_fhir_object(
         row, resource_patient_structure, resource
     )
     fhir_id = fhir_object["id"]
