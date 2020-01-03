@@ -1,10 +1,15 @@
 import os
 import logging
+import json
+from collections import defaultdict
 
-from fhirpipe.extract.graphql import *
+import fhirpipe.extract.graphql as gql
+from fhirpipe.extract.graphql import run_graphql_query
+from fhirpipe.extract.graph import DependencyGraph
+from fhirpipe.utils import get_table_name, build_col_name, new_col_name
 
 
-def get_resources(from_file=None, source_name=None):
+def get_mapping(from_file=None, source_name=None):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -19,28 +24,35 @@ def get_resources(from_file=None, source_name=None):
         raise ValueError("You should provide source_name or from_file")
 
     if from_file:
-        path = from_file
-        if not os.path.isabs(path):
-            path = os.path.join(os.getcwd(), path)
-
-        with open(path) as json_file:
-            resources = json.load(json_file)
-        source_json = resources["data"]["database"]
-
-        return source_json["resources"]
+        return get_mapping_from_file(from_file)
 
     else:
-        # Get Source id from Source name
-        source = run_graphql_query(
-            source_info_query, variables={"sourceName": source_name}
-        )
-        source_id = source["data"]["sourceInfo"]["id"]
+        return get_mapping_from_graphql(source_name)
 
-        # Check that Resource exists for given Source
-        available_resources = run_graphql_query(
-            available_resources_query, variables={"sourceId": source_id}
-        )
-        return available_resources["data"]["availableResources"]
+
+def get_mapping_from_file(path):
+    if not os.path.isabs(path):
+        path = os.path.join(os.getcwd(), path)
+
+    with open(path) as json_file:
+        resources = json.load(json_file)
+    source_json = resources["data"]["database"]
+
+    return source_json["resources"]
+
+
+def get_mapping_from_graphql(source_name):
+    # Get Source id from Source name
+    source = run_graphql_query(
+        gql.source_info_query, variables={"sourceName": source_name}
+    )
+    source_id = source["data"]["sourceInfo"]["id"]
+
+    # Check that Resource exists for given Source
+    available_resources = run_graphql_query(
+        gql.available_resources_query, variables={"sourceId": source_id}
+    )
+    return available_resources["data"]["availableResources"]
 
 
 def prune_fhir_resource(resource_structure):
@@ -93,6 +105,7 @@ def get_identifier_table(resource_structure, extended_get=False):
     Return:
         The table referenced by the identifier mapping rule
     """
+    # NOTE this souldn't be needed as user can provide primary key column with Pyrog
 
     targets = []
     for attribute in resource_structure["attributes"]:
@@ -137,3 +150,196 @@ def search_for_input_columns(obj, targets):
     elif isinstance(obj, list):
         for o in obj:
             search_for_input_columns(o, targets)
+
+
+def find_cols_joins_and_scripts(tree):
+    """
+    Run through the dict/tree of a Resource
+    To find:
+    - All columns name to select
+    - All joins necessary to collect the data
+
+    args:
+        tree (dict): the fhir specification which has the structure of a tree
+        source_table (str): name of the source table, ie the table for which each row
+            will create one instance of the considered resource
+
+    return:
+        a tuple containing all the columns referenced in the tree and all the joins
+        to perform to access those columns
+    """
+    columns = set()
+    joins = set()
+    # The following dicts are used to store script names and on which columns
+    # they are used.
+    # cleaning_scripts has the form
+    # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
+    cleaning_scripts = defaultdict(list)
+    # cleaning_scripts has the form
+    # {"script1": (["col1", "col3", ...], [static3]),
+    #  "script4": ([col2], [static1, static3, ...]),
+    #  ...}
+    merging_scripts = defaultdict(list)
+    if isinstance(tree, dict):
+        # If there are some inputs, we can build the objects to output
+        if "inputColumns" in tree.keys() and tree["inputColumns"]:
+
+            # Check if we need to build the object to put in merging_scripts
+            need_merge = tree["mergingScript"] is not None
+            if need_merge:
+                cols_to_merge = ([], [])
+
+            for col in tree["inputColumns"]:
+
+                # If table and column are defined, we have an sql input
+                if col["table"] and col["column"]:
+                    column_name = build_col_name(
+                        col["table"], col["column"], col["owner"]
+                    )
+                    columns.add(column_name)
+
+                    # If there are joins, add them to the output
+                    for join in col["joins"]:
+                        source_col = build_col_name(
+                            join["sourceTable"],
+                            join["sourceColumn"],
+                            join["sourceOwner"],
+                        )
+                        target_col = build_col_name(
+                            join["targetTable"],
+                            join["targetColumn"],
+                            join["targetOwner"],
+                        )
+                        joins.add((source_col, target_col))
+
+                    # If there is a cleaning script
+                    if col["script"]:
+                        column_name = build_col_name(
+                            col["table"], col["column"], col["owner"]
+                        )
+                        cleaning_scripts[col["script"]].append(column_name)
+                        if need_merge:
+                            cols_to_merge[0].append(
+                                new_col_name(col["script"], column_name)
+                            )
+                    # Otherwise, simply add the column name
+                    elif need_merge:
+                        cols_to_merge[0].append(column_name)
+
+                # If it's a static value add it in case we need it for the merging
+                elif col["staticValue"] and need_merge:
+                    cols_to_merge[1].append(col["staticValue"])
+
+            # Add merging script to scripts dict if needed
+            if tree["mergingScript"]:
+                merging_scripts[tree["mergingScript"]].append(cols_to_merge)
+
+        # If no input, we recurse in child
+        else:
+            return find_cols_joins_and_scripts(tree["attributes"])
+
+    # If the current object is a list, we can repeat the same steps as above for each item
+    elif isinstance(tree, list) and len(tree) > 0:
+        for t in tree:
+            (
+                c_children,
+                j_children,
+                cs_children,
+                ms_children,
+            ) = find_cols_joins_and_scripts(t)
+            columns = columns.union(c_children)
+            joins = joins.union(j_children)
+            for scr, scr_cols in cs_children.items():
+                cleaning_scripts[scr] += scr_cols
+            for scr, scr_cols in ms_children.items():
+                merging_scripts[scr] += scr_cols
+
+    return columns, joins, cleaning_scripts, merging_scripts
+
+
+def build_squash_rule(node, table_col_idx):
+    """
+    Using the dependency graph of the joins on the tables (accessed through the
+    head node), regroup (using the id) the columns which should be squashed (ie
+    those accessed through a OneToMany join)
+
+    Args:
+        node: the node of the source table (which can be relative in recursive calls)
+        table_col_idx: a dict [table_name]: list of idx of cols in the SQL response
+            which come from this table
+
+    Return:
+        [
+            (idx cols for source_table),
+            [
+                (idx cols for join OneToMany n1, [...]),
+                (idx cols for join OneToMany n2, [...]),
+                ...
+            ]
+        ]
+    """
+    # We refer the col indices of the table
+    unifying_col_idx = table_col_idx[node.name]
+
+    # Now parse the col indices for each table joined with a OneToMany
+    child_rules = []
+    for join_node in node.connections:
+        # print(node.name, "-<=", join_node.name)
+        child_rules.append(build_squash_rule(join_node, table_col_idx))
+    return [unifying_col_idx, child_rules]
+
+
+def build_squash_rules(columns, joins, main_table):
+    """
+    """
+    if not isinstance(main_table, str):
+        raise AttributeError(
+            "Please specify the main table for this FHIR Resource,\
+            usually for example for the resource fhir Patient you would\
+            provide a sql table OWNER.Patients or something like this.\
+            Don't forget to provide the owner if it applies"
+        )
+
+    # Build a dependcy graph
+    dependency_graph = build_graph(joins)
+
+    # Reference for each table the columns which belongs to it: {table1: [col1, ...]}
+    table_col_idx = {}
+    for i, col in enumerate(columns):
+        table = get_table_name(col)
+        if table not in table_col_idx:
+            table_col_idx[table] = []
+        table_col_idx[table].append(col)
+
+    head_node = dependency_graph.get(main_table)
+    squash_rules = build_squash_rule(head_node, table_col_idx)
+
+    return squash_rules
+
+
+def build_graph(joins):
+    """
+    Transform a join info into SQL fragments and parse the graph of join dependency
+    Input:
+        [(<type_of_join>, "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"), ... ]
+    Return:
+        [(
+            "<join_table>",
+            "<table>.<col> = <join_table>.<join_col>"
+        ), ... ],
+        graph of dependency of type DependencyGraph
+    """
+    joins_elems = dict()
+    graph = DependencyGraph()
+    for join in joins:
+        join_source, join_target = join
+
+        # Get table names
+        target_table = get_table_name(join_target)
+        source_table = get_table_name(join_source)
+
+        # Add the join in the join_graph
+        source_node = graph.get(source_table)
+        target_node = graph.get(target_table)
+        source_node.connect(target_node)
+    return graph

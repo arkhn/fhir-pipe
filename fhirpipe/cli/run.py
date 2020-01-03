@@ -8,14 +8,14 @@ from fhirpipe import set_global_config
 from fhirpipe.cli import parse_args, WELCOME_MSG
 
 from fhirpipe.extract.mapping import (
-    get_resources,
+    get_mapping,
     prune_fhir_resource,
     get_identifier_table,
+    find_cols_joins_and_scripts,
+    build_squash_rules,
 )
 from fhirpipe.extract.sql import (
-    find_cols_joins_and_scripts,
     build_sql_query,
-    build_squash_rules,
     run_sql_query,
 )
 
@@ -45,7 +45,7 @@ def run():
         fhirstore.bootstrap(resource=r)
 
     # Get all resources available in the pyrog mapping for a given source
-    resources = get_resources(from_file=args.mapping, source_name=args.source)
+    resources = get_mapping(from_file=args.mapping, source_name=args.source)
     print("resources: ", [r["name"] for r in resources])
 
     n_workers = mp.cpu_count()
@@ -67,9 +67,8 @@ def run():
         print("main_table", main_table)
 
         # Extract cols and joins
-        cols, joins, cleaning_scripts, merging_scripts = find_cols_joins_and_scripts(
-            resource_structure
-        )
+        cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
+
         # Build the sql query
         sql_query = build_sql_query(cols, joins, main_table)
         print(sql_query)
@@ -97,7 +96,7 @@ def run():
             print("squash duration: ", time.time() - start)
 
             # Apply cleaning and merging scripts on chunk
-            apply_scripts(chunk, cleaning_scripts, merging_scripts)
+            apply_scripts(chunk, cleaning, merging)
 
             start = time.time()
 
