@@ -51,6 +51,7 @@ def squash_rows(df, squash_rule, parent_cols=[]):
 
     return df
 
+
 def squash_agg_first(x):
     return list(x)[0]
 
@@ -72,7 +73,9 @@ def apply_scripts(df, cleaning_scripts, merging_scripts):
 def create_resource(chunk, resource_structure):
     res = []
     for _, row in chunk.iterrows():
-        res.append(create_fhir_object(row, resource_structure, resource_structure["name"]))
+        res.append(
+            create_fhir_object(row, resource_structure, resource_structure["name"])
+        )
     return res
 
 
@@ -147,12 +150,14 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
             else:
                 fhir_obj[attribute_structure["name"]] = dict()
                 for attr in attribute_structure["attributes"]:
-                    rec_create_fhir_object(fhir_obj[attribute_structure["name"]], attr, row)
+                    rec_create_fhir_object(
+                        fhir_obj[attribute_structure["name"]], attr, row
+                    )
 
-        # TODO reference
-        # If the object is a Reference, to we give it to bind_reference
-        # if attribute_structure["type"].startswith("Reference"):
-        #     bind_reference(fhir_obj[attribute_structure["name"]], attribute_structure)
+            # TODO reference
+            # If the object is a Reference, to we give it to bind_reference
+            # if attribute_structure["type"].startswith("Reference"):
+            #     bind_reference(fhir_obj[attribute_structure["name"]], attribute_structure)
 
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(fhir_obj, list) and len(fhir_obj) > 0:
