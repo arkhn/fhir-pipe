@@ -9,13 +9,14 @@ from fhirpipe.utils import get_table_name
 def build_sql_query(columns, joins, table_name):
     """
     """
-    return f"""
-        SELECT {", ".join(columns)}
-        FROM {table_name}
-        {" ".join(
-            [f"LEFT JOIN {get_table_name(join_target)} ON {join_source}={join_target}" for join_source, join_target in joins]
-        )}
-    """
+    sql_cols = ", ".join(columns)
+    sql_joins = "\n".join(
+        [
+            f"LEFT JOIN {get_table_name(join_target)} ON {join_source}={join_target}"
+            for join_source, join_target in joins
+        ]
+    )
+    return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}"
 
 
 def get_connection(connection_type: str = None):

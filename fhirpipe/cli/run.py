@@ -48,8 +48,9 @@ def run():
     resources = get_mapping(from_file=args.mapping, source_name=args.source)
     print("resources: ", [r["name"] for r in resources])
 
-    n_workers = mp.cpu_count()
-    pool = mp.Pool(n_workers)
+    if args.multiprocessing:
+        n_workers = mp.cpu_count()
+        pool = mp.Pool(n_workers)
 
     print(f"Will run for: {args.resources}")
 
@@ -119,8 +120,9 @@ def run():
 
                 save_many(instances)
 
-    pool.close()
-    pool.join()
+    if args.multiprocessing:
+        pool.close()
+        pool.join()
 
 
 if __name__ == "__main__":
