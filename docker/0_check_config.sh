@@ -3,7 +3,7 @@
 echo 'Check downloaded MIMIC data files ... '
 
 EXT='.csv'
-ALLTABLES='admissions callout caregivers chartevents cptevents datetimeevents d_cpt diagnoses_icd d_icd_diagnoses d_icd_procedures d_items d_labitems drgcodes icustays inputevents_cv inputevents_mv labevents microbiologyevents noteevents outputevents patients prescriptions procedureevents_mv procedures_icd services transfers'
+ALLTABLES='ADMISSIONS CALLOUT CAREGIVERS CHARTEVENTS CPTEVENTS DATETIMEEVENTS D_CPT DIAGNOSES_ICD D_ICD_DIAGNOSES D_ICD_PROCEDURES D_ITEMS D_LABITEMS DRGCODES ICUSTAYS INPUTEVENTS_CV INPUTEVENTS_MV LABEVENTS MICROBIOLOGYEVENTS NOTEEVENTS OUTPUTEVENTS PATIENTS PRESCRIPTIONS PROCEDUREEVENTS_MV PROCEDURES_ICD SERVICES TRANSFERS'
 for TBL in $ALLTABLES; do
     if [ ! -e "/mimic_data/${TBL}$EXT" ];
     then
