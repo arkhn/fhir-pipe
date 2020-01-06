@@ -1,5 +1,6 @@
 import json
 import pandas as pd
+from unittest import mock
 
 import fhirpipe.transform.fhir as fhir
 
@@ -62,3 +63,15 @@ def test_create_resource():
             "gender": "M",
         },
     ]
+
+
+@mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
+def test_bind_reference(find_resource):
+    obj = {"identifier": {"value": "dummy_value"}, "other_key": {"other_value"}}
+
+    fhir.bind_reference(
+        obj,
+        {"type": "Reference(abc|def)", "name": "fhir name"},
+    )
+
+    assert obj == {"identifier": {"value": "dummy_uri"}, "other_key": {"other_value"}}
