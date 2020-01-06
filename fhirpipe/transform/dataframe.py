@@ -4,14 +4,14 @@ from fhirpipe.utils import new_col_name
 from fhirpipe.scripts import get_script
 
 
-def squash_rows(df, squash_rule, parent_cols=[]):
+def squash_rows(df, squash_rules, parent_cols=[], squash_aff_func=None):
     """
     Apply the OneToMany joins to have a single result with a list in it from
     a list of "flat" results.
 
     args:
         rows (list<str>): all the results returned from a sql query
-        squash_rule (tuple<list>): which columns should serve as identifier to
+        squash_rules (tuple<list>): which columns should serve as identifier to
         merge the rows
         parent_cols (list): param used for recursive call
 
@@ -34,7 +34,7 @@ def squash_rows(df, squash_rule, parent_cols=[]):
                                        (Compte d'epargne ,  123456789     )]
         David               51          Ibiza summer        100
     """
-    table, child_rules = squash_rule
+    table, child_rules = squash_rules
 
     new_cols = [col for col in df.columns if col.startswith(f"{table}.")]
     pivot_cols = parent_cols + new_cols
@@ -47,7 +47,10 @@ def squash_rows(df, squash_rule, parent_cols=[]):
     for child_rule in child_rules:
         df = squash_rows(df, child_rule, pivot_cols)
 
-    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(squash_agg_first)
+    if squash_aff_func is None:
+        squash_aff_func = squash_agg_first
+
+    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(squash_aff_func)
 
     return df
 

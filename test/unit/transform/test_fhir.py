@@ -2,7 +2,7 @@ import json
 import pandas as pd
 from unittest import mock
 
-import fhirpipe.transform.fhir as fhir
+import fhirpipe.transform.fhir as transform
 
 from test.unit.transform import PATIENT_LIGHT_RESOURCE
 
@@ -16,7 +16,7 @@ def test_create_fhir_object():
         "ICSF.PATIENT.SEXE": "M",
     }
     resource_structure = json.loads(PATIENT_LIGHT_RESOURCE)
-    actual = fhir.create_fhir_object(row, resource_structure)
+    actual = transform.create_fhir_object(row, resource_structure)
 
     assert actual == {
         "id": actual["id"],
@@ -45,7 +45,7 @@ def test_create_resource():
         },
     ])
     resource_structure = json.loads(PATIENT_LIGHT_RESOURCE)
-    actual = fhir.create_resource(rows, resource_structure)
+    actual = transform.create_resource(rows, resource_structure)
 
     assert actual == [
         {
@@ -69,7 +69,7 @@ def test_create_resource():
 def test_bind_reference(find_resource):
     obj = {"identifier": {"value": "dummy_value"}, "other_key": {"other_value"}}
 
-    fhir.bind_reference(
+    transform.bind_reference(
         obj,
         {"type": "Reference(abc|def)", "name": "fhir name"},
     )
