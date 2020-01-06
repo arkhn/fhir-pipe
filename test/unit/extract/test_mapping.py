@@ -1,4 +1,3 @@
-import pytest
 from unittest import mock
 
 import fhirpipe.extract.mapping as mapping
@@ -69,6 +68,5 @@ def test_build_squash_rules():
     table = "PATIENTS"
 
     actual = mapping.build_squash_rules(cols, joins, table)
-    print(actual)
 
     assert actual == ["PATIENTS", [["ADMISSIONS", []]]]
