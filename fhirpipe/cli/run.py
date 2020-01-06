@@ -47,7 +47,6 @@ def run():
 
     # Get all resources available in the pyrog mapping for a given source
     resources = get_mapping(from_file=args.mapping, source_name=args.source)
-    print("resources: ", [r["name"] for r in resources])
 
     if args.multiprocessing:
         n_workers = mp.cpu_count()
@@ -59,6 +58,8 @@ def run():
         if args.resources is not None:
             if resource_structure["name"] not in args.resources:
                 continue
+
+        print("Running for resource:", resource_structure["name"])
 
         print(len(resource_structure["attributes"]))
         resource_structure = prune_fhir_resource(resource_structure)
