@@ -1,6 +1,5 @@
 import datetime
 import re
-from distutils.util import strtobool
 
 # Utility functions (not callable)
 from fhirpipe.scripts import patient
@@ -75,8 +74,10 @@ def if_valid(process, callback):
 
     return if_valid_func
 
+
 def fake_merging_script(*values):
     return values[0]
+
 
 functions = {
     "to_boolean": to_boolean,

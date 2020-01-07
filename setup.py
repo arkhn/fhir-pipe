@@ -16,7 +16,7 @@ requirements = read("requirements.txt").split()
 
 setup(
     name='fhirpipe',
-    version='0.1',
+    version='0.2',
     description='The smart ETL to standardize health data',
     url='https://github.com/arkhn/fhir-pipe',
     author='Théo Ryffel',
@@ -32,10 +32,7 @@ setup(
     zip_safe=False,
     entry_points={
         'console_scripts': [
-            'fhirpipe-run=fhirpipe.console.run:run',
-            'fhirpipe-batch-run=fhirpipe.console.run:batch_run',
-            'fhirpipe-run-resource=fhirpipe.console.run_resource:run_resource',
-            'fhirpipe-batch-run-resource=fhirpipe.console.run_resource:batch_run_resource',
+            'fhirpipe-run=fhirpipe.cli.run:run',
         ],
     },
 )
