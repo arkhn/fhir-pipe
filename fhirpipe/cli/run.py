@@ -93,15 +93,11 @@ def run():
 
             # Apply join rule to merge some lines from the same resource
             print("Squashing rows...")
-            start = time.time()
             chunk = squash_rows(chunk, squash_rules)
             print("After squash: ", len(chunk))
-            print("squash duration: ", time.time() - start)
 
             # Apply cleaning and merging scripts on chunk
             apply_scripts(chunk, cleaning, merging)
-
-            start = time.time()
 
             if args.multiprocessing:
                 fhir_objects_chunks = pool.map(
@@ -109,14 +105,9 @@ def run():
                     np.array_split(chunk, n_workers),
                 )
 
-                print("obj creation duration: ", time.time() - start)
-
-                start = time.time()
                 # Save instances in fhirstore
-                print("Saving in fhirstore...")
                 pool.map(save_many, fhir_objects_chunks)
 
-                print("saving duration: ", time.time() - start)
             else:
                 instances = create_resource(chunk, resource_structure)
 
@@ -125,6 +116,8 @@ def run():
     if args.multiprocessing:
         pool.close()
         pool.join()
+
+    print(f"Done in {time.time() - start_time}.")
 
 
 if __name__ == "__main__":

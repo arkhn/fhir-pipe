@@ -120,8 +120,9 @@ def bind_reference(fhir_object, fhir_spec):
 
         # Collect all the resource_types which could be referenced
         try:
-            s = fhir_spec["type"]
-            resource_types = s[s.find("(") + 1 : s.find(")")].split("|")
+            begin_ind = fhir_spec["type"].find("(") + 1
+            end_ind = fhir_spec["type"].find(")")
+            resource_types = fhir_spec["type"][begin_ind:end_ind].split("|")
         except AttributeError:
             raise ReferenceError(
                 f"No FHIR Resource type provided for the reference {fhir_spec['name']}"
