@@ -43,16 +43,22 @@ def get_mapping_from_file(path):
 
 def get_mapping_from_graphql(source_name):
     # Get Source id from Source name
-    source = run_graphql_query(
-        gql.source_info_query, variables={"sourceName": source_name}
-    )
-    source_id = source["data"]["sourceInfo"]["id"]
+    # source = run_graphql_query(
+    #     gql.source_info_query, variables={"sourceId": source_name}
+    # )
+    # source_id = source["data"]["source"]["id"]
 
-    # Check that Resource exists for given Source
-    available_resources = run_graphql_query(
-        gql.available_resources_query, variables={"sourceId": source_id}
+    # Fetch resource ids for specified source
+    resource_ids = run_graphql_query(
+        gql.resources_query, variables={"sourceId": source_name}
     )
-    return available_resources["data"]["availableResources"]
+
+    # Return resources mapping
+    for resource in resource_ids["data"]["source"]["resources"]:
+        mapping = run_graphql_query(
+            gql.resource_query, variables={"resourceId": resource["id"]}
+        )
+        yield mapping["data"]["resource"]
 
 
 def prune_fhir_resource(resource_structure):
@@ -139,6 +145,8 @@ def search_for_input_columns(obj, targets):
     returns:
         None as the results are appended to the targets list
     """
+    # NOTE this is only used in get_identifier_table so shouldn't be needed neither
+
     if isinstance(obj, dict):
         if "inputColumns" in obj and len(obj["inputColumns"]) > 0:
             for input_col in obj["inputColumns"]:
@@ -314,7 +322,6 @@ def build_graph(joins):
         ), ... ],
         graph of dependency of type DependencyGraph
     """
-    joins_elems = dict()
     graph = DependencyGraph()
     for join in joins:
         join_source, join_target = join

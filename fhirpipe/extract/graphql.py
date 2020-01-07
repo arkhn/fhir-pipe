@@ -1,97 +1,95 @@
-import json
-import os
 import requests
 
 import fhirpipe
 
 
 source_info_query = """
-query($sourceName: String!) {
-    sourceInfo(sourceName: $sourceName) {
+query($sourceId: ID!) {
+    source(sourceId: $sourceId) {
         id
         name
     }
 }
 """
 
-available_resources_query = """
+resources_query = """
 query($sourceId: ID!) {
-    availableResources(sourceId: $sourceId) {
-        id
-        fhirType
-        label
+    source(sourceId: $sourceId) {
+        resources {
+            id
+        }
     }
 }
 """
 
 resource_query = """
-fragment entireJoin on Join {
-    id
-    sourceOwner
-    sourceTable
-    sourceColumn
-    targetOwner
-    targetTable
-    targetColumn
-}
-
-fragment entireInputColumn on InputColumn {
+fragment entireColumn on Column {
     id
     owner
     table
     column
+    joins {
+        id
+        tables {
+            id
+            owner
+            table
+            column
+        }
+    }
+}
+
+fragment entireInput on Input {
+    id
+    sqlValue {
+        ...entireColumn
+    }
     script
     staticValue
-    joins {
-        ...entireJoin
-    }
 }
 
 fragment a on Attribute {
     id
-    comment
     name
     mergingScript
-    isProfile
-    type
-    inputColumns {
-        ...entireInputColumn
+    inputs {
+        ...entireInput
     }
 }
 
 query($resourceId: ID!) {
-    resource(where: {id: $resourceId}) {
+    resource(resourceId: $resourceId) {
         id
-        name
+        fhirType
         attributes {
             ...a
-            attributes {
+            children {
                 ...a
-                attributes {
+                children {
                     ...a
-                    attributes {
+                    children {
                         ...a
-                        attributes {
+                        children {
                             ...a
-                            attributes {
+                            children {
                                 ...a
-                                attributes {
+                                children {
                                     ...a
-                                    attributes {
+                                    children {
                                         ...a
-                                        attributes {
+                                        children {
                                             ...a
-                                            attributes {
+                                            children {
                                                 ...a
-                                                attributes {
+                                                children {
                                                     ...a
-                                                    attributes {
+                                                    children {
                                                         ...a
-                                                        attributes {
+                                                        children {
                                                             ...a
-                                                            attributes {
+                                                            children {
                                                                 ...a
-                                                                attributes {
+                                                                children {
                                                                     ...a
                                                                 }
                                                             }
