@@ -25,3 +25,8 @@ def get_table_name(name):
         return name.split(".")[0]
     else:
         return None
+
+
+def dict_concat(dict_1, dict_2):
+    for key, val in dict_2.items():
+        dict_1[key] += val

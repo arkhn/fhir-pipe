@@ -6,7 +6,7 @@ from collections import defaultdict
 import fhirpipe.extract.graphql as gql
 from fhirpipe.extract.graphql import run_graphql_query
 from fhirpipe.extract.graph import DependencyGraph
-from fhirpipe.utils import get_table_name, build_col_name, new_col_name
+from fhirpipe.utils import get_table_name, build_col_name, new_col_name, dict_concat
 
 
 def get_mapping(from_file=None, source_name=None):
@@ -175,75 +175,30 @@ def find_cols_joins_and_scripts(tree):
         a tuple containing all the columns referenced in the tree and all the joins
         to perform to access those columns
     """
-    columns = set()
-    joins = set()
+    all_cols = set()
+    all_joins = set()
     # The following dicts are used to store script names and on which columns
     # they are used.
     # cleaning_scripts has the form
     # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
-    cleaning_scripts = defaultdict(list)
+    all_cleaning_scripts = defaultdict(list)
     # cleaning_scripts has the form
     # {"script1": (["col1", "col3", ...], [static3]),
     #  "script4": ([col2], [static1, static3, ...]),
     #  ...}
-    merging_scripts = defaultdict(list)
+    all_merging_scripts = defaultdict(list)
     if isinstance(tree, dict):
-        # If there are some inputs, we can build the objects to output
-        if "inputColumns" in tree.keys() and tree["inputColumns"]:
 
-            # Check if we need to build the object to put in merging_scripts
-            need_merge = tree["mergingScript"] is not None
-            if need_merge:
-                cols_to_merge = ([], [])
-
-            for col in tree["inputColumns"]:
-
-                # If table and column are defined, we have an sql input
-                if col["table"] and col["column"]:
-                    column_name = build_col_name(
-                        col["table"], col["column"], col["owner"]
-                    )
-                    columns.add(column_name)
-
-                    # If there are joins, add them to the output
-                    for join in col["joins"]:
-                        source_col = build_col_name(
-                            join["sourceTable"],
-                            join["sourceColumn"],
-                            join["sourceOwner"],
-                        )
-                        target_col = build_col_name(
-                            join["targetTable"],
-                            join["targetColumn"],
-                            join["targetOwner"],
-                        )
-                        joins.add((source_col, target_col))
-
-                    # If there is a cleaning script
-                    if col["script"]:
-                        column_name = build_col_name(
-                            col["table"], col["column"], col["owner"]
-                        )
-                        cleaning_scripts[col["script"]].append(column_name)
-                        if need_merge:
-                            cols_to_merge[0].append(
-                                new_col_name(col["script"], column_name)
-                            )
-                    # Otherwise, simply add the column name
-                    elif need_merge:
-                        cols_to_merge[0].append(column_name)
-
-                # If it's a static value add it in case we need it for the merging
-                elif col["staticValue"] and need_merge:
-                    cols_to_merge[1].append(col["staticValue"])
-
-            # Add merging script to scripts dict if needed
-            if tree["mergingScript"]:
-                merging_scripts[tree["mergingScript"]].append(cols_to_merge)
-
-        # If no input, we recurse in child
-        else:
+        # If we are not in a leaf, we recurse
+        if "attributes" in tree.keys() and tree["attributes"]:
             return find_cols_joins_and_scripts(tree["attributes"])
+
+        cols, joins, cleaning, merging = find_cjs_in_leaf(tree)
+
+        all_cols = all_cols.union(cols)
+        all_joins = all_joins.union(joins)
+        dict_concat(all_cleaning_scripts, cleaning)
+        dict_concat(all_merging_scripts, merging)
 
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(tree, list) and len(tree) > 0:
@@ -254,12 +209,68 @@ def find_cols_joins_and_scripts(tree):
                 cs_children,
                 ms_children,
             ) = find_cols_joins_and_scripts(t)
-            columns = columns.union(c_children)
-            joins = joins.union(j_children)
-            for scr, scr_cols in cs_children.items():
-                cleaning_scripts[scr] += scr_cols
-            for scr, scr_cols in ms_children.items():
-                merging_scripts[scr] += scr_cols
+
+            all_cols = all_cols.union(c_children)
+            all_joins = all_joins.union(j_children)
+            dict_concat(all_cleaning_scripts, cs_children)
+            dict_concat(all_merging_scripts, ms_children)
+
+    return all_cols, all_joins, all_cleaning_scripts, all_merging_scripts
+
+
+def find_cjs_in_leaf(leaf):
+    columns = set()
+    joins = set()
+    cleaning_scripts = defaultdict(list)
+    merging_scripts = defaultdict(list)
+
+    # Check if we need to build the object to put in merging_scripts
+    cols_to_merge = ([], []) if leaf["mergingScript"] is not None else None
+
+    for col in leaf["inputColumns"]:
+
+        # If table and column are defined, we have an sql input
+        if col["table"] and col["column"]:
+            column_name = build_col_name(
+                col["table"], col["column"], col["owner"]
+            )
+            columns.add(column_name)
+
+            # If there are joins, add them to the output
+            for join in col["joins"]:
+                source_col = build_col_name(
+                    join["sourceTable"],
+                    join["sourceColumn"],
+                    join["sourceOwner"],
+                )
+                target_col = build_col_name(
+                    join["targetTable"],
+                    join["targetColumn"],
+                    join["targetOwner"],
+                )
+                joins.add((source_col, target_col))
+
+            # If there is a cleaning script
+            if col["script"]:
+                column_name = build_col_name(
+                    col["table"], col["column"], col["owner"]
+                )
+                cleaning_scripts[col["script"]].append(column_name)
+                if cols_to_merge is not None:
+                    cols_to_merge[0].append(
+                        new_col_name(col["script"], column_name)
+                    )
+            # Otherwise, simply add the column name
+            elif cols_to_merge is not None:
+                cols_to_merge[0].append(column_name)
+
+        # If it's a static value add it in case we need it for the merging
+        elif col["staticValue"] and cols_to_merge is not None:
+            cols_to_merge[1].append(col["staticValue"])
+
+    # Add merging script to scripts dict if needed
+    if leaf["mergingScript"]:
+        merging_scripts[leaf["mergingScript"]].append(cols_to_merge)
 
     return columns, joins, cleaning_scripts, merging_scripts
 
