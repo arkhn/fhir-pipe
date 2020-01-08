@@ -4,9 +4,10 @@ from tqdm import tqdm
 import fhirpipe
 from fhirpipe.config import Config
 from fhirpipe.console import parse_args
+from fhirpipe.load.fhirstore import get_fhirstore
 
 
-def run_resource(args=None):
+def run_resource(args=None, bootstrap=True):
     """
     Perform in a single query the processing of a resource and the insertion
     of the fhir data created into the fhir api.
@@ -19,6 +20,13 @@ def run_resource(args=None):
     if not args:
         args = parse_args()
         fhirpipe.set_global_config(Config(path=args.config))
+
+    # Bootstrap is disabled if console/run_resource is called from console/run
+    # Because it is already done there
+    if bootstrap:
+        fhirstore = get_fhirstore()
+        fhirstore.reset()
+        fhirstore.bootstrap(depth=5)
 
     # Launch timer
     start_time = time.time()
