@@ -52,7 +52,7 @@ def run():
                 self.project = args.project
                 self.mock_pyrog_mapping = args.mock_pyrog_mapping
 
-        run_resource(args=Parser())
+        run_resource(args=Parser(), bootstrap=False)
 
     print(round((time.time() - start_time), 2), "seconds")
 
