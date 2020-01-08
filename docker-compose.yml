@@ -1,10 +1,10 @@
 version: '3.7'
 services:
   fhir-pipe:
-    name: fhir-pipe
+    image: arkhn/fhir-pipe:latest
+    container_name: fhir-pipe
     build:
       context: .
-    image: arkhn/fhir-pipe:latest
     command: tail -F anything
     volumes:
       - ./test:/app/test
@@ -12,6 +12,7 @@ services:
       - mimic-db
 
   mimic-db:
+    container_name: fhir-pipe-mimic-db
     env_file: .env
     build:
       context: ./docker
@@ -19,7 +20,6 @@ services:
       args:
         MIMIC_USER: $MIMIC_USER
         MIMIC_PASSWORD: $MIMIC_PASSWORD
-    container_name: fhir-pipe-mimic-db
     restart: always
     environment:
       POSTGRES_USER: mimicuser
