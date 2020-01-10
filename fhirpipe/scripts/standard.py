@@ -77,7 +77,7 @@ def if_valid(process, callback):
 
 def select_first_not_empty(*values):
     for v in values:
-        if v[0] != "None":
+        if v != "None":
             return v
     return v
 

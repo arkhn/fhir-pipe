@@ -4,7 +4,7 @@ from fhirpipe.utils import new_col_name
 from fhirpipe.scripts import get_script
 
 
-def squash_rows(df, squash_rules, parent_cols=[], squash_aff_func=None):
+def squash_rows(df, squash_rules, parent_cols=[], squash_agg_func=None):
     """
     Apply the OneToMany joins to have a single result with a list in it from
     a list of "flat" results.
@@ -47,10 +47,10 @@ def squash_rows(df, squash_rules, parent_cols=[], squash_aff_func=None):
     for child_rule in child_rules:
         df = squash_rows(df, child_rule, pivot_cols)
 
-    if squash_aff_func is None:
-        squash_aff_func = squash_agg_first
+    if squash_agg_func is None:
+        squash_agg_func = squash_agg_first
 
-    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(squash_aff_func)
+    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(squash_agg_func)
 
     return df
 
@@ -70,4 +70,4 @@ def apply_scripts(df, cleaning_scripts, merging_scripts):
             # func to apply
             func = get_script(merging_script)
             args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = func(*args)
+            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(*args)

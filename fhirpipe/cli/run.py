@@ -47,11 +47,11 @@ def run():
         fhirstore.reset()
     for r in args.resources:
         try:
-            fhirstore.bootstrap(resource=r)
+            fhirstore.bootstrap(resource=r, depth=10)
         except CollectionInvalid:
             logging.warning(f"Collection {r} was already existing.")
 
-    # Get all resources available in the pyrog mapping for a given source
+    # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
         from_file=args.mapping,
         source_name=args.source,
