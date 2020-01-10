@@ -1,7 +1,8 @@
 import numpy as np
 
+import scripts
+
 from fhirpipe.utils import new_col_name
-from fhirpipe.scripts import get_script
 
 
 def squash_rows(df, squash_rules, parent_cols=[], squash_agg_func=None):
@@ -60,14 +61,16 @@ def squash_agg_first(x):
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts):
+
     for cleaning_script, columns in cleaning_scripts.items():
         for col in columns:
-            # func to apply
-            func = get_script(cleaning_script)
+            func = scripts.get_script(cleaning_script)
             df[new_col_name(cleaning_script, col)] = np.vectorize(func)(df[col])
+
     for merging_script, cols_and_values in merging_scripts.items():
         for cols, statics in cols_and_values:
-            # func to apply
-            func = get_script(merging_script)
+            func = scripts.get_script(merging_script)
             args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(*args)
+            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(
+                *args
+            )
