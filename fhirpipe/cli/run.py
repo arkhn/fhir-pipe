@@ -2,6 +2,9 @@ import time
 import numpy as np
 import multiprocessing as mp
 from functools import partial
+import logging
+
+from pymongo.errors import CollectionInvalid
 
 from fhirpipe import set_global_config
 
@@ -10,7 +13,7 @@ from fhirpipe.cli import parse_args, WELCOME_MSG
 from fhirpipe.extract.mapping import (
     get_mapping,
     prune_fhir_resource,
-    get_identifier_table,
+    get_primary_key,
     find_cols_joins_and_scripts,
     build_squash_rules,
 )
@@ -43,38 +46,37 @@ def run():
     if args.reset_store:
         fhirstore.reset()
     for r in args.resources:
-        fhirstore.bootstrap(resource=r)
+        try:
+            fhirstore.bootstrap(resource=r)
+        except CollectionInvalid:
+            logging.warning(f"Collection {r} was already existing.")
 
     # Get all resources available in the pyrog mapping for a given source
-    resources = get_mapping(from_file=args.mapping, source_name=args.source)
+    resources = get_mapping(
+        from_file=args.mapping,
+        source_name=args.source,
+        selected_resources=args.resources,
+    )
 
     if args.multiprocessing:
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
     print(f"Will run for: {args.resources}")
-
     for resource_structure in resources:
-        if args.resources is not None:
-            if resource_structure["name"] not in args.resources:
-                continue
-
-        print("Running for resource:", resource_structure["name"])
-
-        print(len(resource_structure["attributes"]))
+        print("Running for resource:", resource_structure["fhirType"])
         resource_structure = prune_fhir_resource(resource_structure)
-        print(len(resource_structure["attributes"]))
 
         # Get main table
-        main_table = get_identifier_table(resource_structure)
+        main_table, primary_key = get_primary_key(resource_structure)
         print("main_table", main_table)
 
         # Extract cols and joins
         cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
 
         # Build the sql query
-        sql_query = build_sql_query(cols, joins, main_table)
-        print(sql_query)
+        sql_query = build_sql_query(cols, joins, main_table, primary_key)
+        print("sql query:", sql_query)
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, main_table)
@@ -89,12 +91,10 @@ def run():
 
             # Force names of dataframe cols to be the same as in SQL query
             chunk.columns = cols
-            print("Before squash: ", len(chunk))
 
             # Apply join rule to merge some lines from the same resource
             print("Squashing rows...")
             chunk = squash_rows(chunk, squash_rules)
-            print("After squash: ", len(chunk))
 
             # Apply cleaning and merging scripts on chunk
             apply_scripts(chunk, cleaning, merging)
@@ -109,8 +109,7 @@ def run():
                 pool.map(save_many, fhir_objects_chunks)
 
             else:
-                instances = create_resource(chunk, resource_structure)
-
+                instances = create_resource(chunk, resource_structure, primary_key)
                 save_many(instances)
 
     if args.multiprocessing:
