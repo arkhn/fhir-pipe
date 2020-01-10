@@ -5,8 +5,13 @@ from collections import defaultdict
 
 import fhirpipe.extract.graphql as gql
 from fhirpipe.extract.graphql import run_graphql_query
-from fhirpipe.extract.graph import DependencyGraph
-from fhirpipe.utils import get_table_name, build_col_name, new_col_name, dict_concat
+from fhirpipe.utils import (
+    get_table_name,
+    build_col_name,
+    new_col_name,
+    dict_concat,
+    build_join_graph,
+)
 
 
 def get_mapping(from_file=None, source_name=None, selected_resources=None):
@@ -291,26 +296,6 @@ def find_cjs_in_leaf(leaf):
 
 def build_squash_rules(columns, joins, main_table):
     """
-    """
-    if not isinstance(main_table, str):
-        raise AttributeError(
-            "Please specify the main table for this FHIR Resource,\
-            usually for example for the resource fhir Patient you would\
-            provide a sql table OWNER.Patients or something like this.\
-            Don't forget to provide the owner if it applies"
-        )
-
-    # Build a dependcy graph
-    dependency_graph = build_graph(joins)
-
-    head_node = dependency_graph.get(main_table)
-    squash_rules = build_squash_rule(head_node)
-
-    return squash_rules
-
-
-def build_squash_rule(node):
-    """
     Using the dependency graph of the joins on the tables (accessed through the
     head node), regroup (using the id) the columns which should be squashed (ie
     those accessed through a OneToMany join)
@@ -328,36 +313,26 @@ def build_squash_rule(node):
             ]
         ]
     """
+    if not isinstance(main_table, str):
+        raise AttributeError(
+            "Please specify the main table for this FHIR Resource,\
+            usually for example for the resource fhir Patient you would\
+            provide a sql table OWNER.Patients or something like this.\
+            Don't forget to provide the owner if it applies"
+        )
+
+    # Build a join graph
+    join_graph = build_join_graph(joins)
+
+    # head_node = dependency_graph.get(main_table)
+    squash_rules = rec_build_squash_rules(join_graph, main_table)
+
+    return squash_rules
+
+
+def rec_build_squash_rules(join_graph, node):
     child_rules = []
-    for join_node in node.connections:
-        child_rules.append(build_squash_rule(join_node))
+    for join_node in join_graph[node]:
+        child_rules.append(rec_build_squash_rules(join_graph, join_node))
 
-    return [node.name, child_rules]
-
-
-def build_graph(joins):
-    """
-    Transform a join info into SQL fragments and parse the graph of join dependency
-    Input:
-        [(<type_of_join>, "<owner>.<table>.<col>=<owner>.<join_table>.<join_col>"), ... ]
-    Return:
-        [(
-            "<join_table>",
-            "<table>.<col> = <join_table>.<join_col>"
-        ), ... ],
-        graph of dependency of type DependencyGraph
-    """
-    graph = DependencyGraph()
-    for join in joins:
-        join_source, join_target = join
-
-        # Get table names
-        target_table = get_table_name(join_target)
-        source_table = get_table_name(join_source)
-
-        # Add the join in the join_graph
-        source_node = graph.get(source_table)
-        target_node = graph.get(target_table)
-        source_node.connect(target_node)
-
-    return graph
+    return [node, child_rules]
