@@ -67,12 +67,12 @@ def find_fhir_resource(resource_type, identifier):
     db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
     if resource_type not in fhir_ids:
         results = db_client[resource_type].find(
-            {"identifier": {"$elemMatch": {"value": {"$exists": True}}}}, ["id", "identifier"]
+            {"id": identifier}
         )
 
         fhir_ids[resource_type] = {}
         for r in results:
-            r_identifier = r["identifier"][0]["value"]
-            fhir_ids[resource_type][r_identifier] = r["id"]
+            # r_identifier = r["identifier"][0]["value"]
+            fhir_ids[resource_type][identifier] = str(r["_id"])
 
     return fhir_ids[resource_type].get(identifier)

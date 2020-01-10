@@ -23,7 +23,7 @@ def split_space(raw_input):
     return raw_input.split(" ")
 
 
-def format_date_from_yyyymmdd(raw_input):
+def clean_date(raw_input):
     if not isinstance(raw_input, str):
         raw_input = str(raw_input)
     if utils.is_empty(raw_input):
@@ -75,18 +75,21 @@ def if_valid(process, callback):
     return if_valid_func
 
 
-def fake_merging_script(*values):
-    return values[0]
+def select_first_not_empty(*values):
+    for v in values:
+        if v[0] != "None":
+            return v
+    return v
 
 
 functions = {
     "to_boolean": to_boolean,
     "make_title": make_title,
     "split_space": split_space,
-    "format_date_from_yyyymmdd": format_date_from_yyyymmdd,
+    "clean_date": clean_date,
     "equal": equal,
     "clean_phone": clean_phone,
-    "fake_merging_script": fake_merging_script,
+    "select_first_not_empty": select_first_not_empty,
 }
 # Add the function declared in the specific resource files
 resources = [patient]

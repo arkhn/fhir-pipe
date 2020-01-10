@@ -3,20 +3,14 @@ import requests
 import fhirpipe
 
 
-source_info_query = """
-query($sourceId: ID!) {
-    source(sourceId: $sourceId) {
+sources_query = """
+query {
+    sources {
         id
         name
-    }
-}
-"""
-
-resources_query = """
-query($sourceId: ID!) {
-    source(sourceId: $sourceId) {
         resources {
-            id
+          id
+          fhirType
         }
     }
 }
@@ -51,6 +45,7 @@ fragment entireInput on Input {
 fragment a on Attribute {
     id
     name
+    fhirType
     mergingScript
     inputs {
         ...entireInput
@@ -61,6 +56,9 @@ query($resourceId: ID!) {
     resource(resourceId: $resourceId) {
         id
         fhirType
+        primaryKeyOwner
+        primaryKeyTable
+        primaryKeyColumn
         attributes {
             ...a
             children {

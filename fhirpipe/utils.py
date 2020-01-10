@@ -1,10 +1,12 @@
 def build_col_name(table, column, owner=None):
-    return "{}{}.{}".format(owner + "." if owner is not None else "", table, column,)
-
+    if owner:
+        return f"{owner}.{table}.{column}"
+    else:
+        return f"{table}.{column}"
 
 def new_col_name(script_name, init_col):
     if isinstance(init_col, tuple):
-        return script_name + "_" + "_".join(init_col[0]) + "_" + "_".join(init_col[1])
+        return script_name + "_" + "_".join(init_col[0] + init_col[1])
     return "_".join((script_name, init_col))
 
 
