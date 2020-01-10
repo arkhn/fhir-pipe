@@ -51,12 +51,14 @@ def get_mapping_from_graphql(source_name, selected_resources):
     sources = run_graphql_query(gql.sources_query)
 
     try:
+        # Look for the source which has the name we want
         selected_source = next(
             s for s in sources["data"]["sources"] if s["name"] == source_name
         )
     except StopIteration:
         logging.error(f"No source with name '{source_name}' found")
 
+    # Get the ids of the resources from the query response
     selected_resource_ids = [
         r["id"]
         for r in selected_source["resources"]
@@ -194,10 +196,10 @@ def find_cols_joins_and_scripts(tree):
     all_joins = set()
     # The following dicts are used to store script names and on which columns
     # they are used.
-    # cleaning_scripts has the form
+    # all_cleaning_scripts has the form
     # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
     all_cleaning_scripts = defaultdict(list)
-    # cleaning_scripts has the form
+    # all_merging_scripts has the form
     # {"script1": (["col1", "col3", ...], [static3]),
     #  "script4": ([col2], [static1, static3, ...]),
     #  ...}
@@ -270,14 +272,14 @@ def find_cjs_in_leaf(leaf):
             # If there is a cleaning script
             if inp["script"]:
                 cleaning_scripts[inp["script"]].append(column_name)
-                if cols_to_merge is not None:
+                if leaf["mergingScript"]:
                     cols_to_merge[0].append(new_col_name(inp["script"], column_name))
             # Otherwise, simply add the column name
-            elif cols_to_merge is not None:
+            elif leaf["mergingScript"]:
                 cols_to_merge[0].append(column_name)
 
         # If it's a static value add it in case we need it for the merging
-        elif inp["staticValue"] and cols_to_merge is not None:
+        elif inp["staticValue"] and leaf["mergingScript"]:
             cols_to_merge[1].append(inp["staticValue"])
 
     # Add merging script to scripts dict if needed
