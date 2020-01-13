@@ -44,7 +44,9 @@ def get_mapping_from_file(path, selected_resources):
 
     if selected_resources is not None:
         source_json["resources"][:] = [
-            r for r in source_json["resources"][:] if r["fhirType"] in selected_resources
+            r
+            for r in source_json["resources"][:]
+            if r["fhirType"] in selected_resources
         ]
 
     return source_json["resources"]
@@ -111,73 +113,20 @@ def rec_prune_resource(attr_structure):
         raise Exception("attr_structure not a dict nor a list.")
 
 
-def get_primary_key(resource_structure, extended_get=False):
+def get_main_table(resource_structure):
     """
-    Analyse a resource mapping rules and return the mapping rule for
-    the identifier
+    Return table of the provided primary key
 
     args:
         resource_structure: the object containing all the mapping rules
-        extended_get (bool): search for the identifier table not only in
-            identifier attributes (default: False)
 
     Return:
-        The table referenced by the identifier mapping rule
+        The table containing the primary key
     """
-    # NOTE this souldn't be needed as user can provide primary key column with Pyrog
-    pk = build_col_name(
-        resource_structure["primaryKeyTable"],
-        resource_structure["primaryKeyColumn"],
-        resource_structure["primaryKeyOwner"],
-    )
-    return resource_structure["primaryKeyTable"], pk
-
-
-#     targets = []
-#     for attribute in resource_structure["attributes"]:
-#         if attribute["name"] == "identifier" or extended_get:
-#             search_for_input_columns(attribute, targets)
-
-#     if len(targets) < 1:
-#         if extended_get:
-#             raise AttributeError(
-#                 "There is no mapping rule for the identifier of this resource"
-#             )
-#         else:
-#             return get_identifier_table(resource_structure, extended_get=True)
-#     else:
-#         if len(targets) > 1:
-#             logging.warning(
-#                 "Warning: Too many choices for the right main table for building SQL request,\
-# taking the first one."
-#             )
-#         return targets[0]
-
-
-# def search_for_input_columns(obj, targets):
-#     """
-#     Inspect a mapping object of an identifier and list all tables used
-#     in mapping rules
-
-#     args:
-#         obj: mapping object of an identifier
-#         targets: a list to append the tables found
-
-#     returns:
-#         None as the results are appended to the targets list
-#     """
-#     # NOTE this is only used in get_identifier_table so shouldn't be needed neither
-
-#     if isinstance(obj, dict):
-#         if "inputColumns" in obj and len(obj["inputColumns"]) > 0:
-#             for input_col in obj["inputColumns"]:
-#                 if input_col["table"]:
-#                     targets.append(input_col["table"])
-#         elif "attributes" in obj:
-#             search_for_input_columns(obj["attributes"], targets)
-#     elif isinstance(obj, list):
-#         for o in obj:
-#             search_for_input_columns(o, targets)
+    if resource_structure["primaryKeyOwner"]:
+        return f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}"
+    else:
+        return resource_structure["primaryKeyTable"]
 
 
 def find_cols_joins_and_scripts(tree):

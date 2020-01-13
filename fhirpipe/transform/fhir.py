@@ -1,17 +1,19 @@
+from uuid import uuid4
+
 from fhirpipe.utils import build_col_name, new_col_name
 from fhirpipe.load.fhirstore import find_fhir_resource
 
 
-def create_resource(chunk, resource_structure, pk):
+def create_resource(chunk, resource_structure):
     res = []
     for _, row in chunk.iterrows():
-        res.append(create_fhir_object(row, resource_structure, pk))
+        res.append(create_fhir_object(row, resource_structure))
     return res
 
 
-def create_fhir_object(row, resource_structure, pk):
+def create_fhir_object(row, resource_structure):
     # Identify the fhir object
-    fhir_object = {"id": row[pk], "resourceType": resource_structure["fhirType"]}
+    fhir_object = {"id": str(uuid4()), "resourceType": resource_structure["fhirType"]}
 
     # The first node has a different structure so iterate outside the
     # dfs_create_fhir function
@@ -101,16 +103,16 @@ def bind_reference(fhir_object):
         a fhir_object where valid references are now FHIR uris
     """
     # TODO think again about how to bind references
-    # Need to load resources in
+
     # First we check that the reference has been provided
     if fhir_object and fhir_object["identifier"]["value"]:
         # get id
         identifier = fhir_object["identifier"]["value"]
         # get referenced type (URI)
-        resource_type = fhir_object["identifier"]["system"]
+        uri = fhir_object["identifier"]["system"]
 
         # Search for the fhir instance
-        fhir_uri = find_fhir_resource(resource_type, identifier)
+        fhir_uri = find_fhir_resource(uri, identifier)
 
         # If an instance was found, replace the provided
         # identifier with FHIR id found

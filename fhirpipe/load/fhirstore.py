@@ -49,7 +49,7 @@ def save_many(instances):
 fhir_ids = {}
 
 
-def find_fhir_resource(resource_type, identifier):
+def find_fhir_resource(uri, identifier):
     """
     Return the first FHIR instance of some resource_type where the
     identifier matches some identifier, if any is found.
@@ -65,14 +65,19 @@ def find_fhir_resource(resource_type, identifier):
         else None
     """
     db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
+
+    # NOTE For now, URI simply consists in the resource name, need discussion about this
+    resource_type = uri
+
     if resource_type not in fhir_ids:
         results = db_client[resource_type].find(
-            {"id": identifier}
+            {"identifier": {"$elemMatch": {"value": {"$exists": True}}}},
+            ["id", "identifier"],
         )
 
         fhir_ids[resource_type] = {}
         for r in results:
-            # r_identifier = r["identifier"][0]["value"]
-            fhir_ids[resource_type][identifier] = str(r["_id"])
+            for r_identifier in r["identifier"]:
+                fhir_ids[resource_type][r_identifier["value"]] = r["id"]
 
     return fhir_ids[resource_type].get(identifier)
