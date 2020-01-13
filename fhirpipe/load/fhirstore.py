@@ -70,6 +70,10 @@ def find_fhir_resource(uri, identifier):
     resource_type = uri
 
     if resource_type not in fhir_ids:
+        # If URI not found, don't do anything
+        if resource_type not in db_client.list_collection_names():
+            return
+
         results = db_client[resource_type].find(
             {"identifier": {"$elemMatch": {"value": {"$exists": True}}}},
             ["id", "identifier"],
