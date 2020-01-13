@@ -6,7 +6,6 @@ from collections import defaultdict
 import fhirpipe.extract.graphql as gql
 from fhirpipe.extract.graphql import run_graphql_query
 from fhirpipe.utils import (
-    get_table_name,
     build_col_name,
     new_col_name,
     dict_concat,
