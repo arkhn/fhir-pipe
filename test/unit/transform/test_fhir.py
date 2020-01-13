@@ -18,11 +18,10 @@ def test_create_fhir_object(_, resource_pruned):
         "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2070-10-10",
     }
     resource_structure = resource_pruned
-    pk = "PATIENT.SUBJECT_ID"
-    actual = transform.create_fhir_object(row, resource_structure, pk)
+    actual = transform.create_fhir_object(row, resource_structure)
 
     assert actual == {
-        "id": "100092",
+        "id": actual["id"],
         "resourceType": "Patient",
         "name": [[{"family": "family name"}]],
         "language": "French",
@@ -62,12 +61,11 @@ def test_create_resource(_, resource_pruned):
         ]
     )
     resource_structure = resource_pruned
-    pk = "PATIENT.SUBJECT_ID"
-    actual = transform.create_resource(rows, resource_structure, pk)
+    actual = transform.create_resource(rows, resource_structure)
 
     assert actual == [
         {
-            "id": "100092",
+            "id": actual[0]["id"],
             "resourceType": "Patient",
             "name": [[{"family": "family name"}]],
             "language": "French",
@@ -83,7 +81,7 @@ def test_create_resource(_, resource_pruned):
             },
         },
         {
-            "id": "100093",
+            "id": actual[1]["id"],
             "resourceType": "Patient",
             "name": [[{"family": "family name"}]],
             "language": "English",

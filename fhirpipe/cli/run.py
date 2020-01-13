@@ -13,7 +13,7 @@ from fhirpipe.cli import parse_args, WELCOME_MSG
 from fhirpipe.extract.mapping import (
     get_mapping,
     prune_fhir_resource,
-    get_primary_key,
+    get_main_table,
     find_cols_joins_and_scripts,
     build_squash_rules,
 )
@@ -68,14 +68,14 @@ def run():
         resource_structure = prune_fhir_resource(resource_structure)
 
         # Get main table
-        main_table, primary_key = get_primary_key(resource_structure)
+        main_table = get_main_table(resource_structure)
         print("main_table", main_table)
 
         # Extract cols and joins
         cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
 
         # Build the sql query
-        sql_query = build_sql_query(cols, joins, main_table, primary_key)
+        sql_query = build_sql_query(cols, joins, main_table)
         print("sql query:", sql_query)
 
         # Build squash rules
@@ -109,7 +109,7 @@ def run():
                 pool.map(save_many, fhir_objects_chunks)
 
             else:
-                instances = create_resource(chunk, resource_structure, primary_key)
+                instances = create_resource(chunk, resource_structure)
                 save_many(instances)
 
     if args.multiprocessing:

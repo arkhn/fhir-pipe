@@ -3,6 +3,9 @@ from collections import defaultdict
 
 
 def build_col_name(table, column, owner=None):
+    table = table.strip()
+    column = column.strip()
+    owner = owner.strip()
     if owner:
         return f"{owner}.{table}.{column}"
     else:

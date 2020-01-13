@@ -6,11 +6,9 @@ import fhirpipe
 from fhirpipe.utils import get_table_name
 
 
-def build_sql_query(columns, joins, table_name, primary_key):
+def build_sql_query(columns, joins, table_name):
     """
     """
-    if primary_key:
-        columns.add(primary_key)
     sql_cols = ", ".join(columns)
     sql_joins = "\n".join(
         [
