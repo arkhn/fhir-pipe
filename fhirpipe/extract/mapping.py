@@ -28,7 +28,7 @@ def get_mapping(from_file=None, source_name=None, selected_resources=None):
         raise ValueError("You should provide source_name or from_file")
 
     if from_file:
-        return get_mapping_from_file(from_file)
+        return get_mapping_from_file(from_file, selected_resources)
 
     else:
         return get_mapping_from_graphql(source_name, selected_resources)
@@ -40,11 +40,11 @@ def get_mapping_from_file(path, selected_resources):
 
     with open(path) as json_file:
         resources = json.load(json_file)
-    source_json = resources["data"]["database"]
+    source_json = resources["data"]["source"]
 
     if selected_resources is not None:
         source_json["resources"][:] = [
-            r for r in source_json["resources"][:] if r["name"] in selected_resources
+            r for r in source_json["resources"][:] if r["fhirType"] in selected_resources
         ]
 
     return source_json["resources"]

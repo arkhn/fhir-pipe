@@ -1,20 +1,18 @@
+import os
+import json
 from unittest import mock
 
 import fhirpipe.extract.mapping as mapping
 
-from test.unit.extract import MOCK_FILE, RAW_FHIR_RESOURCE, PRUNED_FHIR_RESOURCE
+from test.unit import exported_source, gql_response, resource_pruned
 
 
-mock_open = mock.mock_open(read_data=MOCK_FILE)
+def test_get_mapping_from_file(exported_source):
+    with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
+        resources = mapping.get_mapping_from_file("path", selected_resources=None)
 
-
-def test_get_mapping_from_file():
-    with mock.patch("builtins.open", mock_open):
-        resources = mapping.get_mapping_from_file("path")
-
-    assert [r["name"] for r in resources] == [
+    assert [r["fhirType"] for r in resources] == [
         "Patient",
-        "Encounter",
     ]
 
 
@@ -22,37 +20,39 @@ def test_get_mapping_from_file():
 #     pass
 
 
-def test_prune_fhir_resource():
-    actual = mapping.prune_fhir_resource(RAW_FHIR_RESOURCE)
+def test_prune_fhir_resource(gql_response, resource_pruned):
+    actual = mapping.prune_fhir_resource(gql_response)
 
-    assert actual == PRUNED_FHIR_RESOURCE
+    assert actual == resource_pruned
 
 
-def test_find_cols_joins_and_scripts():
-    fhir_resource = PRUNED_FHIR_RESOURCE
+def test_find_cols_joins_and_scripts(resource_pruned):
+    fhir_resource = resource_pruned
 
     cols, joins, cleaning, merging = mapping.find_cols_joins_and_scripts(fhir_resource)
+    print(cols, joins, cleaning, merging)
 
     assert cols == {
         "PATIENTS.DOB",
-        "PATIENTS.SUBJECT_ID",
-        "PATIENTS.EXPIRE_FLAG",
-        "PATIENTS.GENDER",
-        "ADMISSIONS.MARITAL_STATUS",
-        "ADMISSIONS.LANGUAGE",
         "PATIENTS.DOD",
+        "PATIENTS.GENDER",
+        "ADMISSIONS.SUBJECT_ID",
+        "ADMISSIONS.LANGUAGE",
+        "CAREGIVERS.DESCRIPTION",
     }
-    assert joins == {("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID")}
+    assert joins == {
+        ("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID"),
+        ("PATIENTS.SUBJECT_ID", "CAREGIVERS.ROW_ID"),
+    }
     assert cleaning == {
         "map_gender": ["PATIENTS.GENDER"],
-        "format_date_from_yyyymmdd": ["PATIENTS.DOB", "PATIENTS.DOD"],
-        "to_boolean": ["PATIENTS.EXPIRE_FLAG"],
+        "clean_date": ["PATIENTS.DOB", "PATIENTS.DOD"],
     }
     assert merging == {
-        "fake_merging_script": [
+        "select_first_not_empty": [
             (
-                ["map_gender_PATIENTS.GENDER", "PATIENTS.EXPIRE_FLAG"],
-                ["fake static value"],
+                ["CAREGIVERS.DESCRIPTION", "clean_date_PATIENTS.DOD"],
+                [],
             )
         ]
     }

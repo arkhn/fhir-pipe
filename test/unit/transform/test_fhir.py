@@ -4,74 +4,111 @@ from unittest import mock
 
 import fhirpipe.transform.fhir as transform
 
-from test.unit.transform import PATIENT_LIGHT_RESOURCE
+from test.unit import resource_pruned
 
 
-def test_create_fhir_object():
+def test_create_fhir_object(resource_pruned):
     row = {
-        "ICSF.PATIENT.NOPAT": "100092",
-        "ICSF.PATIENT.NOMPAT": "Chirac",
-        "ICSF.PATIENT.PREPAT": "Jacques",
-        "ICSF.PATIENT.PREPATSUITE": "François",
-        "ICSF.PATIENT.SEXE": "M",
+        "PATIENT.SUBJECT_ID": "100092",
+        "clean_date_PATIENTS.DOB": "2012-12-12",
+        "map_gender_PATIENTS.GENDER": "MALE",
+        "ADMISSIONS.SUBJECT_ID": "100092",
+        "ADMISSIONS.LANGUAGE": "French",
+        "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2070-10-10",
     }
-    resource_structure = json.loads(PATIENT_LIGHT_RESOURCE)
-    actual = transform.create_fhir_object(row, resource_structure)
+    resource_structure = resource_pruned
+    pk = "PATIENT.SUBJECT_ID"
+    actual = transform.create_fhir_object(row, resource_structure, pk)
 
     assert actual == {
-        "id": actual["id"],
+        "id": "100092",
         "resourceType": "Patient",
-        "identifier": [{"value": "100092"}],
-        "name": [{"family": "Chirac", "given": ["Jacques", "François"]}],
-        "gender": "M",
+        "name": [[{"family": "family name"}]],
+        "language": "French",
+        "gender": "MALE",
+        "birthDate": "2012-12-12",
+        "deceasedDateTime": "2070-10-10",
+        "address": [
+            [{"city": "Paris", "country": "France"}],
+            [{"city": "NY", "country": "USA"}],
+        ],
+        "managingOrganization": {
+            "identifier": {"system": "Patient", "value": "100092"}
+        },
     }
 
 
-def test_create_resource():
-    rows = pd.DataFrame([
-        {
-            "ICSF.PATIENT.NOPAT": "100092",
-            "ICSF.PATIENT.NOMPAT": "Chirac",
-            "ICSF.PATIENT.PREPAT": "Jacques",
-            "ICSF.PATIENT.PREPATSUITE": "François",
-            "ICSF.PATIENT.SEXE": "M",
-        },
-        {
-            "ICSF.PATIENT.NOPAT": "100093",
-            "ICSF.PATIENT.NOMPAT": "Mitterrand",
-            "ICSF.PATIENT.PREPAT": "François",
-            "ICSF.PATIENT.PREPATSUITE": "Maurice",
-            "ICSF.PATIENT.SEXE": "M",
-        },
-    ])
-    resource_structure = json.loads(PATIENT_LIGHT_RESOURCE)
-    actual = transform.create_resource(rows, resource_structure)
+def test_create_resource(resource_pruned):
+    rows = pd.DataFrame(
+        [
+            {
+                "PATIENT.SUBJECT_ID": "100092",
+                "clean_date_PATIENTS.DOB": "2012-12-12",
+                "map_gender_PATIENTS.GENDER": "MALE",
+                "ADMISSIONS.SUBJECT_ID": "100092",
+                "ADMISSIONS.LANGUAGE": "French",
+                "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2070-10-10",
+            },
+            {
+                "PATIENT.SUBJECT_ID": "100093",
+                "clean_date_PATIENTS.DOB": "2012-11-11",
+                "map_gender_PATIENTS.GENDER": "FEMALE",
+                "ADMISSIONS.SUBJECT_ID": "100093",
+                "ADMISSIONS.LANGUAGE": "English",
+                "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2075-10-10",
+            },
+        ]
+    )
+    resource_structure = resource_pruned
+    pk = "PATIENT.SUBJECT_ID"
+    actual = transform.create_resource(rows, resource_structure, pk)
 
     assert actual == [
         {
-            "id": actual[0]["id"],
+            "id": "100092",
             "resourceType": "Patient",
-            "identifier": [{"value": "100092"}],
-            "name": [{"family": "Chirac", "given": ["Jacques", "François"]}],
-            "gender": "M",
+            "name": [[{"family": "family name"}]],
+            "language": "French",
+            "gender": "MALE",
+            "birthDate": "2012-12-12",
+            "deceasedDateTime": "2070-10-10",
+            "address": [
+                [{"city": "Paris", "country": "France"}],
+                [{"city": "NY", "country": "USA"}],
+            ],
+            "managingOrganization": {
+                "identifier": {"system": "Patient", "value": "100092"}
+            },
         },
         {
-            "id": actual[1]["id"],
+            "id": "100093",
             "resourceType": "Patient",
-            "identifier": [{"value": "100093"}],
-            "name": [{"family": "Mitterrand", "given": ["François", "Maurice"]}],
-            "gender": "M",
+            "name": [[{"family": "family name"}]],
+            "language": "English",
+            "gender": "FEMALE",
+            "birthDate": "2012-11-11",
+            "deceasedDateTime": "2075-10-10",
+            "address": [
+                [{"city": "Paris", "country": "France"}],
+                [{"city": "NY", "country": "USA"}],
+            ],
+            "managingOrganization": {
+                "identifier": {"system": "Patient", "value": "100093"}
+            },
         },
     ]
 
 
 @mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
 def test_bind_reference(find_resource):
-    obj = {"identifier": {"value": "dummy_value"}, "other_key": {"other_value"}}
+    obj = {
+        "identifier": {"value": "dummy_value", "system": "Patient"},
+        "other_key": {"other_value"},
+    }
 
-    transform.bind_reference(
-        obj,
-        {"type": "Reference(abc|def)", "name": "fhir name"},
-    )
+    transform.bind_reference(obj)
 
-    assert obj == {"identifier": {"value": "dummy_uri"}, "other_key": {"other_value"}}
+    assert obj == {
+        "identifier": {"value": "dummy_uri", "system": "Patient"},
+        "other_key": {"other_value"},
+    }

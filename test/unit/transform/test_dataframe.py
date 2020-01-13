@@ -40,7 +40,7 @@ def mock_get_script(*args):
         return args[1] + args[2] + "merge"
 
 
-@mock.patch("fhirpipe.transform.dataframe.get_script", return_value=mock_get_script)
+@mock.patch("fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script)
 def test_apply_scripts(get_script):
     df = pd.DataFrame(
         {
