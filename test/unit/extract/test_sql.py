@@ -23,8 +23,8 @@ def test_build_sql_query():
     )
 
 
-def test_get_connection():
-    sql.get_connection()
+# def test_get_connection():
+#     sql.get_connection()
 
 # @mock.patch("fhirpipe.extract.sql.get_script", return_value=mock_get_script)
 # def test_run_sql_query():

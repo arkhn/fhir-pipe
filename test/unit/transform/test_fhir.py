@@ -7,7 +7,8 @@ import fhirpipe.transform.fhir as transform
 from test.unit import resource_pruned
 
 
-def test_create_fhir_object(resource_pruned):
+@mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
+def test_create_fhir_object(_, resource_pruned):
     row = {
         "PATIENT.SUBJECT_ID": "100092",
         "clean_date_PATIENTS.DOB": "2012-12-12",
@@ -33,12 +34,13 @@ def test_create_fhir_object(resource_pruned):
             [{"city": "NY", "country": "USA"}],
         ],
         "managingOrganization": {
-            "identifier": {"system": "Patient", "value": "100092"}
+            "identifier": {"system": "Patient", "value": "dummy_uri"}
         },
     }
 
 
-def test_create_resource(resource_pruned):
+@mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
+def test_create_resource(_, resource_pruned):
     rows = pd.DataFrame(
         [
             {
@@ -77,7 +79,7 @@ def test_create_resource(resource_pruned):
                 [{"city": "NY", "country": "USA"}],
             ],
             "managingOrganization": {
-                "identifier": {"system": "Patient", "value": "100092"}
+                "identifier": {"system": "Patient", "value": "dummy_uri"}
             },
         },
         {
@@ -93,14 +95,14 @@ def test_create_resource(resource_pruned):
                 [{"city": "NY", "country": "USA"}],
             ],
             "managingOrganization": {
-                "identifier": {"system": "Patient", "value": "100093"}
+                "identifier": {"system": "Patient", "value": "dummy_uri"}
             },
         },
     ]
 
 
 @mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
-def test_bind_reference(find_resource):
+def test_bind_reference(_):
     obj = {
         "identifier": {"value": "dummy_value", "system": "Patient"},
         "other_key": {"other_value"},

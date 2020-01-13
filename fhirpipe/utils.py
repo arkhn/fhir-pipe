@@ -15,6 +15,9 @@ def new_col_name(script_name, init_col):
     return f"{script_name}_{init_col}"
 
 
+column_pattern = re.compile(r"(?:\w+\.)?(\w+)\.\w+")
+
+
 def get_table_name(name):
     """
     Extract the table_name from a column specification
@@ -25,7 +28,6 @@ def get_table_name(name):
         Case 2
             TABLE.COLUMN -> TABLE
     """
-    column_pattern = re.compile(r"(?:\w+\.)?(\w+)\.\w+")
     return re.search(column_pattern, name).group(1)
 
 
