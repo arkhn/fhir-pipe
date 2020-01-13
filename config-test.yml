@@ -1,0 +1,25 @@
+sql:
+  default: 'postgres'
+  postgres:
+    lib: 'psycopg2'
+    args: []
+    kwargs:
+      host: 'localhost'
+      port: 5431
+      database: 'mimic'
+      user: 'mimicuser'
+      password: 'mimicuser'
+  oracle:
+    lib: 'cx_Oracle'
+    args: ['user/password@database']
+    kwargs: {}
+fhirstore:
+  host: 'localhost'
+  port: 27017
+  database: 'fhirstore'
+  user: null
+  password: null
+
+graphql:
+  server: 'http://localhost:4000'
+  token: '<token>'
