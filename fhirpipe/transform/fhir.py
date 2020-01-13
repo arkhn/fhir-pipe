@@ -78,9 +78,7 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
             # TODO bind references only after having loading all the resource?
             # If the object is a Reference, to we give it to bind_reference
             if attribute_structure["fhirType"].startswith("Reference"):
-                bind_reference(
-                    fhir_obj[attribute_structure["name"]], attribute_structure
-                )
+                bind_reference(fhir_obj[attribute_structure["name"]])
 
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(fhir_obj, list) and len(fhir_obj) > 0:
@@ -91,7 +89,7 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
         fhir_obj[attribute_structure["name"]] = children
 
 
-def bind_reference(fhir_object, fhir_spec):
+def bind_reference(fhir_object):
     """
     Analyse a reference and replace the provided identifier
     with official FHIR uri if the resource reference exists.
