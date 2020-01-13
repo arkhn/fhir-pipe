@@ -5,7 +5,7 @@ import scripts
 from fhirpipe.utils import new_col_name
 
 
-def squash_rows(df, squash_rules, parent_cols=[], squash_agg_func=None):
+def squash_rows(df, squash_rules, parent_cols=[]):
     """
     Apply the OneToMany joins to have a single result with a list in it from
     a list of "flat" results.
@@ -48,16 +48,15 @@ def squash_rows(df, squash_rules, parent_cols=[], squash_agg_func=None):
     for child_rule in child_rules:
         df = squash_rows(df, child_rule, pivot_cols)
 
-    if squash_agg_func is None:
-        squash_agg_func = squash_agg_first
-
-    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(squash_agg_func)
+    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(take_first_not_none)
 
     return df
 
 
-def squash_agg_first(x):
-    return list(x)[0]
+def take_first_not_none(x):
+    for el in x:
+        if el:
+            return el
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts):
