@@ -130,7 +130,5 @@ def run_graphql_query(graphql_query, variables=None):
         return request.json()
     else:
         raise Exception(
-            "Query failed with returning code {}\n{}.".format(
-                request.status_code, request.reason
-            )
+            f"Query failed with returning code {request.status_code}\n{request.reason}."
         )
