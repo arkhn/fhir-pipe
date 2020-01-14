@@ -49,7 +49,7 @@ def run():
         try:
             fhirstore.bootstrap(resource=r, depth=10)
         except CollectionInvalid:
-            logging.warning(f"Collection {r} was already existing.")
+            fhirstore.resume()
 
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
