@@ -68,7 +68,7 @@ def get_mapping_from_graphql(source_name, selected_resources):
     selected_resource_ids = [
         r["id"]
         for r in selected_source["resources"]
-        if r["fhirType"] in selected_resources
+        if selected_resources is None or r["fhirType"] in selected_resources
     ]
 
     # Return resources mapping
@@ -160,10 +160,10 @@ def find_cols_joins_and_scripts(tree):
     if isinstance(tree, dict):
 
         # If we are not in a leaf, we recurse
-        if "attributes" in tree.keys() and tree["attributes"]:
+        if "attributes" in tree and tree["attributes"]:
             return find_cols_joins_and_scripts(tree["attributes"])
         # If we are not in a leaf, we recurse
-        if "children" in tree.keys() and tree["children"]:
+        if "children" in tree and tree["children"]:
             return find_cols_joins_and_scripts(tree["children"])
 
         cols, joins, cleaning, merging = find_cjs_in_leaf(tree)
