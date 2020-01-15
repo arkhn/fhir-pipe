@@ -8,8 +8,7 @@ from fhirpipe.extract.graphql import run_graphql_query
 from fhirpipe.utils import (
     build_col_name,
     new_col_name,
-    dict_concat,
-    build_join_graph,
+    get_table_name,
 )
 
 
@@ -63,6 +62,7 @@ def get_mapping_from_graphql(source_name, selected_resources):
         )
     except StopIteration:
         logging.error(f"No source with name '{source_name}' found")
+        raise ValueError(f"{source_name} not found in the provided mapping.")
 
     # Get the ids of the resources from the query response
     selected_resource_ids = [
@@ -123,6 +123,8 @@ def get_main_table(resource_structure):
     Return:
         The table containing the primary key
     """
+    if not resource_structure["primaryKeyTable"]:
+        raise ValueError("You need to provide a primary key table in the mapping.")
     if resource_structure["primaryKeyOwner"]:
         return f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}"
     else:
@@ -200,11 +202,11 @@ def find_cjs_in_leaf(leaf):
     # Check if we need to build the object to put in merging_scripts
     cols_to_merge = ([], []) if leaf["mergingScript"] is not None else None
 
-    for inp in leaf["inputs"]:
+    for input in leaf["inputs"]:
 
         # If table and column are defined, we have an sql input
-        if inp["sqlValue"]:
-            sql = inp["sqlValue"]
+        if input["sqlValue"]:
+            sql = input["sqlValue"]
             column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
             columns.add(column_name)
 
@@ -223,17 +225,17 @@ def find_cjs_in_leaf(leaf):
                 joins.add((source_col, target_col))
 
             # If there is a cleaning script
-            if inp["script"]:
-                cleaning_scripts[inp["script"]].append(column_name)
+            if input["script"]:
+                cleaning_scripts[input["script"]].append(column_name)
                 if leaf["mergingScript"]:
-                    cols_to_merge[0].append(new_col_name(inp["script"], column_name))
+                    cols_to_merge[0].append(new_col_name(input["script"], column_name))
             # Otherwise, simply add the column name
             elif leaf["mergingScript"]:
                 cols_to_merge[0].append(column_name)
 
         # If it's a static value add it in case we need it for the merging
-        elif inp["staticValue"] and leaf["mergingScript"]:
-            cols_to_merge[1].append(inp["staticValue"])
+        elif input["staticValue"] and leaf["mergingScript"]:
+            cols_to_merge[1].append(input["staticValue"])
 
     # Add merging script to scripts dict if needed
     if leaf["mergingScript"]:
@@ -263,16 +265,15 @@ def build_squash_rules(columns, joins, main_table):
     """
     if not isinstance(main_table, str):
         raise AttributeError(
-            "Please specify the main table for this FHIR Resource,\
-            usually for example for the resource fhir Patient you would\
-            provide a sql table OWNER.Patients or something like this.\
-            Don't forget to provide the owner if it applies"
+            "Please specify the main table for this FHIR Resource, "
+            "usually for example for the resource fhir Patient you would "
+            "provide a sql table OWNER.Patients or something like this. "
+            "Don't forget to provide the owner if it applies."
         )
 
     # Build a join graph
     join_graph = build_join_graph(joins)
 
-    # head_node = dependency_graph.get(main_table)
     squash_rules = rec_build_squash_rules(join_graph, main_table)
 
     return squash_rules
@@ -284,3 +285,33 @@ def rec_build_squash_rules(join_graph, node):
         child_rules.append(rec_build_squash_rules(join_graph, join_node))
 
     return [node, child_rules]
+
+
+def build_join_graph(joins):
+    """
+    Transform a join info into SQL fragments and parse the graph of join dependency
+    Input:
+        {("<owner>.<table>.<col>", "<owner>.<join_table>.<join_col>"), ... }
+    Return:
+        {
+            "<table>": ["<join_table 1>", "<join_table 2>", ...],
+            ...
+        }
+    """
+    graph = defaultdict(list)
+    for join in joins:
+        join_source, join_target = join
+
+        # Get table names
+        target_table = get_table_name(join_target)
+        source_table = get_table_name(join_source)
+
+        # Add the join in the join_graph
+        graph[source_table].append(target_table)
+
+    return graph
+
+
+def dict_concat(dict_1, dict_2):
+    for key, val in dict_2.items():
+        dict_1[key] += val

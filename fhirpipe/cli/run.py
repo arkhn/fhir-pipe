@@ -2,7 +2,6 @@ import time
 import numpy as np
 import multiprocessing as mp
 from functools import partial
-import logging
 
 from pymongo.errors import CollectionInvalid
 
@@ -58,6 +57,7 @@ def run():
         selected_resources=args.resources,
     )
 
+    # TODO maybe we can find a more elegant way to handle multiprocessing
     if args.multiprocessing:
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
