@@ -69,7 +69,7 @@ def run_sql_query(query, connection_type: str = None, chunksize: int = None):
         query, get_connection(connection_type), chunksize=chunksize
     )
 
-    # If chunksize is None, we the whole dataframe
+    # If chunksize is None, we return the dataframe for the whole DB
     # Note that we still use yield to use the for ... in ... syntax in any case
     if chunksize is None:
         yield pd.DataFrame(pd_query)
