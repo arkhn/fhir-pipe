@@ -1,6 +1,7 @@
 from unittest import mock
 
 import fhirpipe.load.fhirstore as fhirstore
+from test.unit import mock_config
 from test.unit.load import mock_mongo_client
 
 
@@ -27,7 +28,8 @@ def test_save_many(_):
 
 
 @mock.patch("fhirpipe.load.fhirstore.get_mongo_client", return_value=mock_mongo_client)
-def test_find_fhir_resource(_):
+@mock.patch("fhirpipe.load.fhirstore.fhirpipe.global_config", mock_config)
+def test_find_fhir_resource(*_):
 
     assert fhirstore.find_fhir_resource("Patient", "0001") == "123456"
 

@@ -12,3 +12,6 @@ def exported_source():
 def patient_pruned():
     with open("test/fixtures/patient_pruned.json", "r") as fp:
         return json.load(fp)
+
+
+mock_config = {"fhirstore": {"database": "fhirstore"}}
