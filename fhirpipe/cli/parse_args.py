@@ -30,7 +30,7 @@ def parse_args():
         "--chunksize",
         type=int,
         default=None,
-        help="Batch size if applicable (default: 100000)",
+        help="Batch size. If None, process the whole DB in one run.",
     )
 
     parser.add_argument(

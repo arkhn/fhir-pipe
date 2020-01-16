@@ -40,6 +40,7 @@ def save_many(instances):
         instances (list): list of instances
     """
     store = get_fhirstore()
+    store.resume()
     instances = tqdm(instances)
     for instance in instances:
         store.create(instance)

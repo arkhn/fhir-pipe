@@ -41,15 +41,6 @@ def run():
     # Define global config
     set_global_config(config_path=args.config)
 
-    fhirstore = get_fhirstore()
-    if args.reset_store:
-        fhirstore.reset()
-    for r in args.resources:
-        try:
-            fhirstore.bootstrap(resource=r, depth=10)
-        except CollectionInvalid:
-            fhirstore.resume()
-
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
         from_file=args.mapping,
@@ -57,12 +48,15 @@ def run():
         selected_resources=args.resources,
     )
 
+    fhirstore = get_fhirstore()
+    if args.reset_store:
+        fhirstore.reset()
+
     # TODO maybe we can find a more elegant way to handle multiprocessing
     if args.multiprocessing:
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
-    print(f"Will run for: {args.resources}")
     for resource_structure in resources:
         print("Running for resource:", resource_structure["fhirType"])
         resource_structure = prune_fhir_resource(resource_structure)
@@ -98,6 +92,10 @@ def run():
 
             # Apply cleaning and merging scripts on chunk
             apply_scripts(chunk, cleaning, merging)
+
+            # Bootstrap for resource if needed
+            if resource_structure["fhirType"] not in fhirstore.resources:
+                fhirstore.bootstrap(resource=resource_structure["fhirType"], depth=10)
 
             if args.multiprocessing:
                 fhir_objects_chunks = pool.map(

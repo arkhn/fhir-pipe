@@ -39,16 +39,11 @@ def get_mapping_from_file(path, selected_resources):
 
     with open(path) as json_file:
         resources = json.load(json_file)
-    source_json = resources["data"]["source"]
 
     if selected_resources is not None:
-        source_json["resources"][:] = [
-            r
-            for r in source_json["resources"][:]
-            if r["fhirType"] in selected_resources
-        ]
+        resources[:] = [r for r in resources if r["fhirType"] in selected_resources]
 
-    return source_json["resources"]
+    return resources
 
 
 def get_mapping_from_graphql(source_name, selected_resources):
@@ -93,12 +88,12 @@ def rec_prune_resource(attr_structure):
     """ Helper recursive function called by prune_fhir_resource.
     """
     if isinstance(attr_structure, dict):
-        if attr_structure["children"]:
+        if "children" in attr_structure and attr_structure["children"]:
             attr_structure["children"][:] = [
                 attr for attr in attr_structure["children"] if rec_prune_resource(attr)
             ]
             return len(attr_structure["children"]) > 0
-        elif attr_structure["inputs"]:
+        elif "inputs" in attr_structure and attr_structure["inputs"]:
             return True
         else:
             return False
