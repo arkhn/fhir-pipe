@@ -10,7 +10,7 @@ from fhirpipe.load.fhirstore import get_fhirstore, get_mongo_client
 args = argparse.Namespace(
     chunksize=None,
     config="config-test.yml",
-    mapping="test/integration/fixtures/mimic_mapping.json",
+    mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
     resources=None,
@@ -45,12 +45,13 @@ def test_run_from_file(_):
 args = argparse.Namespace(
     chunksize=None,
     config="config-test.yml",
-    mapping="test/integration/fixtures/mimic_mapping.json",
+    mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
     resources=["Patient", "not_existing_resource"],
     source=None,
 )
+
 
 @mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
 def test_run_resource(_):
@@ -70,7 +71,7 @@ def test_run_resource(_):
 args = argparse.Namespace(
     chunksize=10,
     config="config-test.yml",
-    mapping="test/integration/fixtures/mimic_mapping.json",
+    mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
     resources=None,
@@ -91,12 +92,13 @@ def test_run_batch(_):
 args = argparse.Namespace(
     chunksize=None,
     config="config-test.yml",
-    mapping="test/integration/fixtures/mimic_mapping.json",
+    mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=True,
     reset_store=True,
     resources=None,
     source=None,
 )
+
 
 @mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
 def test_run_multiprocessing(_):
@@ -108,7 +110,7 @@ def test_run_multiprocessing(_):
 args1 = argparse.Namespace(
     chunksize=None,
     config="config-test.yml",
-    mapping="test/integration/fixtures/mimic_mapping.json",
+    mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
     resources=None,
@@ -118,12 +120,13 @@ args1 = argparse.Namespace(
 args2 = argparse.Namespace(
     chunksize=None,
     config="config-test.yml",
-    mapping="test/integration/fixtures/mimic_mapping.json",
+    mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=False,
     resources=None,
     source=None,
 )
+
 
 @mock.patch("fhirpipe.cli.run.parse_args", side_effect=[args1, args2])
 def test_run_no_reset(_):
@@ -156,7 +159,10 @@ def assert_sample_comparison(sample):
     assert sample["resourceType"] == "Patient"
     assert sample["gender"] == "female"
     assert sample["birthDate"] == "1844-07-18"
-    assert sample["address"] == [{"city": "Paris", "country": "France"}]
+    assert sample["address"] == [
+        {"city": "Paris", "country": "France"},
+        {"city": "NY", "state": "NY state", "country": "USA"},
+    ]
     assert sample["generalPractitioner"] == [
         {"identifier": {"system": "HealthcareService", "value": "48902"}}
     ]

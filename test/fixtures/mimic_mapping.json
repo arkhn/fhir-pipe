@@ -36,7 +36,48 @@
                 "updatedAt": "2020-01-15T10:27:14.151Z",
                 "createdAt": "2020-01-15T10:27:14.151Z",
                 "children": [],
-                "inputs": []
+                "inputs": [
+                    {
+                        "id": "ck5fl41ok14723qmthhkestt0",
+                        "script": null,
+                        "staticValue": null,
+                        "updatedAt": "2020-01-15T17:34:06.975Z",
+                        "createdAt": "2020-01-15T17:34:06.975Z",
+                        "sqlValue": {
+                            "id": "ck5fl41og14713qmt5vmrcgrl",
+                            "owner": "",
+                            "table": "ADMISSIONS",
+                            "column": "LANGUAGE",
+                            "updatedAt": "2020-01-15T17:34:06.975Z",
+                            "createdAt": "2020-01-15T17:34:06.975Z",
+                            "joins": [
+                                {
+                                    "id": "ck5fl42ng14733qmtydlmg2rs",
+                                    "updatedAt": "2020-01-15T17:34:08.236Z",
+                                    "createdAt": "2020-01-15T17:34:08.236Z",
+                                    "tables": [
+                                        {
+                                            "id": "ck5fl42nk14743qmt3ek4vo0e",
+                                            "owner": "",
+                                            "table": "PATIENTS",
+                                            "column": "SUBJECT_ID",
+                                            "updatedAt": "2020-01-15T17:34:19.405Z",
+                                            "createdAt": "2020-01-15T17:34:08.236Z"
+                                        },
+                                        {
+                                            "id": "ck5fl42nn14753qmt91okl4pw",
+                                            "owner": "",
+                                            "table": "ADMISSIONS",
+                                            "column": "SUBJECT_ID",
+                                            "updatedAt": "2020-01-15T17:34:19.405Z",
+                                            "createdAt": "2020-01-15T17:34:08.236Z"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                ]
             },
             {
                 "id": "ck5f5v2q000093qmteqcdhpv2",
@@ -1395,6 +1436,14 @@
                                             "createdAt": "2020-01-15T15:12:31.072Z",
                                             "joins": []
                                         }
+                                    },
+                                    {
+                                        "id": "dummy_id",
+                                        "script": null,
+                                        "staticValue": "dummy",
+                                        "updatedAt": "2020-01-15T15:12:31.072Z",
+                                        "createdAt": "2020-01-15T15:12:31.072Z",
+                                        "sqlValue": null
                                     }
                                 ]
                             }
@@ -4133,6 +4182,218 @@
                                         "id": "ck5f5ws4g05493qmtst1k8ltb",
                                         "script": null,
                                         "staticValue": "France",
+                                        "updatedAt": "2020-01-15T10:28:33.758Z",
+                                        "createdAt": "2020-01-15T10:28:33.758Z",
+                                        "sqlValue": null
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "ck5f5v2vg01293qmtpj0zgnyo",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "period",
+                                "fhirType": "Period",
+                                "description": "A time period defined by a start and end date and optionally time.",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.307Z",
+                                "createdAt": "2020-01-15T10:27:14.307Z",
+                                "children": [
+                                    {
+                                        "id": "ck5f5v2vj01333qmtx9hl346o",
+                                        "mergingScript": null,
+                                        "isArray": false,
+                                        "isRequired": false,
+                                        "name": "start",
+                                        "fhirType": "dateTime",
+                                        "description": "A date, date-time or partial date (e.g. just year or year + month).  If hours and minutes are specified, a time zone SHALL be populated. The format is a union of the schema types gYear, gYearMonth, date and dateTime. Seconds must be provided due to schema type constraints but may be zero-filled and may be ignored.                 Dates SHALL be valid dates.",
+                                        "comments": null,
+                                        "updatedAt": "2020-01-15T10:27:14.307Z",
+                                        "createdAt": "2020-01-15T10:27:14.307Z",
+                                        "children": [],
+                                        "inputs": []
+                                    },
+                                    {
+                                        "id": "ck5f5v2vn01363qmtoz792jze",
+                                        "mergingScript": null,
+                                        "isArray": false,
+                                        "isRequired": false,
+                                        "name": "end",
+                                        "fhirType": "dateTime",
+                                        "description": "A date, date-time or partial date (e.g. just year or year + month).  If hours and minutes are specified, a time zone SHALL be populated. The format is a union of the schema types gYear, gYearMonth, date and dateTime. Seconds must be provided due to schema type constraints but may be zero-filled and may be ignored.                 Dates SHALL be valid dates.",
+                                        "comments": null,
+                                        "updatedAt": "2020-01-15T10:27:14.307Z",
+                                        "createdAt": "2020-01-15T10:27:14.307Z",
+                                        "children": [],
+                                        "inputs": []
+                                    }
+                                ],
+                                "inputs": []
+                            }
+                        ],
+                        "inputs": []
+                    },
+                    {
+                        "id": "ck5f5v2tt00803qmtgyf6ycfc",
+                        "mergingScript": null,
+                        "isArray": false,
+                        "isRequired": false,
+                        "name": "address",
+                        "fhirType": "Address",
+                        "description": "An address expressed using postal conventions (as opposed to GPS or other location definition formats).  This data type may be used to convey addresses for use in delivering mail as well as for visiting locations which might not be valid for mail delivery.  There are a variety of postal address formats defined around the world.",
+                        "comments": null,
+                        "updatedAt": "2020-01-15T10:27:14.305Z",
+                        "createdAt": "2020-01-15T10:27:14.305Z",
+                        "children": [
+                            {
+                                "id": "ck5f5v2ty00833qmtodsicx2p",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "use",
+                                "fhirType": "\"home\"|\"work\"|\"temp\"|\"old\"|\"billing\"",
+                                "description": "The purpose of this address.",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": []
+                            },
+                            {
+                                "id": "ck5f5v2ua00883qmtv7j8xrl5",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "type",
+                                "fhirType": "\"postal\"|\"physical\"|\"both\"",
+                                "description": "Distinguishes between physical addresses (those you can visit) and mailing addresses (e.g. PO Boxes and care-of addresses). Most addresses are both.",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": []
+                            },
+                            {
+                                "id": "ck5f5v2ui00943qmtdaoaxfiz",
+                                "mergingScript": null,
+                                "isArray": true,
+                                "isRequired": false,
+                                "name": "line",
+                                "fhirType": "array",
+                                "description": "This component contains the house number, apartment number, street name, street direction,  P.O. Box number, delivery hints, and similar address information.",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [
+                                    {
+                                        "id": "ck5f5v2um00993qmtvzk4xs43",
+                                        "mergingScript": null,
+                                        "isArray": false,
+                                        "isRequired": false,
+                                        "name": "line",
+                                        "fhirType": "string",
+                                        "description": "A sequence of Unicode characters",
+                                        "comments": null,
+                                        "updatedAt": "2020-01-15T10:27:14.305Z",
+                                        "createdAt": "2020-01-15T10:27:14.305Z",
+                                        "children": [],
+                                        "inputs": []
+                                    }
+                                ],
+                                "inputs": []
+                            },
+                            {
+                                "id": "ck5f5v2ur01053qmtqjqi3d4g",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "city",
+                                "fhirType": "string",
+                                "description": "A sequence of Unicode characters",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": [
+                                    {
+                                        "id": "ck5f5wo1905483qmt4qe0063b",
+                                        "script": null,
+                                        "staticValue": "NY",
+                                        "updatedAt": "2020-01-15T10:28:28.459Z",
+                                        "createdAt": "2020-01-15T10:28:28.459Z",
+                                        "sqlValue": null
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "ck5f5v2v001133qmt87z1weir",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "district",
+                                "fhirType": "string",
+                                "description": "A sequence of Unicode characters",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": []
+                            },
+                            {
+                                "id": "ck5f5v2v401203qmtopbttb8m",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "state",
+                                "fhirType": "string",
+                                "description": "A sequence of Unicode characters",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": [
+                                    {
+                                        "id": "ck5f5wo1905483qmt4qe0063b",
+                                        "script": null,
+                                        "staticValue": "NY state",
+                                        "updatedAt": "2020-01-15T10:28:28.459Z",
+                                        "createdAt": "2020-01-15T10:28:28.459Z",
+                                        "sqlValue": null
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "ck5f5v2v701223qmtj3wvnoyb",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "postalCode",
+                                "fhirType": "string",
+                                "description": "A sequence of Unicode characters",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": []
+                            },
+                            {
+                                "id": "ck5f5v2vd01273qmtsdwl4lrj",
+                                "mergingScript": null,
+                                "isArray": false,
+                                "isRequired": false,
+                                "name": "country",
+                                "fhirType": "string",
+                                "description": "A sequence of Unicode characters",
+                                "comments": null,
+                                "updatedAt": "2020-01-15T10:27:14.305Z",
+                                "createdAt": "2020-01-15T10:27:14.305Z",
+                                "children": [],
+                                "inputs": [
+                                    {
+                                        "id": "ck5f5ws4g05493qmtst1k8ltb",
+                                        "script": null,
+                                        "staticValue": "USA",
                                         "updatedAt": "2020-01-15T10:28:33.758Z",
                                         "createdAt": "2020-01-15T10:28:33.758Z",
                                         "sqlValue": null
