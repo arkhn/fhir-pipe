@@ -6,13 +6,9 @@ sql:
     kwargs:
       host: 'localhost'
       port: 5431
-      database: 'mimic'
-      user: 'mimicuser'
-      password: 'mimicuser'
-  oracle:
-    lib: 'cx_Oracle'
-    args: ['user/password@database']
-    kwargs: {}
+      database: 'mockdb'
+      user: 'mockdb'
+      password: 'mockdb'
 fhirstore:
   host: 'localhost'
   port: 27017

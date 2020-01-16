@@ -1,22 +1,17 @@
 version: '3.7'
 services:
-  mimic-db:
-    build:
-      context: ./docker
-      dockerfile: MimicPSQL.Dockerfile
-      args:
-        MIMIC_USER: $MIMIC_USER
-        MIMIC_PASSWORD: $MIMIC_PASSWORD
-    container_name: fhir-pipe-mimic-db
-    restart: always
-    environment:
-      POSTGRES_USER: mimicuser
-      POSTGRES_PASSWORD: mimicuser
-      POSTGRES_DB: mimic
-    volumes:
-      - mimic-db:/var/lib/postgresql/data
+  postgres:
+    image: postgres
     ports:
       - '5431:5432'
+    environment:
+      POSTGRES_USER: mockdb
+      POSTGRES_PASSWORD: mockdb
+      POSTGRES_DB: mockdb
+    volumes:
+      - ./docker-test-config/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker-test-config/csvs:/var/lib/postgresql/csvs
+
 
   mongo:
     image: mongo
@@ -25,10 +20,6 @@ services:
       MONGO_INITDB_DATABASE: fhirstore
     ports:
       - 27017:27017
-    volumes:
-      - fhirstore-db:/data/db
 
 volumes:
-  mimic-db:
-    name: fhir-pipe-mimic-db
-  fhirstore-db:
+  postgres:

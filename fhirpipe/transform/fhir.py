@@ -70,7 +70,9 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
                 if is_array:
                     child = {}
                     rec_create_fhir_object(child, attr, row)
-                    child = list(child.values())
+                    # If this obj parent was an array, we know that it will have only
+                    # one child and we take it to append it directly to the parent's children
+                    child = list(child.values())[0]
                     fhir_obj[attribute_structure["name"]].append(child)
                 else:
                     rec_create_fhir_object(
