@@ -3,8 +3,6 @@ import numpy as np
 import multiprocessing as mp
 from functools import partial
 
-from pymongo.errors import CollectionInvalid
-
 from fhirpipe import set_global_config
 
 from fhirpipe.cli import parse_args, WELCOME_MSG
