@@ -147,8 +147,7 @@ def test_get_mapping_from_graphql():
 def test_prune_fhir_resource(exported_source, patient_pruned):
     resource = json.loads(exported_source)[0]
     actual = mapping.prune_fhir_resource(resource)
-    # with open("test/fixtures/patient_pruned.json", "w") as fp:
-    #     json.dump(actual, fp)
+
     assert actual == patient_pruned
 
 

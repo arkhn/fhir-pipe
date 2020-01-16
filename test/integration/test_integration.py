@@ -9,7 +9,7 @@ from fhirpipe.load.fhirstore import get_fhirstore, get_mongo_client
 ### Run from mapping file ###
 args = argparse.Namespace(
     chunksize=None,
-    config="config-test.yml",
+    config="test/integration/config-test.yml",
     mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
@@ -19,7 +19,7 @@ args = argparse.Namespace(
 
 
 @mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_gql(_):
+def test_run_from_file(_):
     run.run()
     assert_result_as_expected()
 
@@ -28,23 +28,24 @@ def test_run_gql(_):
 ### Run with graphQL queries ###
 args = argparse.Namespace(
     chunksize=None,
-    config="config-test.yml",
-    mapping="mapping-file.json",
+    config="test/integration/config-test.yml",
+    mapping=None,
     multiprocessing=False,
     reset_store=True,
     resources=None,
-    source=None,
+    source="mimic",
 )
 
 @mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_from_file(_):
+def test_run_from_gql(_):
     run.run()
+    assert_result_as_expected()
 """
 
 ### Run for a list of resources ###
 args = argparse.Namespace(
     chunksize=None,
-    config="config-test.yml",
+    config="test/integration/config-test.yml",
     mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
@@ -60,9 +61,9 @@ def test_run_resource(_):
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
     assert mongo_client.list_collection_names() == ["Patient"]
-    assert mongo_client["Patient"].count_documents({}) == 100
+    assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
-    sample = mongo_client["Patient"].find_one({"identifier.0.value": "40655"})
+    sample = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
     assert_sample_comparison(sample)
 
@@ -70,7 +71,7 @@ def test_run_resource(_):
 ### Run by batch ###
 args = argparse.Namespace(
     chunksize=10,
-    config="config-test.yml",
+    config="test/integration/config-test.yml",
     mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
@@ -91,7 +92,7 @@ def test_run_batch(_):
 ### Run with multiprocessing ###
 args = argparse.Namespace(
     chunksize=None,
-    config="config-test.yml",
+    config="test/integration/config-test.yml",
     mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=True,
     reset_store=True,
@@ -109,7 +110,7 @@ def test_run_multiprocessing(_):
 ### Run without resetting the mongo DB ###
 args1 = argparse.Namespace(
     chunksize=None,
-    config="config-test.yml",
+    config="test/integration/config-test.yml",
     mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=True,
@@ -119,7 +120,7 @@ args1 = argparse.Namespace(
 
 args2 = argparse.Namespace(
     chunksize=None,
-    config="config-test.yml",
+    config="test/integration/config-test.yml",
     mapping="test/fixtures/mimic_mapping.json",
     multiprocessing=False,
     reset_store=False,
@@ -136,8 +137,15 @@ def test_run_no_reset(_):
     assert_result_as_expected(patients_count=200, services_count=326)
 
 
-### Helper functions for assertions ###
-def assert_result_as_expected(patients_count=100, services_count=163):
+### Helper functions and variables for assertions ###
+id_sample_patient = "40655"
+expected_patients_count = 100
+expected_services_count = 163
+
+
+def assert_result_as_expected(
+    patients_count=expected_patients_count, services_count=expected_services_count
+):
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
     TestCase().assertCountEqual(
@@ -145,12 +153,16 @@ def assert_result_as_expected(patients_count=100, services_count=163):
     )
     assert_document_counts(mongo_client, patients_count, services_count)
 
-    sample = mongo_client["Patient"].find_one({"identifier.0.value": "40655"})
+    sample = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
     assert_sample_comparison(sample)
 
 
-def assert_document_counts(mongo_client, patients_count=100, services_count=163):
+def assert_document_counts(
+    mongo_client,
+    patients_count=expected_patients_count,
+    services_count=expected_services_count,
+):
     assert mongo_client["Patient"].count_documents({}) == patients_count
     assert mongo_client["HealthcareService"].count_documents({}) == services_count
 
