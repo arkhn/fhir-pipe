@@ -4,97 +4,91 @@ from unittest import mock
 
 import fhirpipe.transform.fhir as transform
 
-from test.unit import resource_pruned
+from test.unit import patient_pruned
 
 
 @mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
-def test_create_fhir_object(_, resource_pruned):
+def test_create_fhir_object(_, patient_pruned):
     row = {
-        "PATIENT.SUBJECT_ID": "100092",
-        "clean_date_PATIENTS.DOB": "2012-12-12",
-        "map_gender_PATIENTS.GENDER": "MALE",
-        "ADMISSIONS.SUBJECT_ID": "100092",
         "ADMISSIONS.LANGUAGE": "French",
-        "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2070-10-10",
+        "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
+        "map_gender_PATIENTS.GENDER": "male",
+        "clean_date_PATIENTS.DOB": "2012-12-12",
+        "SERVICES.ROW_ID": "2345",
     }
-    resource_structure = resource_pruned
+    resource_structure = patient_pruned
     actual = transform.create_fhir_object(row, resource_structure)
 
     assert actual == {
         "id": actual["id"],
+        "identifier": [{"value": "100092"}],
         "resourceType": "Patient",
-        "name": [[{"family": "family name"}]],
         "language": "French",
-        "gender": "MALE",
+        "gender": "male",
         "birthDate": "2012-12-12",
-        "deceasedDateTime": "2070-10-10",
         "address": [
-            [{"city": "Paris", "country": "France"}],
-            [{"city": "NY", "country": "USA"}],
+            {"city": "Paris", "country": "France"},
+            {"city": "NY", "state": "NY state", "country": "USA"},
         ],
-        "managingOrganization": {
-            "identifier": {"system": "Patient", "value": "dummy_uri"}
-        },
+        "generalPractitioner": [
+            {"identifier": {"system": "HealthcareService", "value": "dummy_uri"}}
+        ],
     }
 
 
 @mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
-def test_create_resource(_, resource_pruned):
+def test_create_resource(_, patient_pruned):
     rows = pd.DataFrame(
         [
             {
-                "PATIENT.SUBJECT_ID": "100092",
-                "clean_date_PATIENTS.DOB": "2012-12-12",
-                "map_gender_PATIENTS.GENDER": "MALE",
-                "ADMISSIONS.SUBJECT_ID": "100092",
                 "ADMISSIONS.LANGUAGE": "French",
-                "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2070-10-10",
+                "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
+                "map_gender_PATIENTS.GENDER": "male",
+                "clean_date_PATIENTS.DOB": "2012-12-12",
+                "SERVICES.ROW_ID": "2345",
             },
             {
-                "PATIENT.SUBJECT_ID": "100093",
-                "clean_date_PATIENTS.DOB": "2012-11-11",
-                "map_gender_PATIENTS.GENDER": "FEMALE",
-                "ADMISSIONS.SUBJECT_ID": "100093",
                 "ADMISSIONS.LANGUAGE": "English",
-                "select_first_not_empty_CAREGIVERS.DESCRIPTION_clean_date_PATIENTS.DOD_": "2075-10-10",
+                "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100093",
+                "map_gender_PATIENTS.GENDER": "female",
+                "clean_date_PATIENTS.DOB": "2011-11-11",
+                "SERVICES.ROW_ID": "2346",
             },
         ]
     )
-    resource_structure = resource_pruned
+    resource_structure = patient_pruned
     actual = transform.create_resource(rows, resource_structure)
 
     assert actual == [
         {
             "id": actual[0]["id"],
+            "identifier": [{"value": "100092"}],
             "resourceType": "Patient",
-            "name": [[{"family": "family name"}]],
             "language": "French",
-            "gender": "MALE",
+            "gender": "male",
             "birthDate": "2012-12-12",
-            "deceasedDateTime": "2070-10-10",
             "address": [
-                [{"city": "Paris", "country": "France"}],
-                [{"city": "NY", "country": "USA"}],
+                {"city": "Paris", "country": "France"},
+                {"city": "NY", "state": "NY state", "country": "USA"},
             ],
-            "managingOrganization": {
-                "identifier": {"system": "Patient", "value": "dummy_uri"}
-            },
+            "generalPractitioner": [
+                {"identifier": {"system": "HealthcareService", "value": "dummy_uri"}}
+            ],
         },
         {
             "id": actual[1]["id"],
+            "identifier": [{"value": "100093"}],
             "resourceType": "Patient",
-            "name": [[{"family": "family name"}]],
             "language": "English",
-            "gender": "FEMALE",
-            "birthDate": "2012-11-11",
-            "deceasedDateTime": "2075-10-10",
+            "gender": "female",
+            "birthDate": "2011-11-11",
             "address": [
-                [{"city": "Paris", "country": "France"}],
-                [{"city": "NY", "country": "USA"}],
+                {"city": "Paris", "country": "France"},
+                {"city": "NY", "state": "NY state", "country": "USA"},
             ],
-            "managingOrganization": {
-                "identifier": {"system": "Patient", "value": "dummy_uri"}
-            },
+            "generalPractitioner": [
+                {"identifier": {"system": "HealthcareService", "value": "dummy_uri"}}
+            ],
         },
     ]
 
