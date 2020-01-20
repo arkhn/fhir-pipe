@@ -11,10 +11,10 @@ from test.unit import patient_pruned
 @mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
 def test_create_fhir_object(_, patient_pruned):
     row = {
-        "ADMISSIONS.LANGUAGE": "French",
         "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
         "map_gender_PATIENTS.GENDER": "male",
         "clean_date_PATIENTS.DOB": "2012-12-12",
+        "make_title_ADMISSIONS.LANGUAGE": "Engl",
         "SERVICES.ROW_ID": "2345",
     }
     resource_structure = patient_pruned
@@ -24,7 +24,7 @@ def test_create_fhir_object(_, patient_pruned):
         "id": actual["id"],
         "identifier": [{"value": "100092"}],
         "resourceType": "Patient",
-        "language": "French",
+        "language": "Engl",
         "gender": "male",
         "birthDate": "2012-12-12",
         "address": [
@@ -42,17 +42,17 @@ def test_create_resource(_, patient_pruned):
     rows = pd.DataFrame(
         [
             {
-                "ADMISSIONS.LANGUAGE": "French",
                 "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
                 "map_gender_PATIENTS.GENDER": "male",
                 "clean_date_PATIENTS.DOB": "2012-12-12",
+                "make_title_ADMISSIONS.LANGUAGE": "Engl",
                 "SERVICES.ROW_ID": "2345",
             },
             {
-                "ADMISSIONS.LANGUAGE": "English",
                 "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100093",
                 "map_gender_PATIENTS.GENDER": "female",
                 "clean_date_PATIENTS.DOB": "2011-11-11",
+                "make_title_ADMISSIONS.LANGUAGE": "Fren",
                 "SERVICES.ROW_ID": "2346",
             },
         ]
@@ -65,7 +65,7 @@ def test_create_resource(_, patient_pruned):
             "id": actual[0]["id"],
             "identifier": [{"value": "100092"}],
             "resourceType": "Patient",
-            "language": "French",
+            "language": "Engl",
             "gender": "male",
             "birthDate": "2012-12-12",
             "address": [
@@ -80,7 +80,7 @@ def test_create_resource(_, patient_pruned):
             "id": actual[1]["id"],
             "identifier": [{"value": "100093"}],
             "resourceType": "Patient",
-            "language": "English",
+            "language": "Fren",
             "gender": "female",
             "birthDate": "2011-11-11",
             "address": [
