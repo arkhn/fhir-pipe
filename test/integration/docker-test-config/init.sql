@@ -7,7 +7,7 @@ CREATE TABLE patients (
 
 CREATE TABLE admissions (subject_id integer, language varchar);
 
-CREATE TABLE services (row_id integer, subject_id integer);
+CREATE TABLE services (row_id integer, subject_id integer, curr_service varchar);
 
 COPY patients (row_id, subject_id, gender, dob)
 FROM
@@ -17,6 +17,6 @@ COPY admissions (subject_id, language)
 FROM
     '/var/lib/postgresql/mockdata/admissions.csv' CSV HEADER;
 
-COPY services (row_id, subject_id)
+COPY services (row_id, subject_id, curr_service)
 FROM
     '/var/lib/postgresql/mockdata/services.csv' CSV HEADER;

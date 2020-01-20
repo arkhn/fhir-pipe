@@ -130,10 +130,12 @@ args2 = argparse.Namespace(
 
 
 @mock.patch("fhirpipe.cli.run.parse_args", side_effect=[args1, args2])
-def test_run_no_reset(_):
+# @mock.patch("fhirpipe.transform.fhir.bind_reference")
+def test_run_no_reset(*_):
     run.run()
-    run.run()
+    assert_result_as_expected()
 
+    run.run()
     assert_result_as_expected(patients_count=200, services_count=326)
 
 
@@ -169,6 +171,7 @@ def assert_document_counts(
 
 def assert_sample_comparison(sample):
     assert sample["resourceType"] == "Patient"
+    assert sample["language"] == "Engl"
     assert sample["gender"] == "female"
     assert sample["birthDate"] == "1844-07-18"
     assert sample["address"] == [

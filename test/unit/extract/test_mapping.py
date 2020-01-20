@@ -148,6 +148,9 @@ def test_prune_fhir_resource(exported_source, patient_pruned):
     resource = json.loads(exported_source)[0]
     actual = mapping.prune_fhir_resource(resource)
 
+    # with open("test/fixtures/patient_pruned.json", "w") as fp:
+    #     json.dump(actual, fp, indent=2, separators=(",", ": "))
+
     assert actual == patient_pruned
 
 
@@ -172,6 +175,7 @@ def test_find_cols_joins_and_scripts(patient_pruned):
     assert cleaning == {
         "clean_phone": ["PATIENTS.ROW_ID"],
         "map_gender": ["PATIENTS.GENDER"],
+        "make_title": ["ADMISSIONS.LANGUAGE"],
         "clean_date": ["PATIENTS.DOB"],
     }
     assert merging == {
