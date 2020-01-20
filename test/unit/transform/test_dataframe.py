@@ -23,8 +23,8 @@ def test_squash_rows():
         {
             "PATIENTS.NAME": ["bob", "alice", "bob"],
             "PATIENTS.ID": ["id1", "id2", "id3"],
-            "ADMISSIONS.LANGUAGE": ["lang1", "lang3", "lang4"],
-            "ADMISSIONS.ID": ["id1", "id3", "id4"],
+            "ADMISSIONS.LANGUAGE": [["lang1", "lang2"], ["lang3"], ["lang4"]],
+            "ADMISSIONS.ID": [["id1", "id2"], ["id3"], ["id4"]],
         },
     )
     # Sort to be sure actual and expected are in the same order
@@ -40,7 +40,9 @@ def mock_get_script(*args):
         return args[1] + args[2] + "merge"
 
 
-@mock.patch("fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script)
+@mock.patch(
+    "fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script
+)
 def test_apply_scripts(get_script):
     df = pd.DataFrame(
         {
