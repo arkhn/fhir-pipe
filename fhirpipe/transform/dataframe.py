@@ -40,7 +40,11 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     new_cols = [col for col in df.columns if col.startswith(f"{table}.")]
     pivot_cols = parent_cols + new_cols
 
-    to_squash = [col for col in df.columns if col not in pivot_cols]
+    to_squash = [
+        col
+        for col in df.columns
+        if any([col.startswith(f"{rule[0]}.") for rule in child_rules])
+    ]
 
     if not to_squash:
         return df
@@ -48,15 +52,14 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     for child_rule in child_rules:
         df = squash_rows(df, child_rule, pivot_cols)
 
-    df = df.groupby(pivot_cols, as_index=False)[to_squash].agg(take_first_not_none)
+    df = (
+        df.groupby(pivot_cols, as_index=False)
+        .apply(lambda x: x.drop_duplicates())
+        .groupby(pivot_cols, as_index=False)
+        .agg(list)
+    )
 
     return df
-
-
-def take_first_not_none(x):
-    for el in x:
-        if el:
-            return el
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts):

@@ -1,4 +1,7 @@
 from uuid import uuid4
+import math
+import copy
+import logging
 
 from fhirpipe.utils import build_col_name, new_col_name
 from fhirpipe.load.fhirstore import find_fhir_resource
@@ -7,7 +10,12 @@ from fhirpipe.load.fhirstore import find_fhir_resource
 def create_resource(chunk, resource_structure):
     res = []
     for _, row in chunk.iterrows():
-        res.append(create_fhir_object(row, resource_structure))
+        try:
+            res.append(create_fhir_object(row, resource_structure))
+        except Exception as e:
+            # If cannot build the fhir object, log the warning and try to generate the next one
+            logging.warning("Could not load fhir object. ", e)
+            continue
     return res
 
 
@@ -20,10 +28,13 @@ def create_fhir_object(row, resource_structure):
     for attr in resource_structure["attributes"]:
         rec_create_fhir_object(fhir_object, attr, row)
 
+    # Unlist leaves
+    unlist_dict(fhir_object)
+
     return fhir_object
 
 
-def build_fhir_attribute(attribute_structure, row):
+def build_fhir_leaf_attribute(attribute_structure, row):
     cols_to_fetch = ([], [])
     for inp in attribute_structure["inputs"]:
 
@@ -57,7 +68,7 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
     if isinstance(attribute_structure, dict):
         # If there are some inputs, we can build the objects to output
         if "inputs" in attribute_structure.keys() and attribute_structure["inputs"]:
-            result = build_fhir_attribute(attribute_structure, row)
+            result = build_fhir_leaf_attribute(attribute_structure, row)
             fhir_obj[attribute_structure["name"]] = result
 
         # Otherwise, we can recurse on children
@@ -73,7 +84,16 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
                     # If this obj parent was an array, we know that it will have only
                     # one child and we take it to append it directly to the parent's children
                     child = list(child.values())[0]
-                    fhir_obj[attribute_structure["name"]].append(child)
+
+                    # Here, we have a dict where leaves can be list, we want to convert that to
+                    # a list of dict where leaves are atomic values
+                    n_elements = min_length_leave(child)
+                    if n_elements == math.inf:
+                        n_elements = 1
+
+                    child = dl_2_ld(child, n_elements)
+
+                    fhir_obj[attribute_structure["name"]].extend(child)
                 else:
                     rec_create_fhir_object(
                         fhir_obj[attribute_structure["name"]], attr, row
@@ -91,6 +111,71 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
             children.append(rec_create_fhir_object(dict(), child_spec, row))
 
         fhir_obj[attribute_structure["name"]] = children
+
+
+def min_length_leave(fhir_obj):
+    """ Helper function to compute the length of the leaf attributes that are lists
+    in the input dict representing a fhir object
+    """
+    min_l = math.inf
+    for val in fhir_obj.values():
+        if isinstance(val, dict):
+            length = min_length_leave(val)
+        else:
+            if isinstance(val, list) and not isinstance(val[0], dict):
+                length = len(val)
+                if min_l != math.inf:
+                    # We check that all the list leaves have the same length
+                    assert length == 1 or length == min_l
+            else:
+                length = math.inf
+        min_l = length if length < min_l else min_l
+    return min_l
+
+
+def dl_2_ld(dl, len):
+    """ Helper function to convert a dictionary of lists to a list of dictionaries.
+    """
+    ld = []
+    for i in range(len):
+        res = copy.deepcopy(dl)
+        select_index_in_dl(res, i)
+        ld.append(res)
+    return ld
+
+
+def select_index_in_dl(dl, ind):
+    """ Helper function transform a dictionary of lists to a dictionary where leaves
+    are atomic values by taking the value at index ind each time we have a list leaf.
+    """
+    for key, val in dl.items():
+        if isinstance(val, dict):
+            select_index_in_dl(val, ind)
+        else:
+            if isinstance(val, list) and not isinstance(val[0], dict):
+                if len(val) > 1:
+                    dl[key] = val[ind]
+                else:
+                    dl[key] = val[0]
+
+
+def unlist_dict(fhir_obj):
+    """ Helper function to un-list all the leaves after having created the fhir object.
+    """
+    for key, val in fhir_obj.items():
+        if isinstance(val, dict):
+            unlist_dict(val)
+
+        elif isinstance(val, list):
+            if isinstance(val[0], dict):
+                for child in val:
+                    unlist_dict(child)
+            else:
+                if len(val) > 1:
+                    # We check that if we have a list for an attribute that cannot have a list,
+                    # all the elements in this list are the same and take this as a value.
+                    assert all([el == val[0] for el in val[1:]])
+                fhir_obj[key] = val[0]
 
 
 def bind_reference(fhir_object):

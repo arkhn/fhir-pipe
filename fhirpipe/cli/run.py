@@ -84,12 +84,12 @@ def run():
             # Force names of dataframe cols to be the same as in SQL query
             chunk.columns = cols
 
+            # Apply cleaning and merging scripts on chunk
+            apply_scripts(chunk, cleaning, merging)
+
             # Apply join rule to merge some lines from the same resource
             print("Squashing rows...")
             chunk = squash_rows(chunk, squash_rules)
-
-            # Apply cleaning and merging scripts on chunk
-            apply_scripts(chunk, cleaning, merging)
 
             # Bootstrap for resource if needed
             if resource_structure["fhirType"] not in fhirstore.resources:
