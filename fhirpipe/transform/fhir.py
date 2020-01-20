@@ -13,8 +13,8 @@ def create_resource(chunk, resource_structure):
         try:
             res.append(create_fhir_object(row, resource_structure))
         except Exception as e:
-            # If cannot build the fhir object, log the warning and try to generate the next one
-            logging.warning("Could not load fhir object. ", e)
+            # If cannot build the fhir object, a warning has been logged
+            # and we try to generate the next one
             continue
     return res
 
@@ -124,11 +124,18 @@ def min_length_leave(fhir_obj):
         else:
             if isinstance(val, list) and not isinstance(val[0], dict):
                 length = len(val)
-                if min_l != math.inf:
-                    # We check that all the list leaves have the same length
-                    assert length == 1 or length == min_l
             else:
                 length = math.inf
+
+        # We check that all the list leaves have the same length
+        if min_l != math.inf:
+            if not length in [1, min_l, math.inf]:
+                logging.warning(
+                    f"Failed to create obj {fhir_obj} because of "
+                    "inconsistant lengths in child leaves."
+                )
+                raise Exception("Inconsistant lengths in child leaves.")
+
         min_l = length if length < min_l else min_l
     return min_l
 
@@ -174,7 +181,15 @@ def unlist_dict(fhir_obj):
                 if len(val) > 1:
                     # We check that if we have a list for an attribute that cannot have a list,
                     # all the elements in this list are the same and take this as a value.
-                    assert all([el == val[0] for el in val[1:]])
+                    if not all([el == val[0] for el in val[1:]]):
+                        logging.warning(
+                            f"Failed to create obj {fhir_obj} because you cannot create "
+                            "a non-list attribute with a list of different values."
+                        )
+                        raise Exception(
+                            "You cannot create a non-list attribute with a list of different values."
+                        )
+
                 fhir_obj[key] = val[0]
 
 
