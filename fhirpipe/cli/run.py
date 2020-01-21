@@ -22,13 +22,10 @@ from fhirpipe.extract.sql import (
 )
 
 from fhirpipe.transform.dataframe import squash_rows, apply_scripts
-from fhirpipe.transform.fhir import (
-    create_resource,
-    bind_references,
-    build_identifier_dict,
-)
+from fhirpipe.transform.fhir import create_resource
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
+from fhirpipe.load.references import build_identifier_dict, bind_references
 
 
 def run():

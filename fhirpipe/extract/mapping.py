@@ -320,11 +320,8 @@ def find_reference_attributes(tree, path=[]):
     if isinstance(tree, dict):
 
         if "name" in tree:
-            # if len(path) < 2 or not (path[-1] == "$[]" and path[-2] == tree["name"]):
             if not path or not path[-1] == tree["name"]:
                 path.append(tree["name"])
-                # if tree["fhirType"] == "array":
-                #     path.append("$[]")
 
         # If attribute is a reference, we add it to the result list
         if tree["fhirType"] == "Reference":

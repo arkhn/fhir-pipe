@@ -197,3 +197,14 @@ def test_build_squash_rules():
     actual = mapping.build_squash_rules(cols, joins, table)
 
     assert actual == ["PATIENTS", [["ADMISSIONS", []]]]
+
+
+def test_find_reference_attributes(patient_pruned):
+    # TODO this test is a bit light
+    fhir_resource = patient_pruned
+
+    actual = mapping.find_reference_attributes(fhir_resource)
+
+    expected = [('generalPractitioner',)]
+
+    assert actual == expected
