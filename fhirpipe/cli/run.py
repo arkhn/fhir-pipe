@@ -2,6 +2,7 @@ import time
 import numpy as np
 import multiprocessing as mp
 from functools import partial
+from collections import defaultdict
 
 from fhirpipe import set_global_config
 
@@ -13,6 +14,7 @@ from fhirpipe.extract.mapping import (
     get_main_table,
     find_cols_joins_and_scripts,
     build_squash_rules,
+    find_reference_attributes,
 )
 from fhirpipe.extract.sql import (
     build_sql_query,
@@ -20,7 +22,11 @@ from fhirpipe.extract.sql import (
 )
 
 from fhirpipe.transform.dataframe import squash_rows, apply_scripts
-from fhirpipe.transform.fhir import create_resource
+from fhirpipe.transform.fhir import (
+    create_resource,
+    bind_references,
+    build_identifier_dict,
+)
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
 
@@ -55,8 +61,12 @@ def run():
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
+    reference_attributes = defaultdict(set)
+
     for resource_structure in resources:
-        print("Running for resource:", resource_structure["fhirType"])
+        fhirType = resource_structure["fhirType"]
+
+        print("Running for resource:", fhirType)
         resource_structure = prune_fhir_resource(resource_structure)
 
         # Get main table
@@ -72,6 +82,10 @@ def run():
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, main_table)
+
+        # Get all the attributes that are references for future binding
+        for attr in find_reference_attributes(resource_structure):
+            reference_attributes[fhirType].add(attr)
 
         # Run the sql query
         print("Launching query...")
@@ -92,8 +106,8 @@ def run():
             chunk = squash_rows(chunk, squash_rules)
 
             # Bootstrap for resource if needed
-            if resource_structure["fhirType"] not in fhirstore.resources:
-                fhirstore.bootstrap(resource=resource_structure["fhirType"], depth=10)
+            if fhirType not in fhirstore.resources:
+                fhirstore.bootstrap(resource=fhirType, depth=10)
 
             if args.multiprocessing:
                 fhir_objects_chunks = pool.map(
@@ -107,6 +121,16 @@ def run():
             else:
                 instances = create_resource(chunk, resource_structure)
                 save_many(instances)
+
+    identifier_dict = build_identifier_dict()
+
+    # Now, we can bind the references
+    # TODO I think we could find a more efficient way to bind references
+    # using more advanced mongo features
+    if args.multiprocessing:
+        bind_references(reference_attributes, identifier_dict, pool)
+    else:
+        bind_references(reference_attributes, identifier_dict)
 
     if args.multiprocessing:
         pool.close()

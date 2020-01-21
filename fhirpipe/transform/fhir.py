@@ -2,9 +2,11 @@ from uuid import uuid4
 import math
 import copy
 import logging
+from functools import partial
 
+import fhirpipe
 from fhirpipe.utils import build_col_name, new_col_name
-from fhirpipe.load.fhirstore import find_fhir_resource
+from fhirpipe.load.fhirstore import find_fhir_resource, get_mongo_client
 
 
 def create_resource(chunk, resource_structure):
@@ -15,6 +17,7 @@ def create_resource(chunk, resource_structure):
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
+            print(e)
             continue
     return res
 
@@ -99,11 +102,6 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
                         fhir_obj[attribute_structure["name"]], attr, row
                     )
 
-            # TODO bind references only after having loading all the resource?
-            # If the object is a Reference, to we give it to bind_reference
-            if attribute_structure["fhirType"].startswith("Reference"):
-                bind_reference(fhir_obj[attribute_structure["name"]])
-
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(fhir_obj, list) and len(fhir_obj) > 0:
         children = []
@@ -175,7 +173,11 @@ def unlist_dict(fhir_obj):
 
         elif isinstance(val, list):
             if isinstance(val[0], dict):
-                for child in val:
+                # Remove duplicates primary types (where the only field is value)
+                if len(val) > 1 and list(val[0].keys()) == ["value"]:
+                    fhir_obj[key] = [{"value": v} for v in {d["value"] for d in val}]
+                # And recurse
+                for child in fhir_obj[key]:
                     unlist_dict(child)
             else:
                 if len(val) > 1:
@@ -189,34 +191,99 @@ def unlist_dict(fhir_obj):
                         raise Exception(
                             "You cannot create a non-list attribute with a list of different values."
                         )
-
                 fhir_obj[key] = val[0]
 
 
-def bind_reference(fhir_object):
+def build_identifier_dict():
+    db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
+    resources = db_client.collection_names()
+
+    identifier_dict = {}
+
+    for resource in resources:
+
+        results = db_client[resource].find(
+            {"identifier": {"$elemMatch": {"value": {"$exists": True}}}},
+            ["id", "identifier"],
+        )
+
+        identifier_dict[resource] = {}
+        for r in results:
+            for r_identifier in r["identifier"]:
+                identifier_dict[resource][r_identifier["value"]] = r["id"]
+
+    return identifier_dict
+
+
+def bind_references(reference_attributes, identifier_dict, pool=None):
+    db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
+
+    for resource, references in reference_attributes.items():
+        collection = db_client[resource].find({})
+
+        if pool:
+            pool.map(
+                partial(
+                    bind_references_for_doc,
+                    resource=resource,
+                    references=references,
+                    identifier_dict=identifier_dict,
+                ),
+                collection,
+            )
+        else:
+            for document in collection:
+                bind_references_for_doc(document, resource, references, identifier_dict)
+
+
+def bind_references_for_doc(document, resource, references, identifier_dict):
+    db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
+
+    for path in references:
+        # Extract the sub-tree which is a reference
+        rec_bind_reference(document, identifier_dict, path)
+
+    db_client[resource].replace_one({"_id": document["_id"]}, document)
+
+
+def rec_bind_reference(fhir_object, identifier_dict, path):
     """
     Analyse a reference and replace the provided identifier
     with official FHIR uri if the resource reference exists.
 
     args:
         fhir_object: the fhir object to parse
+        identifier_dict: a dictionary where the keys are
+            identifier values and the values are fhir ids
+        path: path to reference attribute
 
     return:
         a fhir_object where valid references are now FHIR uris
     """
-    # TODO think again about how to bind references
+    if isinstance(fhir_object, dict):
+        if path:
+            rec_bind_reference(fhir_object[path[0]], identifier_dict, path[1:])
 
-    # First we check that the reference has been provided
-    if fhir_object and fhir_object["identifier"]["value"]:
-        # get id
-        identifier = fhir_object["identifier"]["value"]
-        # get referenced type (URI)
-        uri = fhir_object["identifier"]["system"]
+        # We have the reference attribute to bind
+        # First we check that the reference has been provided
+        elif fhir_object and fhir_object["identifier"]["value"]:
+            # get id
+            identifier = fhir_object["identifier"]["value"]
+            # get referenced type (URI)
+            uri = fhir_object["identifier"]["system"]
 
-        # Search for the fhir instance
-        fhir_uri = find_fhir_resource(uri, identifier)
+            # Get the fhir id
+            fhir_uri = (
+                identifier_dict[uri][identifier]
+                if uri in identifier_dict and identifier in identifier_dict[uri]
+                else None
+            )
 
-        # If an instance was found, replace the provided
-        # identifier with FHIR id found
-        if fhir_uri is not None:
-            fhir_object["identifier"]["value"] = fhir_uri
+            # If an instance was found, replace the provided
+            # identifier with FHIR id found
+            if fhir_uri is not None:
+                fhir_object["identifier"]["value"] = fhir_uri
+
+    elif isinstance(fhir_object, list):
+        for child in fhir_object:
+            rec_bind_reference(child, identifier_dict, path)
