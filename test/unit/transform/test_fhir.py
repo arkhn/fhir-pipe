@@ -6,10 +6,10 @@ from unittest import mock
 import fhirpipe.transform.fhir as transform
 
 from test.unit import patient_pruned
+from test.unit.load import mock_mongo_client
 
 
-@mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
-def test_create_fhir_object(_, patient_pruned):
+def test_create_fhir_object(patient_pruned):
     row = {
         "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
         "map_gender_PATIENTS.GENDER": "male",
@@ -32,13 +32,12 @@ def test_create_fhir_object(_, patient_pruned):
             {"city": "NY", "state": "NY state", "country": "USA"},
         ],
         "generalPractitioner": [
-            {"identifier": {"system": "HealthcareService", "value": "dummy_uri"}}
+            {"identifier": {"system": "HealthcareService", "value": "2345"}}
         ],
     }
 
 
-@mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
-def test_create_resource(_, patient_pruned):
+def test_create_resource(patient_pruned):
     rows = pd.DataFrame(
         [
             {
@@ -73,7 +72,7 @@ def test_create_resource(_, patient_pruned):
                 {"city": "NY", "state": "NY state", "country": "USA"},
             ],
             "generalPractitioner": [
-                {"identifier": {"system": "HealthcareService", "value": "dummy_uri"}}
+                {"identifier": {"system": "HealthcareService", "value": "2345"}}
             ],
         },
         {
@@ -88,7 +87,7 @@ def test_create_resource(_, patient_pruned):
                 {"city": "NY", "state": "NY state", "country": "USA"},
             ],
             "generalPractitioner": [
-                {"identifier": {"system": "HealthcareService", "value": "dummy_uri"}}
+                {"identifier": {"system": "HealthcareService", "value": "2346"}}
             ],
         },
     ]
@@ -144,17 +143,3 @@ def unlist_dict():
     ):
         res = transform.min_length_leave(in_dict)
 
-
-@mock.patch("fhirpipe.transform.fhir.find_fhir_resource", return_value="dummy_uri")
-def test_bind_reference(_):
-    obj = {
-        "identifier": {"value": "dummy_value", "system": "Patient"},
-        "other_key": {"other_value"},
-    }
-
-    transform.bind_reference(obj)
-
-    assert obj == {
-        "identifier": {"value": "dummy_uri", "system": "Patient"},
-        "other_key": {"other_value"},
-    }

@@ -65,7 +65,7 @@ def test_run_resource(_):
 
     sample = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
-    assert_sample_comparison(sample)
+    assert_sample_comparison(sample, mongo_client, referencing_done=False)
 
 
 ### Run by batch ###
@@ -157,7 +157,7 @@ def assert_result_as_expected(
 
     sample = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
-    assert_sample_comparison(sample)
+    assert_sample_comparison(sample, mongo_client)
 
 
 def assert_document_counts(
@@ -169,7 +169,7 @@ def assert_document_counts(
     assert mongo_client["HealthcareService"].count_documents({}) == services_count
 
 
-def assert_sample_comparison(sample):
+def assert_sample_comparison(sample, mongo_client, referencing_done=True):
     assert sample["resourceType"] == "Patient"
     assert sample["language"] == "Engl"
     assert sample["gender"] == "female"
@@ -178,6 +178,16 @@ def assert_sample_comparison(sample):
         {"city": "Paris", "country": "France"},
         {"city": "NY", "state": "NY state", "country": "USA"},
     ]
-    assert sample["generalPractitioner"] == [
-        {"identifier": {"system": "HealthcareService", "value": "48902"}}
-    ]
+
+    if referencing_done:
+        ref = mongo_client["HealthcareService"].find_one(
+            {"identifier": {"$elemMatch": {"value": "48902"}}},
+            ["id"]
+        )
+        assert sample["generalPractitioner"] == [
+            {"identifier": {"system": "HealthcareService", "value": ref["id"]}}
+        ]
+    else:
+        assert sample["generalPractitioner"] == [
+            {"identifier": {"system": "HealthcareService", "value": "48902"}}
+        ]
