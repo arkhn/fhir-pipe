@@ -124,7 +124,7 @@ def min_length_leave(fhir_obj):
 
         # We check that all the list leaves have the same length
         if min_l != math.inf:
-            if not length in [1, min_l, math.inf]:
+            if length not in [1, min_l, math.inf]:
                 logging.warning(
                     f"Failed to create obj {fhir_obj} because of "
                     "inconsistant lengths in child leaves."
@@ -186,6 +186,6 @@ def unlist_dict(fhir_obj):
                             "a non-list attribute with a list of different values."
                         )
                         raise Exception(
-                            "You cannot create a non-list attribute with a list of different values."
+                            "Cannot create non-list attribute with list of different values."
                         )
                 fhir_obj[key] = val[0]
