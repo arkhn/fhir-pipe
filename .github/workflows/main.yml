@@ -12,7 +12,7 @@ jobs:
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
+          python-version: "3.7"
       - name: Install dependencies
         run: |
           # postgres is required to build fhir-pipe
@@ -45,21 +45,32 @@ jobs:
     env:
       GITHUB_REGISTRY: docker.pkg.github.com
       IMAGE: arkhn/fhir-pipe
-      TAG: latest
     steps:
       - uses: actions/checkout@v1
+
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: '3.7'
-      - name: Build
-        run: docker build -t $IMAGE:$TAG .
+          python-version: "3.7"
+
+      - name: Build images
+        run: docker build -t $IMAGE .
+
+      - name: Tag images
+        run: |
+          docker tag $IMAGE $IMAGE:latest
+          docker tag $IMAGE $IMAGE:$GITHUB_SHA
+          docker tag $IMAGE $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:latest
+          docker tag $IMAGE $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:$GITHUB_SHA
+
       - name: Publish to the docker hub
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" |  docker login -u ${{ secrets.DOCKER_LOGIN }} --password-stdin
-          docker push $IMAGE:$TAG
+          docker push $IMAGE:latest
+          docker push $IMAGE:$GITHUB_SHA
+
       - name: Publish to Github Packages
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login $GITHUB_REGISTRY -u ${{ github.actor }} --password-stdin
-          docker tag $IMAGE:$TAG $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:$TAG
-          docker push $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:$TAG
+          docker push $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:latest
+          docker push $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:$GITHUB_SHA
