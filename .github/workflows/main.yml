@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-18.04
 
     needs: tests
-    # if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master'
 
     env:
       GITHUB_REGISTRY: docker.pkg.github.com
