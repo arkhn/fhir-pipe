@@ -40,7 +40,8 @@ jobs:
     runs-on: ubuntu-18.04
 
     needs: tests
-    if: github.ref == 'refs/heads/master'
+    # TODO: REMOVE BEFORE MERGING ! also remove line 64 (tag aphp)
+    # if: github.ref == 'refs/heads/master'
 
     env:
       GITHUB_REGISTRY: docker.pkg.github.com
@@ -60,6 +61,7 @@ jobs:
         run: |
           docker tag $IMAGE $IMAGE:latest
           docker tag $IMAGE $IMAGE:$GITHUB_SHA
+          docker tag $IMAGE $IMAGE:aphp
           docker tag $IMAGE $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:latest
           docker tag $IMAGE $GITHUB_REGISTRY/${{ github.repository }}/fhir-pipe:$GITHUB_SHA
 
