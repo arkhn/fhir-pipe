@@ -18,9 +18,7 @@ def test_build_identifier_dict(*_):
 @mock.patch("fhirpipe.load.references.get_mongo_client", return_value=mock_mongo_client)
 @mock.patch("fhirpipe.load.fhirstore.fhirpipe.global_config", mock_config)
 def test_bind_references(*_):
-    reference_attributes = {
-        "Patient": [("generalPractitioner",)],
-    }
+    reference_attributes = {"Patient": [("generalPractitioner",)]}
     identifier_dict = {
         "Patient": {"0001": "123456"},
         "HealthcareService": {"12345": "654321"},
@@ -45,4 +43,3 @@ def test_bind_references(*_):
     }
 
     assert patients[0] == expected
-

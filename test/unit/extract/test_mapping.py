@@ -122,10 +122,10 @@ def mock_run_graphql_query(graphql_query, variables=None):
     elif graphql_query == gql.resource_query:
 
         if variables["resourceId"] == 1:
-            return {"data": {"resource": {"id": 1, "content": "content1",}}}
+            return {"data": {"resource": {"id": 1, "content": "content1"}}}
 
         elif variables["resourceId"] == 2:
-            return {"data": {"resource": {"id": 2, "content": "content2",}}}
+            return {"data": {"resource": {"id": 2, "content": "content2"}}}
 
 
 @mock.patch("fhirpipe.extract.mapping.run_graphql_query", mock_run_graphql_query)
@@ -180,7 +180,7 @@ def test_find_cols_joins_and_scripts(patient_pruned):
     }
     assert merging == {
         "select_first_not_empty": [
-            (["PATIENTS.SUBJECT_ID", "clean_phone_PATIENTS.ROW_ID"], ["dummy"],)
+            (["PATIENTS.SUBJECT_ID", "clean_phone_PATIENTS.ROW_ID"], ["dummy"])
         ]
     }
 
@@ -205,6 +205,6 @@ def test_find_reference_attributes(patient_pruned):
 
     actual = mapping.find_reference_attributes(fhir_resource)
 
-    expected = [('generalPractitioner',)]
+    expected = [("generalPractitioner",)]
 
     assert actual == expected

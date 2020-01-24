@@ -16,10 +16,7 @@ from fhirpipe.extract.mapping import (
     build_squash_rules,
     find_reference_attributes,
 )
-from fhirpipe.extract.sql import (
-    build_sql_query,
-    run_sql_query,
-)
+from fhirpipe.extract.sql import build_sql_query, run_sql_query
 
 from fhirpipe.transform.dataframe import squash_rows, apply_scripts
 from fhirpipe.transform.fhir import create_resource

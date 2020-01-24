@@ -181,8 +181,7 @@ def assert_sample_comparison(sample, mongo_client, referencing_done=True):
 
     if referencing_done:
         ref = mongo_client["HealthcareService"].find_one(
-            {"identifier": {"$elemMatch": {"value": "48902"}}},
-            ["id"]
+            {"identifier": {"$elemMatch": {"value": "48902"}}}, ["id"]
         )
         assert sample["generalPractitioner"] == [
             {"identifier": {"system": "HealthcareService", "value": ref["id"]}}

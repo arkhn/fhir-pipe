@@ -52,12 +52,18 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     for child_rule in child_rules:
         df = squash_rows(df, child_rule, pivot_cols)
 
-    df = (
-        df.groupby(pivot_cols, as_index=False)
-        .apply(lambda x: x.drop_duplicates())
-        .groupby(pivot_cols, as_index=False)
-        .agg(list)
-    )
+    df = df.groupby(pivot_cols, as_index=False).agg(np.array)
+
+    def my_stacker(cols):
+        arrays = [np.array(col, dtype=object) for col in cols]
+        r = np.stack(arrays).T
+        return r
+
+    serie = df[to_squash].apply(my_stacker, axis=1).apply(list)
+    index = list(df.columns).index(to_squash[0])
+    df.insert(loc=index, column="-".join(to_squash), value=serie)
+    for col in to_squash:
+        del df[col]
 
     return df
 
@@ -67,12 +73,12 @@ def apply_scripts(df, cleaning_scripts, merging_scripts):
     for cleaning_script, columns in cleaning_scripts.items():
         for col in columns:
             func = scripts.get_script(cleaning_script)
-            df[new_col_name(cleaning_script, col)] = np.vectorize(func)(df[col])
+            df[col] = np.vectorize(func)(df[col])
 
     for merging_script, cols_and_values in merging_scripts.items():
         for cols, statics in cols_and_values:
             func = scripts.get_script(merging_script)
             args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(
-                *args
-            )
+            df[cols[0]] = np.vectorize(func)(*args)
+            for col in cols[1:]:
+                del df[col]

@@ -5,11 +5,7 @@ from collections import defaultdict
 
 import fhirpipe.extract.graphql as gql
 from fhirpipe.extract.graphql import run_graphql_query
-from fhirpipe.utils import (
-    build_col_name,
-    new_col_name,
-    get_table_name,
-)
+from fhirpipe.utils import build_col_name, new_col_name, get_table_name
 
 
 def get_mapping(from_file=None, source_name=None, selected_resources=None):
@@ -142,7 +138,7 @@ def find_cols_joins_and_scripts(tree):
         a tuple containing all the columns referenced in the tree and all the joins
         to perform to access those columns
     """
-    all_cols = set()
+    all_cols = list()
     all_joins = set()
     # The following dicts are used to store script names and on which columns
     # they are used.
@@ -165,7 +161,7 @@ def find_cols_joins_and_scripts(tree):
 
         cols, joins, cleaning, merging = find_cjs_in_leaf(tree)
 
-        all_cols = all_cols.union(cols)
+        all_cols = all_cols.extend(cols)
         all_joins = all_joins.union(joins)
         dict_concat(all_cleaning_scripts, cleaning)
         dict_concat(all_merging_scripts, merging)
@@ -180,7 +176,7 @@ def find_cols_joins_and_scripts(tree):
                 ms_children,
             ) = find_cols_joins_and_scripts(t)
 
-            all_cols = all_cols.union(c_children)
+            all_cols = all_cols.extend(c_children)
             all_joins = all_joins.union(j_children)
             dict_concat(all_cleaning_scripts, cs_children)
             dict_concat(all_merging_scripts, ms_children)
@@ -189,7 +185,7 @@ def find_cols_joins_and_scripts(tree):
 
 
 def find_cjs_in_leaf(leaf):
-    columns = set()
+    columns = list()
     joins = set()
     cleaning_scripts = defaultdict(list)
     merging_scripts = defaultdict(list)
@@ -203,7 +199,7 @@ def find_cjs_in_leaf(leaf):
         if input["sqlValue"]:
             sql = input["sqlValue"]
             column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
-            columns.add(column_name)
+            columns.append(column_name)
 
             # If there are joins, add them to the output
             for join in sql["joins"]:

@@ -15,13 +15,13 @@ def read(fname):
 requirements = read("requirements.txt").split()
 
 setup(
-    name='fhirpipe',
-    version='0.2',
-    description='The smart ETL to standardize health data',
-    url='https://github.com/arkhn/fhir-pipe',
-    author='Théo Ryffel',
-    author_email='contact@arkhn.org',
-    license='Apache License 2.0',
+    name="fhirpipe",
+    version="0.2",
+    description="The smart ETL to standardize health data",
+    url="https://github.com/arkhn/fhir-pipe",
+    author="Théo Ryffel",
+    author_email="contact@arkhn.org",
+    license="Apache License 2.0",
     packages=find_packages(exclude=["docs", "examples", "dist"]),
     include_package_data=True,
     long_description=read("README.md"),
@@ -30,9 +30,5 @@ setup(
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     zip_safe=False,
-    entry_points={
-        'console_scripts': [
-            'fhirpipe-run=fhirpipe.cli.run:run',
-        ],
-    },
+    entry_points={"console_scripts": ["fhirpipe-run=fhirpipe.cli.run:run"]},
 )

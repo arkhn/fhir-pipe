@@ -10,7 +10,7 @@ def create_resource(chunk, resource_structure):
     res = []
     for _, row in chunk.iterrows():
         try:
-            res.append(create_fhir_object(row, resource_structure))
+            res.append(create_fhir_object(list(row), resource_structure))
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
@@ -35,27 +35,15 @@ def create_fhir_object(row, resource_structure):
 
 
 def build_fhir_leaf_attribute(attribute_structure, row):
-    cols_to_fetch = ([], [])
-    for inp in attribute_structure["inputs"]:
-
-        # If a sql location is provided, then a sql value has been returned
-        if inp["sqlValue"]:
-            sql = inp["sqlValue"]
-            col_name = build_col_name(sql["table"], sql["column"], sql["owner"])
-            if inp["script"]:
-                # If there is a cleaning script, we fetch the value in the cleaned column
-                col_name = new_col_name(inp["script"], col_name)
-            cols_to_fetch[0].append(col_name)
-
-        # Else retrieve the static value
-        else:
-            cols_to_fetch[1].append(inp["staticValue"])
-
     if attribute_structure["mergingScript"]:
-        result = row[new_col_name(attribute_structure["mergingScript"], cols_to_fetch)]
+        result = [row.pop(0)]
     else:
-        result = [row[c] for c in cols_to_fetch[0]]
-        result.extend(cols_to_fetch[1])
+        result = []
+        for inp in attribute_structure["inputs"]:
+            if "sqlValue" in inp and inp["sqlValue"]:
+                result.append(row.pop(0))
+            else:
+                result.append(inp["staticValue"])
 
     # Unlist
     if len(result) == 1:
@@ -74,31 +62,37 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
         # Otherwise, we can recurse on children
         else:
             is_array = attribute_structure["fhirType"] == "array"
-
-            fhir_obj[attribute_structure["name"]] = [] if is_array else dict()
-
-            for attr in attribute_structure["children"]:
-                if is_array:
-                    child = {}
-                    rec_create_fhir_object(child, attr, row)
-                    # If this obj parent was an array, we know that it will have only
-                    # one child and we take it to append it directly to the parent's children
-                    child = list(child.values())[0]
-
-                    # Here, we have a dict where leaves can be list, we want to convert that to
-                    # a list of dict where leaves are atomic values
-                    n_elements = min_length_leave(child)
-                    if n_elements == math.inf:
-                        n_elements = 1
-
-                    child = dl_2_ld(child, n_elements)
-
-                    fhir_obj[attribute_structure["name"]].extend(child)
-                else:
+            # 1. The object is a list, so we parse a list
+            # and insert it
+            if is_array:
+                fhir_obj_list = list()
+                for attr in attribute_structure["children"]:
+                    if len(row) > 0 and isinstance(row[0], list):
+                        join_rows = row.pop(0)
+                        join_rows_remaining = []
+                        for i, join_row in enumerate(join_rows):
+                            fhir_obj_list_el = dict()
+                            rec_create_fhir_object(fhir_obj_list_el, attr, join_row)
+                            fhir_obj_list.append(list(fhir_obj_list_el.values())[0])
+                            # Not everything has been consumed: we need to
+                            # keep what's remaining
+                            if len(join_row) > 0:
+                                join_rows_remaining.append(join_row)
+                        # If there are remaining elements, we put them back
+                        if len(join_rows_remaining) > 0:
+                            row.insert(0, join_rows_remaining)
+                    else:
+                        fhir_obj_list_el = dict()
+                        rec_create_fhir_object(fhir_obj_list_el, attr, row)
+                        fhir_obj_list.append(list(fhir_obj_list_el.values())[0])
+                fhir_obj[attribute_structure["name"]] = fhir_obj_list
+            # 2. We keep the layer and recreate the fhir architecture as is
+            else:
+                fhir_obj[attribute_structure["name"]] = dict()
+                for attr in attribute_structure["children"]:
                     rec_create_fhir_object(
                         fhir_obj[attribute_structure["name"]], attr, row
                     )
-
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(fhir_obj, list) and len(fhir_obj) > 0:
         children = []
@@ -106,7 +100,6 @@ def rec_create_fhir_object(fhir_obj, attribute_structure, row):
             children.append(rec_create_fhir_object(dict(), child_spec, row))
 
         fhir_obj[attribute_structure["name"]] = children
-
 
 def min_length_leave(fhir_obj):
     """ Helper function to compute the length of the leaf attributes that are lists
