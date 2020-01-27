@@ -56,7 +56,7 @@ def squash_rows(df, squash_rules, parent_cols=[]):
         df.groupby(pivot_cols, as_index=False)
         .apply(lambda x: x.drop_duplicates())
         .groupby(pivot_cols, as_index=False)
-        .agg(list)
+        .agg(tuple)
     )
 
     return df

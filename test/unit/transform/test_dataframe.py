@@ -23,8 +23,8 @@ def test_squash_rows():
         {
             "PATIENTS.NAME": ["bob", "alice", "bob"],
             "PATIENTS.ID": ["id1", "id2", "id3"],
-            "ADMISSIONS.LANGUAGE": [["lang1", "lang2"], ["lang3"], ["lang4"]],
-            "ADMISSIONS.ID": [["id1", "id2"], ["id3"], ["id4"]],
+            "ADMISSIONS.LANGUAGE": [("lang1", "lang2"), ("lang3",), ("lang4",)],
+            "ADMISSIONS.ID": [("id1", "id2"), ("id3",), ("id4",)],
         },
     )
     # Sort to be sure actual and expected are in the same order

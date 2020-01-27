@@ -63,9 +63,10 @@ def test_run_resource(_):
     assert mongo_client.list_collection_names() == ["Patient"]
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
-    sample = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
+    sample_simple = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_simple})
+    sample_list = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_list})
 
-    assert_sample_comparison(sample, mongo_client, referencing_done=False)
+    assert_sample_comparison(sample_simple, sample_list, mongo_client, referencing_done=False)
 
 
 ### Run by batch ###
@@ -140,7 +141,8 @@ def test_run_no_reset(*_):
 
 
 ### Helper functions and variables for assertions ###
-id_sample_patient = "40655"
+id_sample_patient_simple = "40655"
+id_sample_patient_list = "10088"
 expected_patients_count = 100
 expected_services_count = 163
 
@@ -155,9 +157,14 @@ def assert_result_as_expected(
     )
     assert_document_counts(mongo_client, patients_count, services_count)
 
-    sample = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
+    sample_simple = mongo_client["Patient"].find_one(
+        {"identifier.0.value": id_sample_patient_simple}
+    )
+    sample_list = mongo_client["Patient"].find_one(
+        {"identifier.0.value": id_sample_patient_list}
+    )
 
-    assert_sample_comparison(sample, mongo_client)
+    assert_sample_comparison(sample_simple, sample_list, mongo_client)
 
 
 def assert_document_counts(
@@ -169,25 +176,62 @@ def assert_document_counts(
     assert mongo_client["HealthcareService"].count_documents({}) == services_count
 
 
-def assert_sample_comparison(sample, mongo_client, referencing_done=True):
-    assert sample["resourceType"] == "Patient"
-    assert sample["language"] == "Engl"
-    assert sample["gender"] == "female"
-    assert sample["birthDate"] == "1844-07-18"
-    assert sample["address"] == [
-        {"city": "Paris", "country": "France"},
-        {"city": "NY", "state": "NY state", "country": "USA"},
-    ]
+def assert_sample_comparison(
+    sample_simple, sample_list, mongo_client, referencing_done=True
+):
 
     if referencing_done:
-        ref = mongo_client["HealthcareService"].find_one(
-            {"identifier": {"$elemMatch": {"value": "48902"}}},
-            ["id"]
+        ref_simple = mongo_client["HealthcareService"].find_one(
+            {"identifier": {"$elemMatch": {"value": "48902"}}}, ["id"]
         )
-        assert sample["generalPractitioner"] == [
+        refs_list = [
+            mongo_client["HealthcareService"].find_one(
+                {"identifier": {"$elemMatch": {"value": val}}}, ["id"]
+            )
+            for val in ["15067", "15068", "15069", "15070"]
+        ]
+
+    assert sample_simple == {
+        "_id": sample_simple["_id"],
+        "id": sample_simple["id"],
+        "resourceType": "Patient",
+        "language": "Engl",
+        "identifier": sample_simple["identifier"],
+        "gender": "female",
+        "birthDate": "1844-07-18",
+        "address": [
+            {"city": "Paris", "country": "France"},
+            {"city": "NY", "state": "NY state", "country": "USA"},
+        ],
+        "generalPractitioner": [
+            {
+                "identifier": {
+                    "system": "HealthcareService",
+                    "value": ref_simple["id"] if referencing_done else "48902",
+                }
+            }
+        ],
+    }
+
+    assert sample_list == {
+        "_id": sample_list["_id"],
+        "id": sample_list["id"],
+        "resourceType": "Patient",
+        "language": "None",
+        "identifier": sample_list["identifier"],
+        "gender": "male",
+        "birthDate": "2029-07-09",
+        "address": [
+            {"city": "Paris", "country": "France"},
+            {"city": "NY", "state": "NY state", "country": "USA"},
+        ],
+        "generalPractitioner": [
             {"identifier": {"system": "HealthcareService", "value": ref["id"]}}
+            for ref in refs_list
         ]
-    else:
-        assert sample["generalPractitioner"] == [
-            {"identifier": {"system": "HealthcareService", "value": "48902"}}
-        ]
+        if referencing_done
+        else [
+            {"identifier": {"system": "HealthcareService", "value": val}}
+            for val in ["15067", "15068", "15069", "15070"]
+        ],
+    }
