@@ -1,6 +1,9 @@
-import fhirstore
+import logging
+
 from pymongo import MongoClient
 from tqdm import tqdm
+from jsonschema import ValidationError
+import fhirstore
 
 import fhirpipe
 
@@ -43,5 +46,11 @@ def save_many(instances):
     store.resume()
     instances = tqdm(instances)
     for instance in instances:
-        store.create(instance, bypass_document_validation=True)
+        try:
+            store.create(instance)
+        except ValidationError as e:
+            logging.error(
+                f"Validation failed for resource {instance} at\
+{'.'.join(e.schema_path)}: {e.message}"
+            )
         instances.refresh()

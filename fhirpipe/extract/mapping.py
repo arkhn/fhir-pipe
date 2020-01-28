@@ -52,9 +52,7 @@ def get_mapping_from_graphql(source_name, selected_resources):
 
     try:
         # Look for the source which has the name we want
-        selected_source = next(
-            s for s in sources["data"]["sources"] if s["name"] == source_name
-        )
+        selected_source = next(s for s in sources["data"]["sources"] if s["name"] == source_name)
     except StopIteration:
         logging.error(f"No source with name '{source_name}' found")
         raise ValueError(f"{source_name} not found in the provided mapping.")
@@ -68,9 +66,7 @@ def get_mapping_from_graphql(source_name, selected_resources):
 
     # Return resources mapping
     for resource_id in selected_resource_ids:
-        mapping = run_graphql_query(
-            gql.resource_query, variables={"resourceId": resource_id}
-        )
+        mapping = run_graphql_query(gql.resource_query, variables={"resourceId": resource_id})
         yield mapping["data"]["resource"]
 
 
@@ -99,9 +95,7 @@ def rec_prune_resource(attr_structure):
             return False
 
     elif isinstance(attr_structure, list):
-        attr_structure[:] = [
-            attr for attr in attr_structure if rec_prune_resource(attr)
-        ]
+        attr_structure[:] = [attr for attr in attr_structure if rec_prune_resource(attr)]
         return len(attr_structure) > 0
 
     else:
@@ -119,7 +113,9 @@ def get_main_table(resource_structure):
         The table containing the primary key
     """
     if not resource_structure["primaryKeyTable"]:
-        raise ValueError("You need to provide a primary key table in the mapping.")
+        raise ValueError(
+            f"You need to provide a primary key table in the mapping for resource {resource_structure['fhirType']}."
+        )
     if resource_structure["primaryKeyOwner"]:
         return f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}"
     else:
@@ -173,12 +169,7 @@ def find_cols_joins_and_scripts(tree):
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(tree, list) and len(tree) > 0:
         for t in tree:
-            (
-                c_children,
-                j_children,
-                cs_children,
-                ms_children,
-            ) = find_cols_joins_and_scripts(t)
+            (c_children, j_children, cs_children, ms_children,) = find_cols_joins_and_scripts(t)
 
             all_cols = all_cols.union(c_children)
             all_joins = all_joins.union(j_children)

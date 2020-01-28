@@ -1,10 +1,11 @@
 import time
+import logging
 import numpy as np
 import multiprocessing as mp
 from functools import partial
 from collections import defaultdict
 
-from fhirpipe import set_global_config
+from fhirpipe import set_global_config, setup_logging
 
 from fhirpipe.cli import parse_args, WELCOME_MSG
 
@@ -42,6 +43,9 @@ def run():
     # Define global config
     set_global_config(config_path=args.config)
 
+    # Setup logging configuration
+    setup_logging()
+
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
         from_file=args.mapping, source_name=args.source, selected_resources=args.resources,
@@ -49,6 +53,7 @@ def run():
 
     fhirstore = get_fhirstore()
     if args.reset_store:
+        print("resetting...")
         fhirstore.reset()
 
     # TODO maybe we can find a more elegant way to handle multiprocessing
@@ -61,19 +66,18 @@ def run():
     for resource_structure in resources:
         fhirType = resource_structure["fhirType"]
 
-        print("Running for resource:", fhirType)
+        logging.info("Running for resource: %s", fhirType)
         resource_structure = prune_fhir_resource(resource_structure)
 
         # Get main table
         main_table = get_main_table(resource_structure)
-        print("main_table", main_table)
 
         # Extract cols and joins
         cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
 
         # Build the sql query
         sql_query = build_sql_query(cols, joins, main_table)
-        print("sql query:", sql_query)
+        logging.info("sql query: %s", sql_query)
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, main_table)
@@ -83,7 +87,7 @@ def run():
             reference_attributes[fhirType].add(attr)
 
         # Run the sql query
-        print("Launching query...")
+        logging.info("Launching query...")
         df = run_sql_query(sql_query, chunksize=args.chunksize)
 
         for chunk in df:
@@ -97,7 +101,7 @@ def run():
             apply_scripts(chunk, cleaning, merging)
 
             # Apply join rule to merge some lines from the same resource
-            print("Squashing rows...")
+            logging.info("Squashing rows...")
             chunk = squash_rows(chunk, squash_rules)
 
             # Bootstrap for resource if needed
@@ -131,7 +135,7 @@ def run():
         pool.close()
         pool.join()
 
-    print(f"Done in {time.time() - start_time}.")
+    logging.info(f"Done in {time.time() - start_time}.")
 
 
 if __name__ == "__main__":

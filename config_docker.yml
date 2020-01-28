@@ -1,25 +1,27 @@
 sql:
-  default: 'postgres'
+  default: "postgres"
   postgres:
-    lib: 'psycopg2'
+    lib: "psycopg2"
     args: []
     kwargs:
-      host: 'fhir-pipe-mimic-db'
+      host: "fhir-pipe-mimic-db"
       port: 5432
-      database: 'mimic'
-      user: 'mimicuser'
-      password: 'mimicuser'
+      database: "mimic"
+      user: "mimicuser"
+      password: "mimicuser"
     oracle:
-      lib: 'cx_Oracle'
-      args: ['user/password@database']
+      lib: "cx_Oracle"
+      args: ["user/password@database"]
       kwargs: {}
 fhirstore:
-  host: 'mongo'
+  host: "mongo"
   port: 27017
-  database: 'fhirstore'
+  database: "fhirstore"
   user: null
   password: null
 
 graphql:
-  server: 'http://pyrog-server:4000'
-  token: '<token>'
+  server: "http://pyrog-server:4000"
+  token: "<token>"
+# logging:
+#   filename: fhirpipe.log

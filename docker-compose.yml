@@ -1,4 +1,4 @@
-version: '3.7'
+version: "3.7"
 services:
   fhir-pipe:
     image: arkhn/fhir-pipe:latest
@@ -28,7 +28,7 @@ services:
     volumes:
       - mimic-db:/var/lib/postgresql/data
     ports:
-      - '5431:5432'
+      - "5431:5432"
 
   mongo:
     image: mongo

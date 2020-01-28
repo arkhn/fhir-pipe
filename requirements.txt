@@ -7,3 +7,4 @@ pymongo==3.9.0
 PyYAML==5.1.2
 requests==2.21.0
 pandas==0.25.3
+jsonschema==3.0.2
