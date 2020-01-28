@@ -1,4 +1,4 @@
-fhirstore==0.1.0
+fhirstore==0.2.0
 cleaning-scripts==0.2.3
 cx_Oracle==7.1.2
 psycopg2==2.8.3

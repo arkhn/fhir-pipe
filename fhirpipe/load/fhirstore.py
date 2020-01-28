@@ -43,5 +43,5 @@ def save_many(instances):
     store.resume()
     instances = tqdm(instances)
     for instance in instances:
-        store.create(instance)
+        store.create(instance, bypass_document_validation=True)
         instances.refresh()
