@@ -44,9 +44,7 @@ def run():
 
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
-        from_file=args.mapping,
-        source_name=args.source,
-        selected_resources=args.resources,
+        from_file=args.mapping, source_name=args.source, selected_resources=args.resources,
     )
 
     fhirstore = get_fhirstore()
@@ -104,7 +102,7 @@ def run():
 
             # Bootstrap for resource if needed
             if fhirType not in fhirstore.resources:
-                fhirstore.bootstrap(resource=fhirType, depth=10)
+                fhirstore.bootstrap(resource=fhirType, depth=4)
 
             if args.multiprocessing:
                 fhir_objects_chunks = pool.map(
