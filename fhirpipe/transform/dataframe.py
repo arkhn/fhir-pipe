@@ -62,17 +62,6 @@ def squash_rows(df, squash_rules, parent_cols=[]):
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
-    def clean_and_log(val, script=None, id=None, col=None):
-        try:
-            return script(val)
-        except Exception as e:
-            logging.error(f"{script.__name__}: Error cleaning {col} (at id = {id}): {e}")
-
-    def merge_and_log(*val, script=None, id=None, cols=None):
-        try:
-            return script(*val)
-        except Exception as e:
-            logging.error(f"{script.__name__}: Error merging columns {cols} (at id = {id}): {e}")
 
     for cleaning_script, columns in cleaning_scripts.items():
         script = scripts.get_script(cleaning_script)
@@ -88,3 +77,17 @@ def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
             df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
                 *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
             )
+
+
+def clean_and_log(val, script=None, id=None, col=None):
+    try:
+        return script(val)
+    except Exception as e:
+        logging.error(f"{script.__name__}: Error cleaning {col} (at id = {id}): {e}")
+
+
+def merge_and_log(*val, script=None, id=None, cols=None):
+    try:
+        return script(*val)
+    except Exception as e:
+        logging.error(f"{script.__name__}: Error merging columns {cols} (at id = {id}): {e}")
