@@ -40,9 +40,7 @@ def mock_get_script(*args):
         return args[1] + args[2] + "merge"
 
 
-@mock.patch(
-    "fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script
-)
+@mock.patch("fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script)
 def test_apply_scripts(get_script):
     df = pd.DataFrame(
         {
@@ -53,8 +51,9 @@ def test_apply_scripts(get_script):
     )
     cleaning = {"clean1": ["NAME"], "clean2": ["NAME", "ADDRESS"]}
     merging = {"merge": [(["ADDRESS", "ID"], ["val"])]}
+    primary_key_column = "ID"
 
-    transform.apply_scripts(df, cleaning, merging)
+    transform.apply_scripts(df, cleaning, merging, primary_key_column)
 
     expected = pd.DataFrame(
         {

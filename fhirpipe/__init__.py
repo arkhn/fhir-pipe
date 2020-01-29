@@ -18,7 +18,7 @@ def setup_logging():
     if global_config and global_config.get("logging"):
         filename = global_config["logging"].get("filename")
     else:
-        logging.warn("Logging configuration not found, logging on stdout...")
+        logging.warning("Logging configuration not found, logging on stdout...")
 
     logging.basicConfig(
         filename=filename, format="%(asctime)s %(levelname)s %(message)s", level=logging.DEBUG,
