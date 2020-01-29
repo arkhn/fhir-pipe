@@ -31,8 +31,8 @@ jobs:
           MIMIC_USER: ${{ secrets.MIMIC_USER }}
           MIMIC_PASSWORD: ${{ secrets.MIMIC_PASSWORD }}
         run: |
-          docker-compose -f docker-compose.test.yml up -d
-          ./scripts/wait_for_db.sh localhost 5431 mimicuser mimicuser mimic
+          docker-compose -f test/integration/docker-compose.test.yml up -d
+          ./scripts/wait_for_db.sh localhost 5431 mockdb mockdb mockdb
           python -m pytest -svv test/
 
   publish:

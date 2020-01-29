@@ -1,0 +1,21 @@
+sql:
+  default: 'postgres'
+  postgres:
+    lib: 'psycopg2'
+    args: []
+    kwargs:
+      host: 'localhost'
+      port: 5431
+      database: 'mockdb'
+      user: 'mockdb'
+      password: 'mockdb'
+fhirstore:
+  host: 'localhost'
+  port: 27017
+  database: 'fhirstore'
+  user: null
+  password: null
+
+graphql:
+  server: 'http://localhost:4000'
+  token: '<token>'

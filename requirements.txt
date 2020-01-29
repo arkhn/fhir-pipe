@@ -1,7 +1,10 @@
+fhirstore==0.2.0
+cleaning-scripts==0.2.3
 cx_Oracle==7.1.2
 psycopg2==2.8.3
 tqdm==4.36.1 
-fhirstore==0.0.4
 pymongo==3.9.0
 PyYAML==5.1.2
-requests==2.22.0
+requests==2.21.0
+pandas==0.25.3
+jsonschema==3.0.2

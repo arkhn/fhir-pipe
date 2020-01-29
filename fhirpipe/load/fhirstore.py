@@ -1,6 +1,9 @@
-import fhirstore
+import logging
+
 from pymongo import MongoClient
 from tqdm import tqdm
+from jsonschema import ValidationError
+import fhirstore
 
 import fhirpipe
 
@@ -12,10 +15,10 @@ def get_mongo_client():
     global _client
     if _client is None:
         _client = MongoClient(
-            host=fhirpipe.global_config.fhirstore.host,
-            port=fhirpipe.global_config.fhirstore.port,
-            username=fhirpipe.global_config.fhirstore.user,
-            password=fhirpipe.global_config.fhirstore.password,
+            host=fhirpipe.global_config["fhirstore"]["host"],
+            port=fhirpipe.global_config["fhirstore"]["port"],
+            username=fhirpipe.global_config["fhirstore"]["user"],
+            password=fhirpipe.global_config["fhirstore"]["password"],
         )
     return _client
 
@@ -27,7 +30,7 @@ def get_fhirstore():
     global _fhirstore
     if _fhirstore is None:
         _fhirstore = fhirstore.FHIRStore(
-            get_mongo_client(), fhirpipe.global_config.fhirstore.database
+            get_mongo_client(), fhirpipe.global_config["fhirstore"]["database"]
         )
     return _fhirstore
 
@@ -40,39 +43,14 @@ def save_many(instances):
         instances (list): list of instances
     """
     store = get_fhirstore()
+    store.resume()
     instances = tqdm(instances)
     for instance in instances:
-        store.create(instance)
+        try:
+            store.create(instance)
+        except ValidationError as e:
+            logging.error(
+                f"Validation failed for resource {instance} at "
+                f"{'.'.join(e.schema_path)}: {e.message}"
+            )
         instances.refresh()
-
-
-fhir_ids = {}
-
-
-def find_fhir_resource(resource_type, identifier):
-    """
-    Return the first FHIR instance of some resource_type where the
-    identifier matches some identifier, if any is found.
-
-    args:
-        resource_type (str): name of the Fhir resource to search for
-        identifier (str): the provided id which could be an identifier of
-            some instance of the resource_type
-
-    return:
-        the fhir id of the instance is there is one found of resource_type
-        which has an identifier matching the provided identifier,
-        else None
-    """
-    db_client = get_mongo_client()[fhirpipe.global_config.fhirstore.database]
-    if resource_type not in fhir_ids:
-        results = db_client[resource_type].find(
-            {"identifier": {"$elemMatch": {"value": {"$exists": True}}}}, ["id", "identifier"]
-        )
-
-        fhir_ids[resource_type] = {}
-        for r in results:
-            r_identifier = r["identifier"][0]["value"]
-            fhir_ids[resource_type][r_identifier] = r["id"]
-
-    return fhir_ids[resource_type].get(identifier)
