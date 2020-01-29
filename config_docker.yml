@@ -23,5 +23,6 @@ fhirstore:
 graphql:
   server: "http://pyrog-server:4000"
   token: "<token>"
-# logging:
-#   filename: fhirpipe.log
+
+logging:
+  filename: fhirpipe.log

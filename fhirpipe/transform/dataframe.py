@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 import scripts
 
@@ -60,15 +61,30 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     return df
 
 
-def apply_scripts(df, cleaning_scripts, merging_scripts):
+def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
+    def clean_and_log(val, script=None, id=None, col=None):
+        try:
+            return script(val)
+        except Exception as e:
+            logging.error(f"{script.__name__}: Error cleaning {col} (at id = {id}): {e}")
+
+    def merge_and_log(*val, script=None, id=None, cols=None):
+        try:
+            return script(*val)
+        except Exception as e:
+            logging.error(f"{script.__name__}: Error merging columns {cols} (at id = {id}): {e}")
 
     for cleaning_script, columns in cleaning_scripts.items():
-        func = scripts.get_script(cleaning_script)
+        script = scripts.get_script(cleaning_script)
         for col in columns:
-            df[new_col_name(cleaning_script, col)] = np.vectorize(func)(df[col])
+            df[new_col_name(cleaning_script, col)] = np.vectorize(clean_and_log)(
+                df[col], script=script, id=df[primary_key_column], col=col
+            )
 
     for merging_script, cols_and_values in merging_scripts.items():
-        func = scripts.get_script(merging_script)
+        script = scripts.get_script(merging_script)
         for cols, statics in cols_and_values:
             args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(*args)
+            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
+                *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
+            )
