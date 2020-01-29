@@ -12,7 +12,7 @@ from fhirpipe.cli import parse_args, WELCOME_MSG
 from fhirpipe.extract.mapping import (
     get_mapping,
     prune_fhir_resource,
-    get_main_table,
+    get_primary_key,
     find_cols_joins_and_scripts,
     build_squash_rules,
     find_reference_attributes,
@@ -69,18 +69,18 @@ def run():
         logging.info("Running for resource: %s", fhirType)
         resource_structure = prune_fhir_resource(resource_structure)
 
-        # Get main table
-        main_table = get_main_table(resource_structure)
+        # Get primary key table
+        primary_key_table, primary_key_column = get_primary_key(resource_structure)
 
         # Extract cols and joins
         cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
 
         # Build the sql query
-        sql_query = build_sql_query(cols, joins, main_table)
+        sql_query = build_sql_query(cols, joins, primary_key_table)
         logging.info("sql query: %s", sql_query)
 
         # Build squash rules
-        squash_rules = build_squash_rules(cols, joins, main_table)
+        squash_rules = build_squash_rules(cols, joins, primary_key_table)
 
         # Get all the attributes that are references for future binding
         for attr in find_reference_attributes(resource_structure):
@@ -92,13 +92,13 @@ def run():
 
         for chunk in df:
             # Change not string value to strings (to be validated by jsonSchema for resource)
-            chunk = chunk.applymap(str)
+            chunk = chunk.applymap(lambda value: str(value) if value is not None else None)
 
             # Force names of dataframe cols to be the same as in SQL query
             chunk.columns = cols
 
             # Apply cleaning and merging scripts on chunk
-            apply_scripts(chunk, cleaning, merging)
+            apply_scripts(chunk, cleaning, merging, primary_key_column)
 
             # Apply join rule to merge some lines from the same resource
             logging.info("Squashing rows...")

@@ -102,25 +102,28 @@ def rec_prune_resource(attr_structure):
         raise Exception("attr_structure not a dict nor a list.")
 
 
-def get_main_table(resource_structure):
+def get_primary_key(resource_structure):
     """
-    Return table of the provided primary key
+    Return primary key table and column of the provided resource.
 
     args:
         resource_structure: the object containing all the mapping rules
 
     Return:
-        The table containing the primary key
+        A tuple with the table containing the primary key and the primary key column.
     """
-    if not resource_structure["primaryKeyTable"]:
+    if not resource_structure["primaryKeyTable"] or not resource_structure["primaryKeyColumn"]:
         raise ValueError(
-            "You need to provide a primary key table in the mapping for "
+            "You need to provide a primary key table and column in the mapping for "
             f"resource {resource_structure['fhirType']}."
         )
-    if resource_structure["primaryKeyOwner"]:
-        return f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}"
-    else:
-        return resource_structure["primaryKeyTable"]
+    main_table = (
+        (f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}")
+        if resource_structure["primaryKeyOwner"]
+        else resource_structure["primaryKeyTable"]
+    )
+    column = f"{main_table}.{resource_structure['primaryKeyColumn']}"
+    return main_table, column
 
 
 def find_cols_joins_and_scripts(tree):

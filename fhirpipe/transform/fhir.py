@@ -63,9 +63,7 @@ def build_fhir_leaf_attribute(structure, row, indices):
 
     if isinstance(result, tuple):
         if not all([el == result[0] for el in result[1:]]):
-            raise Exception(
-                f"Cannot have as input a list with different values ({result})."
-            )
+            raise Exception(f"Cannot have as input a list with different values ({result}).")
         result = result[0]
 
     return result
@@ -88,9 +86,7 @@ def rec_create_fhir_object(fhir_obj, structure, row, indices=[]):
                 if is_array:
                     create_fhir_list(fhir_obj, attr, structure["name"], row, indices)
                 else:
-                    rec_create_fhir_object(
-                        fhir_obj[structure["name"]], attr, row, indices
-                    )
+                    rec_create_fhir_object(fhir_obj[structure["name"]], attr, row, indices)
 
     # If the current object is a list, we can repeat the same steps as above for each item
     elif isinstance(fhir_obj, list) and len(fhir_obj) > 0:
@@ -99,6 +95,16 @@ def rec_create_fhir_object(fhir_obj, structure, row, indices=[]):
             children.append(rec_create_fhir_object(dict(), child_spec, row, indices))
 
         fhir_obj[structure["name"]] = children
+
+    # Remove the attribute if it is null or has no children
+    prune_empty_attributes(fhir_obj, structure["name"])
+
+
+def prune_empty_attributes(fhir_obj, key):
+    if isinstance(fhir_obj[key], (dict, list)) and not fhir_obj[key]:
+        del fhir_obj[key]
+    elif fhir_obj[key] is None:
+        del fhir_obj[key]
 
 
 def create_fhir_list(fhir_obj, attr, name, row, indices):
