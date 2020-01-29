@@ -114,7 +114,8 @@ def get_main_table(resource_structure):
     """
     if not resource_structure["primaryKeyTable"]:
         raise ValueError(
-            f"You need to provide a primary key table in the mapping for resource {resource_structure['fhirType']}."
+            "You need to provide a primary key table in the mapping for "
+            f"resource {resource_structure['fhirType']}."
         )
     if resource_structure["primaryKeyOwner"]:
         return f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}"

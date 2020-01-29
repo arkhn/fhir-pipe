@@ -50,7 +50,7 @@ def save_many(instances):
             store.create(instance)
         except ValidationError as e:
             logging.error(
-                f"Validation failed for resource {instance} at\
-{'.'.join(e.schema_path)}: {e.message}"
+                f"Validation failed for resource {instance} at "
+                f"{'.'.join(e.schema_path)}: {e.message}"
             )
         instances.refresh()

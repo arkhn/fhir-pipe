@@ -41,9 +41,7 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     pivot_cols = parent_cols + new_cols
 
     to_squash = [
-        col
-        for col in df.columns
-        if any([col.startswith(f"{rule[0]}.") for rule in child_rules])
+        col for col in df.columns if any([col.startswith(f"{rule[0]}.") for rule in child_rules])
     ]
 
     if not to_squash:
@@ -65,14 +63,12 @@ def squash_rows(df, squash_rules, parent_cols=[]):
 def apply_scripts(df, cleaning_scripts, merging_scripts):
 
     for cleaning_script, columns in cleaning_scripts.items():
+        func = scripts.get_script(cleaning_script)
         for col in columns:
-            func = scripts.get_script(cleaning_script)
             df[new_col_name(cleaning_script, col)] = np.vectorize(func)(df[col])
 
     for merging_script, cols_and_values in merging_scripts.items():
+        func = scripts.get_script(merging_script)
         for cols, statics in cols_and_values:
-            func = scripts.get_script(merging_script)
             args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(
-                *args
-            )
+            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(func)(*args)
