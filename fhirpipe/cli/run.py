@@ -106,7 +106,7 @@ def run():
 
             # Bootstrap for resource if needed
             if fhirType not in fhirstore.resources:
-                fhirstore.bootstrap(resource=fhirType, depth=4)
+                fhirstore.bootstrap(resource=fhirType, depth=3)
 
             if args.multiprocessing:
                 fhir_objects_chunks = pool.map(
