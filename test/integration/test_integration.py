@@ -63,7 +63,9 @@ def test_run_resource(_):
     assert mongo_client.list_collection_names() == ["Patient"]
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
-    sample_simple = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_simple})
+    sample_simple = mongo_client["Patient"].find_one(
+        {"identifier.0.value": id_sample_patient_simple}
+    )
     sample_list = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_list})
 
     assert_sample_comparison(sample_simple, sample_list, mongo_client, referencing_done=False)
@@ -160,25 +162,19 @@ def assert_result_as_expected(
     sample_simple = mongo_client["Patient"].find_one(
         {"identifier.0.value": id_sample_patient_simple}
     )
-    sample_list = mongo_client["Patient"].find_one(
-        {"identifier.0.value": id_sample_patient_list}
-    )
+    sample_list = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_list})
 
     assert_sample_comparison(sample_simple, sample_list, mongo_client)
 
 
 def assert_document_counts(
-    mongo_client,
-    patients_count=expected_patients_count,
-    services_count=expected_services_count,
+    mongo_client, patients_count=expected_patients_count, services_count=expected_services_count,
 ):
     assert mongo_client["Patient"].count_documents({}) == patients_count
     assert mongo_client["HealthcareService"].count_documents({}) == services_count
 
 
-def assert_sample_comparison(
-    sample_simple, sample_list, mongo_client, referencing_done=True
-):
+def assert_sample_comparison(sample_simple, sample_list, mongo_client, referencing_done=True):
 
     if referencing_done:
         ref_simple = mongo_client["HealthcareService"].find_one(
@@ -217,7 +213,6 @@ def assert_sample_comparison(
         "_id": sample_list["_id"],
         "id": sample_list["id"],
         "resourceType": "Patient",
-        "language": "None",
         "identifier": sample_list["identifier"],
         "gender": "male",
         "birthDate": "2029-07-09",
@@ -226,8 +221,7 @@ def assert_sample_comparison(
             {"city": "NY", "state": "NY state", "country": "USA"},
         ],
         "generalPractitioner": [
-            {"identifier": {"system": "HealthcareService", "value": ref["id"]}}
-            for ref in refs_list
+            {"identifier": {"system": "HealthcareService", "value": ref["id"]}} for ref in refs_list
         ]
         if referencing_done
         else [
