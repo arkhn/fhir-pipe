@@ -53,7 +53,6 @@ def run():
 
     fhirstore = get_fhirstore()
     if args.reset_store:
-        print("resetting...")
         fhirstore.reset()
 
     # TODO maybe we can find a more elegant way to handle multiprocessing

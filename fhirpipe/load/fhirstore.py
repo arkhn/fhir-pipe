@@ -35,7 +35,7 @@ def get_fhirstore():
     return _fhirstore
 
 
-def save_many(instances, bypass_validation):
+def save_many(instances, bypass_validation=False):
     """
     Save instances of FHIR resources in MongoDB through fhirstore.
 
