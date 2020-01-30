@@ -53,9 +53,6 @@ def build_fhir_leaf_attribute(structure, row, indices):
         result = [row[c] for c in cols_to_fetch[0]]
         result.extend(cols_to_fetch[1])
 
-    if result is None:
-        return None
-
     # Unlist
     if isinstance(result, list) and len(result) == 1:
         result = result[0]
