@@ -43,6 +43,13 @@ def parse_args():
     )
 
     parser.add_argument(
+        "--bypass_validation",
+        action="store_true",
+        default=False,
+        help="Bypass document validation that should be done by fhirstore.",
+    )
+
+    parser.add_argument(
         "-mp",
         "--multiprocessing",
         action="store_true",

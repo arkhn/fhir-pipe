@@ -115,11 +115,14 @@ def run():
                 )
 
                 # Save instances in fhirstore
-                pool.map(save_many, fhir_objects_chunks)
+                pool.map(
+                    partial(save_many, bypass_validation=args.bypass_validation),
+                    fhir_objects_chunks,
+                )
 
             else:
                 instances = create_resource(chunk, resource_structure)
-                save_many(instances)
+                save_many(instances, args.bypass_validation)
 
     identifier_dict = build_identifier_dict()
 

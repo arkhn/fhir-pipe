@@ -35,7 +35,7 @@ def get_fhirstore():
     return _fhirstore
 
 
-def save_many(instances):
+def save_many(instances, bypass_validation):
     """
     Save instances of FHIR resources in MongoDB through fhirstore.
 
@@ -47,7 +47,7 @@ def save_many(instances):
     instances = tqdm(instances)
     for instance in instances:
         try:
-            store.create(instance)
+            store.create(instance, bypass_document_validation=bypass_validation)
         except ValidationError as e:
             logging.error(
                 f"Validation failed for resource {instance} at "
