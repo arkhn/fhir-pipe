@@ -158,7 +158,6 @@ def test_find_cols_joins_and_scripts(patient_pruned):
     fhir_resource = patient_pruned
 
     cols, joins, cleaning, merging = mapping.find_cols_joins_and_scripts(fhir_resource)
-    print(cols, joins, cleaning, merging)
 
     assert cols == {
         "PATIENTS.ROW_ID",
