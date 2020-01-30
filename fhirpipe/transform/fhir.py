@@ -12,7 +12,7 @@ def create_resource(chunk, resource_structure):
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
-            logging.warning(e)
+            logging.error(f"create_fhir_object failed with: {e}")
             continue
     return res
 
@@ -52,6 +52,9 @@ def build_fhir_leaf_attribute(structure, row, indices):
     else:
         result = [row[c] for c in cols_to_fetch[0]]
         result.extend(cols_to_fetch[1])
+
+    if result is None:
+        return None
 
     # Unlist
     if len(result) == 1:
