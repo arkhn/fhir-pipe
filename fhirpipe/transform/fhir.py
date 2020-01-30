@@ -57,7 +57,7 @@ def build_fhir_leaf_attribute(structure, row, indices):
         return None
 
     # Unlist
-    if len(result) == 1:
+    if isinstance(result, list) and len(result) == 1:
         result = result[0]
 
     if isinstance(result, tuple):
