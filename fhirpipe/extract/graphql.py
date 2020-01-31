@@ -121,14 +121,18 @@ def run_graphql_query(graphql_query, variables=None):
     This function queries a GraphQL endpoint
     and returns a json parsed response.
     """
-    request = requests.post(
+    response = requests.post(
         fhirpipe.global_config["graphql"]["server"],
         headers=get_headers(),
         json={"query": graphql_query, "variables": variables},
     )
-    if request.status_code == 200:
-        return request.json()
-    else:
+    if response.status_code != 200:
         raise Exception(
-            f"Query failed with returning code {request.status_code}\n{request.reason}."
+            f"Query failed with returning code {response.status_code}\n{response.reason}."
         )
+
+    json_response = response.json()
+    if "errors" in json_response:
+        raise Exception(f"GraphQL query failed with errors: {json_response['errors']}.")
+
+    return json_response
