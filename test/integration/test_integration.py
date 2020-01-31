@@ -9,7 +9,7 @@ from fhirpipe.extract.sql import get_connection
 
 @fixture(scope="module")
 def connection():
-    fhirpipe.set_global_config("config.yml")
+    fhirpipe.set_global_config("test/integration/config-test.yml")
     return get_connection()
 
 
