@@ -1,6 +1,21 @@
 import requests
 
 import fhirpipe
+from fhirpipe.errors import OperationOutcome
+
+
+credential_query = """
+query credential($credentialId: ID!) {
+    credential(credentialId: $credentialId) {
+        model
+        host
+        port
+        database
+        login
+        password
+    }
+}
+"""
 
 
 def build_resources_query(selected_sources=None, selected_resources=None, selected_labels=None):
@@ -149,3 +164,12 @@ def run_graphql_query(graphql_query, variables=None):
         raise Exception(f"GraphQL query failed with errors: {json_response['errors']}.")
 
     return json_response
+
+
+def get_credentials(credential_id):
+
+    resp = run_graphql_query(credential_query, variables={"credentialId": credential_id})
+    credentials = resp["data"]["credential"]
+    if not credentials:
+        raise OperationOutcome(f"Database using credentials ID '{credential_id}' does not exist")
+    return credentials

@@ -1,66 +1,65 @@
-from unittest import mock, TestCase
-import argparse
+from unittest import TestCase
+from pytest import fixture
 
 import fhirpipe
 import fhirpipe.cli.run as run
-from fhirpipe.load.fhirstore import get_fhirstore, get_mongo_client
+from fhirpipe.load.fhirstore import get_mongo_client
+from fhirpipe.extract.sql import get_connection
+
+
+@fixture(scope="module")
+def connection():
+    fhirpipe.set_global_config("config.yml")
+    return get_connection()
 
 
 ### Run from mapping file ###
-args = argparse.Namespace(
-    chunksize=None,
-    config="test/integration/config-test.yml",
-    mapping="test/fixtures/mimic_mapping.json",
-    multiprocessing=False,
-    reset_store=True,
-    resources=None,
-    labels=None,
-    sources=None,
-    bypass_validation=False,
-)
-
-
-@mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_from_file(_):
-    run.run()
+def test_run_from_file(connection):
+    run.run(
+        connection=connection,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        reset_store=True,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 
 
 """
 ### Run with graphQL queries ###
-args = argparse.Namespace(
-    chunksize=None,
-    config="test/integration/config-test.yml",
-    mapping=None,
-    multiprocessing=False,
-    reset_store=True,
-    resources=None,
-    sources="mimic",
-)
-
-@mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_from_gql(_):
-    run.run()
+def test_run_from_gql(connection):
+    run.run(
+        connection=connection,
+        mapping=None,
+        source="mimic",
+        resources=None,
+        labels=None,
+        reset_store=True,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 """
 
+
 ### Run for a list of resources ###
-args = argparse.Namespace(
-    chunksize=None,
-    config="test/integration/config-test.yml",
-    mapping="test/fixtures/mimic_mapping.json",
-    multiprocessing=False,
-    reset_store=True,
-    resources=["Patient", "not_existing_resource"],
-    labels=["pat_label"],
-    sources=None,
-    bypass_validation=False,
-)
-
-
-@mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_resource(_):
-    run.run()
+def test_run_resource(connection):
+    run.run(
+        connection=connection,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=["Patient", "not_existing_resource"],
+        labels=["pat_label"],
+        reset_store=True,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
 
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
@@ -76,81 +75,66 @@ def test_run_resource(_):
 
 
 ### Run by batch ###
-args = argparse.Namespace(
-    chunksize=10,
-    config="test/integration/config-test.yml",
-    mapping="test/fixtures/mimic_mapping.json",
-    multiprocessing=False,
-    reset_store=True,
-    resources=None,
-    labels=None,
-    sources=None,
-    bypass_validation=False,
-)
-
-
 # When using batch processing, df can be cut at any place and some rows that should
 # be squashed can be in different chunks
 """
-@mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_batch(_):
-    run.run()
+def test_run_batch(connection):
+    run.run(
+        connection=connection,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        reset_store=True,
+        chunksize=10,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 """
 
-### Run with multiprocessing ###
-args = argparse.Namespace(
-    chunksize=None,
-    config="test/integration/config-test.yml",
-    mapping="test/fixtures/mimic_mapping.json",
-    multiprocessing=True,
-    reset_store=True,
-    resources=None,
-    labels=None,
-    sources=None,
-    bypass_validation=False,
-)
 
-
-@mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
-def test_run_multiprocessing(_):
-    run.run()
+def test_run_multiprocessing(connection):
+    run.run(
+        connection=connection,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        reset_store=True,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=True,
+    )
     assert_result_as_expected()
 
 
 ### Run without resetting the mongo DB ###
-args1 = argparse.Namespace(
-    chunksize=None,
-    config="test/integration/config-test.yml",
-    mapping="test/fixtures/mimic_mapping.json",
-    multiprocessing=False,
-    reset_store=True,
-    resources=None,
-    labels=None,
-    sources=None,
-    bypass_validation=False,
-)
-
-args2 = argparse.Namespace(
-    chunksize=None,
-    config="test/integration/config-test.yml",
-    mapping="test/fixtures/mimic_mapping.json",
-    multiprocessing=False,
-    reset_store=False,
-    resources=None,
-    labels=None,
-    sources=None,
-    bypass_validation=False,
-)
-
-
-@mock.patch("fhirpipe.cli.run.parse_args", side_effect=[args1, args2])
-# @mock.patch("fhirpipe.transform.fhir.bind_reference")
-def test_run_no_reset(*_):
-    run.run()
+def test_run_no_reset(connection):
+    run.run(
+        connection=connection,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        reset_store=True,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 
-    run.run()
+    run.run(
+        connection=connection,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        reset_store=False,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected(patients_count=200, services_count=326)
 
 
@@ -232,12 +216,21 @@ def assert_sample_comparison(sample_simple, sample_list, mongo_client, referenci
             {"city": "Paris", "country": "France"},
             {"city": "NY", "state": "NY state", "country": "USA"},
         ],
-        "generalPractitioner": [
-            {"identifier": {"system": "HealthcareService", "value": ref["id"]}} for ref in refs_list
-        ]
-        if referencing_done
-        else [
-            {"identifier": {"system": "HealthcareService", "value": val}}
-            for val in ["15067", "15068", "15069", "15070"]
-        ],
+        "generalPractitioner": sample_list["generalPractitioner"],
     }
+    if referencing_done:
+        TestCase().assertCountEqual(
+            sample_list["generalPractitioner"],
+            [
+                {"identifier": {"system": "HealthcareService", "value": ref["id"]}}
+                for ref in refs_list
+            ],
+        )
+    else:
+        TestCase().assertCountEqual(
+            sample_list["generalPractitioner"],
+            [
+                {"identifier": {"system": "HealthcareService", "value": val}}
+                for val in ["15067", "15068", "15069", "15070"]
+            ],
+        )
