@@ -32,7 +32,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-s", "--source", type=str, default="Mimic", help="Project to run (default: Mimic)",
+        "-s", "--source", type=str, default=None, help="Project to run.",
     )
 
     parser.add_argument(
