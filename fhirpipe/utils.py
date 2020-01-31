@@ -1,6 +1,3 @@
-import re
-
-
 def build_col_name(table, column, owner=None):
     table = table.strip()
     column = column.strip()
@@ -20,9 +17,6 @@ def new_col_name(script_name, init_col):
     return f"{script_name}_{init_col}"
 
 
-column_pattern = re.compile(r"(?:\w+\.)?(\w+)\.\w+")
-
-
 def get_table_name(name):
     """
     Extract the table_name from a column specification
@@ -33,4 +27,4 @@ def get_table_name(name):
         Case 2
             TABLE.COLUMN -> TABLE
     """
-    return re.search(column_pattern, name).group(1)
+    return name.rsplit(".", 1)[0]
