@@ -2,7 +2,6 @@ from flask import Blueprint, request, jsonify
 
 import logging
 
-import fhirpipe
 from fhirpipe.errors import OperationOutcome
 from fhirpipe.cli.run import run as fp_run
 from fhirpipe.extract.graphql import get_credentials
@@ -32,7 +31,7 @@ def run():
     # Get credentials if given in request
     credentials = None
     connection_type = None
-    print(fhirpipe.global_config)
+
     if "credential_id" in body:
         try:
             credentials = get_credentials(body["credential_id"])
