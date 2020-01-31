@@ -1,25 +1,50 @@
-from flask import request
+from flask import Blueprint, request, jsonify
 
+import logging
+
+import fhirpipe
+from fhirpipe.errors import OperationOutcome
 from fhirpipe.cli.run import run as fp_run
-from fhirpipe.api import app
+from fhirpipe.extract.graphql import get_credentials
+from fhirpipe.extract.sql import get_connection
 
 
-@app.route("/run", methods=["POST"])
+api = Blueprint("api", __name__)
+
+
+@api.route("/run", methods=["POST"])
 def run():
-    config = request.args.get("config", default="config.yml")
-    mapping = request.args.get("mapping", default=None)
-    source = request.args.get("source", default=None)
-    resources = request.args.get("resources", default=None)
-    reset_store = request.args.get("reset_store", default=False)
-    chunksize = request.args.get("chunksize", default=None)
-    multiprocessing = request.args.get("multiprocessing", default=False)
+    default_params = {
+        "mapping": None,
+        "source": None,
+        "resources": None,
+        "reset_store": False,
+        "chunksize": None,
+        "bypass_validation": False,
+        "multiprocessing": False,
+    }
 
-    fp_run(
-        config_path=config,
-        mapping_file=mapping,
-        source_name=source,
-        resources=resources,
-        reset_store=reset_store,
-        chunksize=chunksize,
-        multiprocessing=multiprocessing,
-    )
+    body = request.get_json()
+
+    # Merge body with default_params to get parameters to use
+    params = {k: body[k] if k in body else default_params[k] for k in default_params}
+
+    # Get credentials if given in request
+    credentials = None
+    connection_type = None
+    print(fhirpipe.global_config)
+    if "credential_id" in body:
+        try:
+            credentials = get_credentials(body["credential_id"])
+            connection_type = credentials["model"].lower()
+        except OperationOutcome as e:
+            logging.warning(
+                f"Error while fetching credientials for DB: {e}. "
+                "Will try to connect with default credentials provided in the config file."
+            )
+
+    # Connect to DB and run
+    with get_connection(credentials, connection_type=connection_type) as connection:
+        fp_run(connection, **params)
+
+    return jsonify(success=True)
