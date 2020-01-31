@@ -11,6 +11,7 @@ query {
         resources {
           id
           fhirType
+          label
         }
     }
 }

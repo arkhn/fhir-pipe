@@ -15,31 +15,29 @@ def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file):
 
     # When providing file
     mapping.get_mapping(from_file="file", selected_resources=["sel"])
-    mock_get_mapping_from_file.assert_called_once_with("file", ["sel"])
+    mock_get_mapping_from_file.assert_called_once_with("file", ["sel"], None)
     mock_get_mapping_from_file.reset_mock()
 
     mapping.get_mapping(from_file="file")
-    mock_get_mapping_from_file.assert_called_once_with("file", None)
+    mock_get_mapping_from_file.assert_called_once_with("file", None, None)
     mock_get_mapping_from_file.reset_mock()
 
     # When providing source name
     mapping.get_mapping(source_name="source", selected_resources=["sel"])
-    mock_get_mapping_from_graphql.assert_called_once_with("source", ["sel"])
+    mock_get_mapping_from_graphql.assert_called_once_with("source", ["sel"], None)
     mock_get_mapping_from_graphql.reset_mock()
 
     mapping.get_mapping(source_name="source")
-    mock_get_mapping_from_graphql.assert_called_once_with("source", None)
+    mock_get_mapping_from_graphql.assert_called_once_with("source", None, None)
     mock_get_mapping_from_graphql.reset_mock()
 
     # When providing both
-    mapping.get_mapping(
-        from_file="file", source_name="source", selected_resources=["sel"]
-    )
-    mock_get_mapping_from_file.assert_called_once_with("file", ["sel"])
+    mapping.get_mapping(from_file="file", source_name="source", selected_resources=["sel"])
+    mock_get_mapping_from_file.assert_called_once_with("file", ["sel"], None)
     mock_get_mapping_from_file.reset_mock()
 
     mapping.get_mapping(from_file="file", source_name="source")
-    mock_get_mapping_from_file.assert_called_once_with("file", None)
+    mock_get_mapping_from_file.assert_called_once_with("file", None, None)
     mock_get_mapping_from_file.reset_mock()
 
     # When providing none
@@ -51,9 +49,10 @@ def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file):
 def test_get_mapping_from_file(exported_source):
     # With selected resources
     with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
-        resources = mapping.get_mapping_from_file("path", selected_resources="Patient")
+        resources = mapping.get_mapping_from_file(
+            "path", selected_resources=["Patient"], selected_labels=None
+        )
 
-    assert len(resources) == 1
     assert [r["fhirType"] for r in resources] == ["Patient"]
     TestCase().assertCountEqual(
         resources[0].keys(),
@@ -73,9 +72,10 @@ def test_get_mapping_from_file(exported_source):
 
     # Without selected resources
     with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
-        resources = mapping.get_mapping_from_file("path", selected_resources=None)
+        resources = mapping.get_mapping_from_file(
+            "path", selected_resources=None, selected_labels=None
+        )
 
-    assert len(resources) == 2
     assert [r["fhirType"] for r in resources] == ["Patient", "HealthcareService"]
     TestCase().assertCountEqual(
         resources[0].keys(),
@@ -93,6 +93,21 @@ def test_get_mapping_from_file(exported_source):
         ],
     )
 
+    # With selected labels
+    with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
+        resources = mapping.get_mapping_from_file(
+            "path", selected_resources=["Patient"], selected_labels=["wrong_label"]
+        )
+
+    assert resources == []
+
+    with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
+        resources = mapping.get_mapping_from_file(
+            "path", selected_resources=["Patient"], selected_labels=["pat_label"]
+        )
+
+    assert len(resources) == 1
+
 
 def mock_run_graphql_query(graphql_query, variables=None):
     if graphql_query == gql.sources_query:
@@ -103,16 +118,16 @@ def mock_run_graphql_query(graphql_query, variables=None):
                         "id": 123,
                         "name": "aphp",
                         "resources": [
-                            {"id": 1, "fhirType": "Patient"},
-                            {"id": 2, "fhirType": "Observation"},
+                            {"id": 1, "label": "pat_label", "fhirType": "Patient"},
+                            {"id": 2, "label": "obs_label", "fhirType": "Observation"},
                         ],
                     },
                     {
                         "id": 456,
                         "name": "chimio",
                         "resources": [
-                            {"id": 3, "fhirType": "Practitioner"},
-                            {"id": 4, "fhirType": "Medication"},
+                            {"id": 3, "label": "pract_label", "fhirType": "Practitioner"},
+                            {"id": 4, "label": "med_label", "fhirType": "Medication"},
                         ],
                     },
                 ]
@@ -122,26 +137,33 @@ def mock_run_graphql_query(graphql_query, variables=None):
     elif graphql_query == gql.resource_query:
 
         if variables["resourceId"] == 1:
-            return {"data": {"resource": {"id": 1, "content": "content1",}}}
+            return {"data": {"resource": {"id": 1, "content": "content1"}}}
 
         elif variables["resourceId"] == 2:
-            return {"data": {"resource": {"id": 2, "content": "content2",}}}
+            return {"data": {"resource": {"id": 2, "content": "content2"}}}
 
 
 @mock.patch("fhirpipe.extract.mapping.run_graphql_query", mock_run_graphql_query)
 def test_get_mapping_from_graphql():
     # With selected resources
-    resources = mapping.get_mapping_from_graphql("aphp", ["Patient"])
+    resources = mapping.get_mapping_from_graphql("aphp", ["Patient"], None)
 
     assert list(resources) == [{"id": 1, "content": "content1"}]
 
     # Without selected resources
-    resources = mapping.get_mapping_from_graphql("aphp", None)
+    resources = mapping.get_mapping_from_graphql("aphp", None, None)
 
     assert list(resources) == [
         {"id": 1, "content": "content1"},
         {"id": 2, "content": "content2"},
     ]
+
+    # With selected label
+    resources = mapping.get_mapping_from_graphql("aphp", ["Patient"], ["wrong_label"])
+    assert list(resources) == []
+
+    resources = mapping.get_mapping_from_graphql("aphp", ["Patient"], ["pat_label"])
+    assert list(resources) == [{"id": 1, "content": "content1"}]
 
 
 def test_prune_fhir_resource(exported_source, patient_pruned):
@@ -204,6 +226,6 @@ def test_find_reference_attributes(patient_pruned):
 
     actual = mapping.find_reference_attributes(fhir_resource)
 
-    expected = [('generalPractitioner',)]
+    expected = [("generalPractitioner",)]
 
     assert actual == expected

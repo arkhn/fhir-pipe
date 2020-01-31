@@ -14,6 +14,7 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
+    labels=None,
     source=None,
     bypass_validation=False,
 )
@@ -51,6 +52,7 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=["Patient", "not_existing_resource"],
+    labels=["pat_label"],
     source=None,
     bypass_validation=False,
 )
@@ -81,6 +83,7 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
+    labels=None,
     source=None,
     bypass_validation=False,
 )
@@ -103,6 +106,7 @@ args = argparse.Namespace(
     multiprocessing=True,
     reset_store=True,
     resources=None,
+    labels=None,
     source=None,
     bypass_validation=False,
 )
@@ -122,6 +126,7 @@ args1 = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
+    labels=None,
     source=None,
     bypass_validation=False,
 )
@@ -133,6 +138,7 @@ args2 = argparse.Namespace(
     multiprocessing=False,
     reset_store=False,
     resources=None,
+    labels=None,
     source=None,
     bypass_validation=False,
 )

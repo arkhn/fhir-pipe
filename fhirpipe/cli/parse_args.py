@@ -12,7 +12,11 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-r", "--resources", nargs="+", type=str, default=None, help="Resource type to process",
+        "-r", "--resources", nargs="+", type=str, default=None, help="Resource types to process",
+    )
+
+    parser.add_argument(
+        "-l", "--labels", nargs="+", type=str, default=None, help="Labels of resources to process",
     )
 
     parser.add_argument(

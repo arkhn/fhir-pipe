@@ -12,7 +12,7 @@ from fhirpipe.utils import (
 )
 
 
-def get_mapping(from_file=None, source_name=None, selected_resources=None):
+def get_mapping(from_file=None, source_name=None, selected_resources=None, selected_labels=None):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -27,26 +27,30 @@ def get_mapping(from_file=None, source_name=None, selected_resources=None):
         raise ValueError("You should provide source_name or from_file")
 
     if from_file:
-        return get_mapping_from_file(from_file, selected_resources)
+        return get_mapping_from_file(from_file, selected_resources, selected_labels)
 
     else:
-        return get_mapping_from_graphql(source_name, selected_resources)
+        return get_mapping_from_graphql(source_name, selected_resources, selected_labels)
 
 
-def get_mapping_from_file(path, selected_resources):
+def get_mapping_from_file(path, selected_resources, selected_labels):
     if not os.path.isabs(path):
         path = os.path.join(os.getcwd(), path)
 
     with open(path) as json_file:
         resources = json.load(json_file)
 
-    if selected_resources is not None:
-        resources[:] = [r for r in resources if r["fhirType"] in selected_resources]
+    resources[:] = [
+        r
+        for r in resources
+        if (selected_resources is None or r["fhirType"] in selected_resources)
+        and (selected_labels is None or r["label"] in selected_labels)
+    ]
 
     return resources
 
 
-def get_mapping_from_graphql(source_name, selected_resources):
+def get_mapping_from_graphql(source_name, selected_resources, selected_labels):
     # Get Source id from Source name
     sources = run_graphql_query(gql.sources_query)
 
@@ -61,7 +65,8 @@ def get_mapping_from_graphql(source_name, selected_resources):
     selected_resource_ids = [
         r["id"]
         for r in selected_source["resources"]
-        if selected_resources is None or r["fhirType"] in selected_resources
+        if (selected_resources is None or r["fhirType"] in selected_resources)
+        and (selected_labels is None or r["label"] in selected_labels)
     ]
 
     # Return resources mapping
