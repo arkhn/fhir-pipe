@@ -22,8 +22,8 @@ fhirstore:
   password: null
 
 graphql:
-  server: 'http://localhost:4000'
-  token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJjazYwdmJ1M2gwMDAwNGNwMTBhejI0aXRuIiwiaWF0IjoxNTgwMzk2NTk2fQ.ci2uxrsCd-OtPKKTliIIuS0Qvj4rzyALGYZ2_KbNId4'
+  server: "https://graphql.pyrog.staging.arkhn.org/"
+  token: "<token>"
 
 logging:
   filename: fhirpipe.log
