@@ -2,7 +2,7 @@ from unittest import TestCase
 from pytest import fixture
 
 import fhirpipe
-import fhirpipe.cli.run as run
+import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
 from fhirpipe.extract.sql import get_connection
 
