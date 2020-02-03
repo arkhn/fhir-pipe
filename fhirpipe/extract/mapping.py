@@ -1,10 +1,8 @@
 import os
-import logging
 import json
 from collections import defaultdict
 
-import fhirpipe.extract.graphql as gql
-from fhirpipe.extract.graphql import run_graphql_query
+from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
 from fhirpipe.utils import (
     build_col_name,
     new_col_name,
@@ -12,7 +10,9 @@ from fhirpipe.utils import (
 )
 
 
-def get_mapping(from_file=None, source_name=None, selected_resources=None, selected_labels=None):
+def get_mapping(
+    from_file=None, selected_sources=None, selected_resources=None, selected_labels=None
+):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -23,14 +23,14 @@ def get_mapping(from_file=None, source_name=None, selected_resources=None, selec
         from_file: path to the static file to mock
             the pyrog API response.
     """
-    if source_name is None and from_file is None:
-        raise ValueError("You should provide source_name or from_file")
+    if selected_sources is None and from_file is None:
+        raise ValueError("You should provide selected_sources or from_file")
 
     if from_file:
         return get_mapping_from_file(from_file, selected_resources, selected_labels)
 
     else:
-        return get_mapping_from_graphql(source_name, selected_resources, selected_labels)
+        return get_mapping_from_graphql(selected_sources, selected_resources, selected_labels)
 
 
 def get_mapping_from_file(path, selected_resources, selected_labels):
@@ -50,29 +50,14 @@ def get_mapping_from_file(path, selected_resources, selected_labels):
     return resources
 
 
-def get_mapping_from_graphql(source_name, selected_resources, selected_labels):
-    # Get Source id from Source name
-    sources = run_graphql_query(gql.sources_query)
+def get_mapping_from_graphql(selected_sources, selected_resources, selected_labels):
+    # Build the query
+    query = build_resources_query(selected_sources, selected_resources, selected_labels)
+    # Run it
+    resources = run_graphql_query(query)
 
-    try:
-        # Look for the source which has the name we want
-        selected_source = next(s for s in sources["data"]["sources"] if s["name"] == source_name)
-    except StopIteration:
-        logging.error(f"No source with name '{source_name}' found")
-        raise ValueError(f"{source_name} not found in the provided mapping.")
-
-    # Get the ids of the resources from the query response
-    selected_resource_ids = [
-        r["id"]
-        for r in selected_source["resources"]
-        if (selected_resources is None or r["fhirType"] in selected_resources)
-        and (selected_labels is None or r["label"] in selected_labels)
-    ]
-
-    # Return resources mapping
-    for resource_id in selected_resource_ids:
-        mapping = run_graphql_query(gql.resource_query, variables={"resourceId": resource_id})
-        yield mapping["data"]["resource"]
+    for resource in resources["data"]["resources"]:
+        yield resource
 
 
 def prune_fhir_resource(resource_structure):

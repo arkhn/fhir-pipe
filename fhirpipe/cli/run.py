@@ -49,7 +49,7 @@ def run():
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
         from_file=args.mapping,
-        source_name=args.source,
+        selected_sources=args.sources,
         selected_resources=args.resources,
         selected_labels=args.labels,
     )

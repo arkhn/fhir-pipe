@@ -3,111 +3,111 @@ import requests
 import fhirpipe
 
 
-sources_query = """
-query {
-    sources {
-        id
-        name
-        resources {
-          id
-          fhirType
-          label
-        }
-    }
-}
-"""
-
-resource_query = """
-fragment entireColumn on Column {
+def build_resources_query(selected_sources=None, selected_resources=None, selected_labels=None):
+    # NOTE the curly braces have to be doubled in f-strings
+    # NOTE The .replace("'", '"') is needed because the graphql needs to have
+    # strings delimited by double quotes
+    return f"""fragment entireColumn on Column {{
     id
     owner
     table
     column
-    joins {
+    joins {{
         id
-        tables {
+        tables {{
             id
             owner
             table
             column
-        }
-    }
-}
+        }}
+    }}
+}}
 
-fragment entireInput on Input {
+fragment entireInput on Input {{
     id
-    sqlValue {
+    sqlValue {{
         ...entireColumn
-    }
+    }}
     script
     staticValue
-}
+}}
 
-fragment a on Attribute {
+fragment a on Attribute {{
     id
     name
     fhirType
     mergingScript
-    inputs {
+    inputs {{
         ...entireInput
-    }
-}
+    }}
+}}
 
-query($resourceId: ID!) {
-    resource(resourceId: $resourceId) {
+query {{
+    resources(filter: {{
+        AND: {{
+            { f'''source: {{
+                name: {{ in: {selected_sources} }}
+            }}''' if selected_sources else ""}
+            { f"fhirType: {{ in: {selected_resources} }}" if selected_resources else ""}
+            { f"label: {{ in: {selected_labels} }}" if selected_labels else ""}
+        }}
+    }})
+    {{
         id
         fhirType
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
-        attributes {
+        attributes {{
             ...a
-            children {
+            children {{
                 ...a
-                children {
+                children {{
                     ...a
-                    children {
+                    children {{
                         ...a
-                        children {
+                        children {{
                             ...a
-                            children {
+                            children {{
                                 ...a
-                                children {
+                                children {{
                                     ...a
-                                    children {
+                                    children {{
                                         ...a
-                                        children {
+                                        children {{
                                             ...a
-                                            children {
+                                            children {{
                                                 ...a
-                                                children {
+                                                children {{
                                                     ...a
-                                                    children {
+                                                    children {{
                                                         ...a
-                                                        children {
+                                                        children {{
                                                             ...a
-                                                            children {
+                                                            children {{
                                                                 ...a
-                                                                children {
+                                                                children {{
                                                                     ...a
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-"""
+                                                                }}
+                                                            }}
+                                                        }}
+                                                    }}
+                                                }}
+                                            }}
+                                        }}
+                                    }}
+                                }}
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        }}
+    }}
+}}
+""".replace(
+        "'", '"'
+    )
 
 
 def get_headers():

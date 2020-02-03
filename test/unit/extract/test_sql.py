@@ -1,6 +1,3 @@
-from unittest import mock
-
-import fhirpipe
 import fhirpipe.extract.sql as sql
 
 

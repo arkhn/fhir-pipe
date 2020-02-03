@@ -12,6 +12,10 @@ def parse_args():
     )
 
     parser.add_argument(
+        "-s", "--sources", nargs="+", type=str, default=None, help="Names of sources to process",
+    )
+
+    parser.add_argument(
         "-r", "--resources", nargs="+", type=str, default=None, help="Resource types to process",
     )
 
@@ -33,10 +37,6 @@ def parse_args():
         type=str,
         default=None,
         help="Use graphql file response instead of the API",
-    )
-
-    parser.add_argument(
-        "-s", "--source", type=str, default="Mimic", help="Project to run (default: Mimic)",
     )
 
     parser.add_argument(
