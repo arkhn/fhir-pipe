@@ -70,9 +70,7 @@ def run_sql_query(connection, query, chunksize: int = None):
         the result of the sql query run on the specified connection type
             or an iterator if chunksize is specified
     """
-    pd_query = pd.read_sql_query(
-        query, connection, chunksize=chunksize
-    )
+    pd_query = pd.read_sql_query(query, connection, chunksize=chunksize)
 
     # If chunksize is None, we return the dataframe for the whole DB
     # Note that we still use yield to use the for ... in ... syntax in any case

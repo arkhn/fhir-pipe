@@ -1,4 +1,3 @@
-
 # Get started!
 
 Learn how to standardize data using the pipe!
@@ -17,7 +16,6 @@ But first, you need some data! We will use the MIMIC III Clinical Database Demo,
 
 [![Physionet Agreement](https://img.shields.io/badge/Physionet-Sign%20Agreement-green.svg?style=for-the-badge)](https://physionet.org/pnw/a/self-register?project=/works/MIMICIIIClinicalDatabaseDemo/index.shtml)
 
-
 Then, copy `.env.example` into `.env` and edit the file last to add your physionet credentials.
 
 ```
@@ -31,11 +29,13 @@ source .env
 You can use Docker to start quickly playing with demos. Alternatively, the **[2.B Manual Setup](#2-b-manual-setup)** section explains how to install the pipeline step by step.
 
 Start [or install](https://docs.docker.com/install/#supported-platforms) Docker, and then build the docker images.
+
 ```
 docker-compose build
 ```
 
 Then start the services:
+
 ```
 docker-compose up
 ```
@@ -53,13 +53,15 @@ You can now directly go to **[3 Launch the pipe](#3-launch-the-pipe)**.
 If you're not experienced with the project, we recommend that you first go through the **[2.A Docker Setup](#2-a-docker-setup)**. We still use Docker to get the MIMIC database set up along with the database where the FHIR data will be stored, but the ETL will be run from your local computer.
 
 Open `docker-compose.yml` to check that the local ports used are not used by your current apps.
+
 ```
-vi docker-compose.yml 
+vi docker-compose.yml
 ```
 
 Run in specific tabs the two database containers we depend on:
+
 ```
-docker-compose up --build mimic-db
+docker-compose up --build mimic
 docker-compose up mongo
 ```
 
@@ -79,7 +81,6 @@ python setup.py install
 ```
 
 ## 3. Launch the pipe
-
 
 And to run to whole pipe
 
@@ -115,7 +116,7 @@ mongo --port 27017 --host localhost fhirstore
 To check if the data was correctly loaded in the mimic container, you can execute this in a new terminal:
 
 ```
-$ docker exec -ti fhir-pipe-mimic-db psql -d mimic -U mimicuser -c 'SELECT count(subject_id) FROM patients'
+$ docker exec -ti mimic psql -d mimic -U mimicuser -c 'SELECT count(subject_id) FROM patients'
  count
 -------
    100
@@ -127,6 +128,7 @@ $ docker exec -ti fhir-pipe-mimic-db psql -d mimic -U mimicuser -c 'SELECT count
 You might want to change stuff directly on the container.
 
 Example for `nano`:
+
 ```
 apt update
 apt install nano
@@ -134,24 +136,23 @@ apt install nano
 
 #### Reload the mimic container
 
-You can then shutdown the database with `ctrl-c` or with `docker-compose down mimic-db`
+You can then shutdown the database with `ctrl-c` or with `docker-compose down mimic`
 
 In case of troubles, note that the setup scripts are executed only if the PSQL database is empty.
 To clear the previously build dockers and databases to re-start from a clean state, please run :
 
 ```
-docker-compose down mimic-db
-docker volume rm fhir-pipe-mimic-db
+docker-compose down mimic
+docker volume rm mimic
 ```
 
 And, after that, if you have to re-build the docker (for example to take into account the values setup in `.env` file), please run :
 
 ```
-docker-compose build mimic-db
+docker-compose build mimic
 ```
 
 > :warning: You may experience trouble if the postgres port is already taken. You can modify it in `docker-compose.yml`
-
 
 #### Install the pipe locally
 
@@ -162,7 +163,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
- Make sure you already have the docker containers with mimic and mongo running.
+Make sure you already have the docker containers with mimic and mongo running.
 
 Copy `config_local.yml` (from the `fhirpipe` directory) into `config.yml` and put there your credentials. (Don't forget to change the postgres ports if needed).
 
@@ -171,6 +172,7 @@ cp config_local.yml config.yml
 ```
 
 Finish the install and run the tests to check all works fine
+
 ```
 cd ..
 python setup.py install
@@ -188,4 +190,3 @@ fhirpipe-run --project=Mimic --resource=Patient --main-table=Patients --mock-pyr
 ```
 
 Remove `--mock-pyrog-mapping` to get the latest mapping rules from the pyrog api.
-
