@@ -26,5 +26,5 @@ setup(
     setup_requires=["pytest-runner"],
     tests_require=["pytest"],
     zip_safe=False,
-    entry_points={"console_scripts": ["fhirpipe-run=fhirpipe.cli.run:cli_entry_point"]},
+    entry_points={"console_scripts": ["fhirpipe-run=fhirpipe.cli.cli_run:cli_run"]},
 )

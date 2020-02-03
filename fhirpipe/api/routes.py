@@ -1,28 +1,26 @@
 from flask import Blueprint, request, jsonify
 
-import logging
-
 from fhirpipe.errors import OperationOutcome
-from fhirpipe.cli.run import run as fp_run
+from fhirpipe.run import run as fp_run
 from fhirpipe.extract.graphql import get_credentials
 from fhirpipe.extract.sql import get_connection
 
 
 api = Blueprint("api", __name__)
 
+default_params = {
+    "mapping": None,
+    "source": None,
+    "resources": None,
+    "reset_store": False,
+    "chunksize": None,
+    "bypass_validation": False,
+    "multiprocessing": False,
+}
+
 
 @api.route("/run", methods=["POST"])
 def run():
-    default_params = {
-        "mapping": None,
-        "source": None,
-        "resources": None,
-        "reset_store": False,
-        "chunksize": None,
-        "bypass_validation": False,
-        "multiprocessing": False,
-    }
-
     body = request.get_json()
 
     # Merge body with default_params to get parameters to use
@@ -37,10 +35,9 @@ def run():
             credentials = get_credentials(body["credential_id"])
             connection_type = credentials["model"].lower()
         except OperationOutcome as e:
-            logging.warning(
-                f"Error while fetching credientials for DB: {e}. "
-                "Will try to connect with default credentials provided in the config file."
-            )
+            raise ValueError(f"Error while fetching credientials for DB: {e}.")
+    else:
+        raise Exception("credential_id is required to run fhirpipe.")
 
     # Connect to DB and run
     with get_connection(credentials, connection_type=connection_type) as connection:
