@@ -3,21 +3,25 @@ import requests
 import fhirpipe
 
 
-sources_query = """
-query {
-    sources {
-        id
-        name
-        resources {
-          id
-          fhirType
-        }
-    }
-}
-"""
+def build_resources_query(selected_sources=None, selected_resources=None, selected_labels=None):
+    """ Builds a graphql query fetching all the resources needed.
 
-resource_query = """
-fragment entireColumn on Column {
+    Note that the .replace("'", '"') is needed because the graphql needs to have
+    strings delimited by double quotes.
+    """
+    source_filter = (
+        """source: {
+                name: { in: %s }
+            }"""
+        % selected_sources
+        if selected_sources
+        else ""
+    )
+    resource_filter = "fhirType: { in: %s }" % selected_resources if selected_resources else ""
+    label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
+
+    return (
+        """fragment entireColumn on Column {
     id
     owner
     table
@@ -52,8 +56,15 @@ fragment a on Attribute {
     }
 }
 
-query($resourceId: ID!) {
-    resource(resourceId: $resourceId) {
+query {
+    resources(filter: {
+        AND: {
+            %s
+            %s
+            %s
+        }
+    })
+    {
         id
         fhirType
         primaryKeyOwner
@@ -107,6 +118,8 @@ query($resourceId: ID!) {
     }
 }
 """
+        % (source_filter, resource_filter, label_filter)
+    ).replace("'", '"')
 
 
 def get_headers():

@@ -14,7 +14,8 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
-    source=None,
+    labels=None,
+    sources=None,
     bypass_validation=False,
 )
 
@@ -34,7 +35,7 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
-    source="mimic",
+    sources="mimic",
 )
 
 @mock.patch("fhirpipe.cli.run.parse_args", return_value=args)
@@ -51,7 +52,8 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=["Patient", "not_existing_resource"],
-    source=None,
+    labels=["pat_label"],
+    sources=None,
     bypass_validation=False,
 )
 
@@ -81,7 +83,8 @@ args = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
-    source=None,
+    labels=None,
+    sources=None,
     bypass_validation=False,
 )
 
@@ -103,7 +106,8 @@ args = argparse.Namespace(
     multiprocessing=True,
     reset_store=True,
     resources=None,
-    source=None,
+    labels=None,
+    sources=None,
     bypass_validation=False,
 )
 
@@ -122,7 +126,8 @@ args1 = argparse.Namespace(
     multiprocessing=False,
     reset_store=True,
     resources=None,
-    source=None,
+    labels=None,
+    sources=None,
     bypass_validation=False,
 )
 
@@ -133,7 +138,8 @@ args2 = argparse.Namespace(
     multiprocessing=False,
     reset_store=False,
     resources=None,
-    source=None,
+    labels=None,
+    sources=None,
     bypass_validation=False,
 )
 

@@ -1,7 +1,7 @@
 [
     {
         "id": "ck5f5v2kd00023qmtzv2887fr",
-        "label": "",
+        "label": "pat_label",
         "profile": null,
         "fhirType": "Patient",
         "primaryKeyOwner": "",
@@ -7331,7 +7331,7 @@
     },
     {
         "id": "ck5ffy5ai08933qmtbzshjwfl",
-        "label": "",
+        "label": "service_label",
         "profile": null,
         "fhirType": "HealthcareService",
         "primaryKeyOwner": "",

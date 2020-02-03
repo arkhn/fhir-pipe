@@ -14,4 +14,7 @@ def patient_pruned():
         return json.load(fp)
 
 
-mock_config = {"fhirstore": {"database": "fhirstore"}}
+mock_config = {
+    "fhirstore": {"database": "fhirstore"},
+    "graphql": {"token": "gql_token", "server": "gql_server"},
+}

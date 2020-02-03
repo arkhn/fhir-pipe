@@ -1,6 +1,6 @@
 {
   "id": "ck5f5v2kd00023qmtzv2887fr",
-  "label": "",
+  "label": "pat_label",
   "profile": null,
   "fhirType": "Patient",
   "primaryKeyOwner": "",
