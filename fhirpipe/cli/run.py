@@ -141,7 +141,7 @@ def run(
     logging.info(f"Done in {time.time() - start_time}.")
 
 
-if __name__ == "__main__":
+def cli_entry_point():
     print(WELCOME_MSG)
 
     # Parse arguments
@@ -165,3 +165,7 @@ if __name__ == "__main__":
             bypass_validation=args.bypass_validation,
             multiprocessing=args.multiprocessing,
         )
+
+
+if __name__ == "__main__":
+    cli_entry_point()
