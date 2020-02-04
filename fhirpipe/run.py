@@ -11,7 +11,6 @@ from fhirpipe.cli import parse_args, WELCOME_MSG
 
 from fhirpipe.extract.mapping import (
     get_mapping,
-    prune_fhir_resource,
     get_primary_key,
     find_cols_joins_and_scripts,
     build_squash_rules,
@@ -65,27 +64,27 @@ def run(
 
     reference_attributes = defaultdict(set)
 
-    for resource_structure in resources:
-        fhirType = resource_structure["fhirType"]
+    for resource_mapping in resources:
+        fhirType = resource_mapping["definition"]["type"]
 
         logging.info("Running for resource: %s", fhirType)
-        resource_structure = prune_fhir_resource(resource_structure)
 
         # Get primary key table
-        primary_key_table, primary_key_column = get_primary_key(resource_structure)
+        primary_key_table, primary_key_column = get_primary_key(resource_mapping)
 
         # Extract cols and joins
-        cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
+        cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_mapping)
 
         # Build the sql query
         sql_query = build_sql_query(cols, joins, primary_key_table)
         logging.info("sql query: %s", sql_query)
+        print(sql_query)
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, primary_key_table)
 
         # Get all the attributes that are references for future binding
-        for attr in find_reference_attributes(resource_structure):
+        for attr in find_reference_attributes(resource_mapping):
             reference_attributes[fhirType].add(attr)
 
         # Run the sql query
@@ -112,7 +111,7 @@ def run(
 
             if multiprocessing:
                 fhir_objects_chunks = pool.map(
-                    partial(create_resource, resource_structure=resource_structure),
+                    partial(create_resource, resource_mapping=resource_mapping),
                     np.array_split(chunk, n_workers),
                 )
 
@@ -122,7 +121,7 @@ def run(
                 )
 
             else:
-                instances = create_resource(chunk, resource_structure)
+                instances = create_resource(chunk, resource_mapping)
                 save_many(instances, bypass_validation)
 
     identifier_dict = build_identifier_dict()

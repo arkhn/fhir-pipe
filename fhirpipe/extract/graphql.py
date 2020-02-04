@@ -32,7 +32,14 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
         if selected_sources
         else ""
     )
-    resource_filter = "fhirType: { in: %s }" % selected_resources if selected_resources else ""
+    resource_filter = (
+        """definition: {
+                type: { in: %s }
+            }"""
+        % selected_resources
+        if selected_resources
+        else ""
+    )
     label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
 
     return (
@@ -63,8 +70,7 @@ fragment entireInput on Input {
 
 fragment a on Attribute {
     id
-    name
-    fhirType
+    path
     mergingScript
     inputs {
         ...entireInput
@@ -81,54 +87,15 @@ query {
     })
     {
         id
-        fhirType
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
+        definition {
+            id
+            type
+        }
         attributes {
             ...a
-            children {
-                ...a
-                children {
-                    ...a
-                    children {
-                        ...a
-                        children {
-                            ...a
-                            children {
-                                ...a
-                                children {
-                                    ...a
-                                    children {
-                                        ...a
-                                        children {
-                                            ...a
-                                            children {
-                                                ...a
-                                                children {
-                                                    ...a
-                                                    children {
-                                                        ...a
-                                                        children {
-                                                            ...a
-                                                            children {
-                                                                ...a
-                                                                children {
-                                                                    ...a
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }

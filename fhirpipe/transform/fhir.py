@@ -4,11 +4,11 @@ import logging
 from fhirpipe.utils import build_col_name, new_col_name
 
 
-def create_resource(chunk, resource_structure):
+def create_resource(chunk, resource_mapping):
     res = []
     for _, row in chunk.iterrows():
         try:
-            res.append(create_fhir_object(row, resource_structure))
+            res.append(create_fhir_object(row, resource_mapping))
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
@@ -17,13 +17,13 @@ def create_resource(chunk, resource_structure):
     return res
 
 
-def create_fhir_object(row, resource_structure):
+def create_fhir_object(row, resource_mapping):
     # Identify the fhir object
-    fhir_object = {"id": str(uuid4()), "resourceType": resource_structure["fhirType"]}
+    fhir_object = {"id": str(uuid4()), "resourceType": resource_mapping["fhirType"]}
 
     # The first node has a different structure so iterate outside the
     # dfs_create_fhir function
-    for attr in resource_structure["attributes"]:
+    for attr in resource_mapping["attributes"]:
         rec_create_fhir_object(fhir_object, attr, row)
 
     return fhir_object
