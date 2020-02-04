@@ -20,6 +20,7 @@ from fhirpipe.extract.mapping import (
 from fhirpipe.extract.sql import (
     build_sql_query,
     run_sql_query,
+    get_connection,
 )
 
 from fhirpipe.transform.dataframe import squash_rows, apply_scripts
@@ -29,37 +30,36 @@ from fhirpipe.load.fhirstore import get_fhirstore, save_many
 from fhirpipe.load.references import build_identifier_dict, bind_references
 
 
-def run():
+def run(
+    connection,
+    mapping,
+    sources,
+    resources,
+    labels,
+    reset_store,
+    chunksize,
+    bypass_validation,
+    multiprocessing,
+):
     """
     """
-    # Parse arguments
-    args = parse_args()
-
-    print(WELCOME_MSG)
-
     # Launch timer
     start_time = time.time()
 
-    # Define global config
-    set_global_config(config_path=args.config)
-
-    # Setup logging configuration
-    setup_logging()
-
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
-        from_file=args.mapping,
-        selected_sources=args.sources,
-        selected_resources=args.resources,
-        selected_labels=args.labels,
+        from_file=mapping,
+        selected_sources=sources,
+        selected_resources=resources,
+        selected_labels=labels,
     )
 
     fhirstore = get_fhirstore()
-    if args.reset_store:
+    if reset_store:
         fhirstore.reset()
 
     # TODO maybe we can find a more elegant way to handle multiprocessing
-    if args.multiprocessing:
+    if multiprocessing:
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
@@ -90,7 +90,7 @@ def run():
 
         # Run the sql query
         logging.info("Launching query...")
-        df = run_sql_query(sql_query, chunksize=args.chunksize)
+        df = run_sql_query(connection, sql_query, chunksize=chunksize)
 
         for chunk in df:
             # Change not string value to strings (to be validated by jsonSchema for resource)
@@ -110,7 +110,7 @@ def run():
             if fhirType not in fhirstore.resources:
                 fhirstore.bootstrap(resource=fhirType, depth=3)
 
-            if args.multiprocessing:
+            if multiprocessing:
                 fhir_objects_chunks = pool.map(
                     partial(create_resource, resource_structure=resource_structure),
                     np.array_split(chunk, n_workers),
@@ -118,25 +118,24 @@ def run():
 
                 # Save instances in fhirstore
                 pool.map(
-                    partial(save_many, bypass_validation=args.bypass_validation),
-                    fhir_objects_chunks,
+                    partial(save_many, bypass_validation=bypass_validation), fhir_objects_chunks,
                 )
 
             else:
                 instances = create_resource(chunk, resource_structure)
-                save_many(instances, args.bypass_validation)
+                save_many(instances, bypass_validation)
 
     identifier_dict = build_identifier_dict()
 
     # Now, we can bind the references
     # TODO I think we could find a more efficient way to bind references
     # using more advanced mongo features
-    if args.multiprocessing:
+    if multiprocessing:
         bind_references(reference_attributes, identifier_dict, pool)
     else:
         bind_references(reference_attributes, identifier_dict)
 
-    if args.multiprocessing:
+    if multiprocessing:
         pool.close()
         pool.join()
 
@@ -144,4 +143,26 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    print(WELCOME_MSG)
+
+    # Parse arguments
+    args = parse_args()
+
+    # Define global config
+    set_global_config(config_path=args.config)
+
+    # Setup logging configuration
+    setup_logging()
+
+    # Setup DB connection and run
+    with get_connection() as connection:
+        run(
+            connection=connection,
+            mapping=args.mapping,
+            source=args.source,
+            resources=args.resources,
+            reset_store=args.reset_store,
+            chunksize=args.chunksize,
+            bypass_validation=args.bypass_validation,
+            multiprocessing=args.multiprocessing,
+        )

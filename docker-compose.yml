@@ -5,9 +5,10 @@ services:
     container_name: fhir-pipe
     build:
       context: .
-    command: tail -F anything
     volumes:
       - ./test:/app/test
+    ports:
+      - "5003:5003"
     depends_on:
       - mimic-db
 

@@ -10,3 +10,5 @@
 !requirements.txt
 !config_docker.yml
 !README.md
+!start.sh
+!uwsgi.ini

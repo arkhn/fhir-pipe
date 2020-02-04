@@ -21,8 +21,12 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 
 # Copy the current directory contents into the container at /app
 COPY config_docker.yml /app/config.yml
+COPY start.sh /app
+COPY uwsgi.ini /app
 COPY setup.py /app
 COPY README.md /app
-COPY ./fhirpipe /app/fhirpipe
+COPY fhirpipe /app/fhirpipe
 
 RUN python setup.py install
+
+CMD ["./start.sh"]

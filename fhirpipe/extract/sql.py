@@ -19,7 +19,7 @@ def build_sql_query(columns, joins, table_name):
     return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}"
 
 
-def get_connection(connection_type: str = None):
+def get_connection(credentials=None, connection_type: str = None):
     """
     Return a sql connexion depending on the configuration provided in
     config.yml (see root of the project)
@@ -33,12 +33,17 @@ def get_connection(connection_type: str = None):
         a sql connexion
     """
     sql_config = fhirpipe.global_config["sql"]
+
     if connection_type is None:
         connection_type = sql_config["default"]
-    connection = sql_config[connection_type]
 
-    args = connection["args"]
-    kwargs = connection["kwargs"]
+    if credentials is None:
+        args = sql_config[connection_type]["args"]
+        kwargs = sql_config[connection_type]["kwargs"]
+    else:
+        assert connection_type == "postgres", "credentials for non postgres DB not supported"
+        args = []
+        kwargs = credentials
 
     if connection_type == "postgres":
         return psycopg2.connect(*args, **kwargs)
@@ -51,7 +56,7 @@ def get_connection(connection_type: str = None):
         )
 
 
-def run_sql_query(query, connection_type: str = None, chunksize: int = None):
+def run_sql_query(connection, query, chunksize: int = None):
     """
     Run a sql query after opening a sql connection
 
@@ -66,7 +71,7 @@ def run_sql_query(query, connection_type: str = None, chunksize: int = None):
             or an iterator if chunksize is specified
     """
     pd_query = pd.read_sql_query(
-        query, get_connection(connection_type), chunksize=chunksize
+        query, connection, chunksize=chunksize
     )
 
     # If chunksize is None, we return the dataframe for the whole DB
