@@ -10,10 +10,11 @@ services:
     ports:
       - "5003:5003"
     depends_on:
-      - mimic-db
+      - mimic
 
-  mimic-db:
-    container_name: fhir-pipe-mimic-db
+  mimic:
+    image: arkhn/mimic:latest
+    container_name: mimic
     env_file: .env
     build:
       context: ./docker
@@ -43,5 +44,5 @@ services:
 
 volumes:
   mimic-db:
-    name: fhir-pipe-mimic-db
+    name: mimic-db
   fhirstore-db:

@@ -4,7 +4,7 @@ sql:
     lib: "psycopg2"
     args: []
     kwargs:
-      host: "fhir-pipe-mimic-db"
+      host: mimic
       port: 5432
       database: "mimic"
       user: "mimicuser"
