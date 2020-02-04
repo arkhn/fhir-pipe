@@ -10,8 +10,9 @@ api = Blueprint("api", __name__)
 
 default_params = {
     "mapping": None,
-    "source": None,
+    "sources": None,
     "resources": None,
+    "labels": None,
     "reset_store": False,
     "chunksize": None,
     "bypass_validation": False,

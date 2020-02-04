@@ -167,8 +167,8 @@ def run_graphql_query(graphql_query, variables=None):
 
 
 def get_credentials(credential_id):
-
     resp = run_graphql_query(credential_query, variables={"credentialId": credential_id})
-    if not resp["data"]:
+    credentials = resp["data"]["credential"]
+    if not credentials:
         raise OperationOutcome(f"Database using credentials ID {credential_id} does not exist")
-    return resp["data"]["credential"]
+    return credentials

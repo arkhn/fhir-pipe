@@ -18,7 +18,7 @@ def test_run_from_file(connection):
     run.run(
         connection=connection,
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
+        sources=None,
         resources=None,
         labels=None,
         reset_store=True,
@@ -52,7 +52,7 @@ def test_run_resource(connection):
     run.run(
         connection=connection,
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
+        sources=None,
         resources=["Patient", "not_existing_resource"],
         labels=["pat_label"],
         reset_store=True,
@@ -82,7 +82,7 @@ def test_run_batch(connection):
     run.run(
         connection=connection,
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
+        sources=None,
         resources=None,
         labels=None,
         reset_store=True,
@@ -98,7 +98,7 @@ def test_run_multiprocessing(connection):
     run.run(
         connection=connection,
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
+        sources=None,
         resources=None,
         labels=None,
         reset_store=True,
@@ -114,7 +114,7 @@ def test_run_no_reset(connection):
     run.run(
         connection=connection,
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
+        sources=None,
         resources=None,
         labels=None,
         reset_store=True,
@@ -127,7 +127,7 @@ def test_run_no_reset(connection):
     run.run(
         connection=connection,
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
+        sources=None,
         resources=None,
         labels=None,
         reset_store=False,

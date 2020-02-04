@@ -33,8 +33,9 @@ from fhirpipe.load.references import build_identifier_dict, bind_references
 def run(
     connection,
     mapping,
-    source,
+    sources,
     resources,
+    labels,
     reset_store,
     chunksize,
     bypass_validation,
@@ -47,10 +48,10 @@ def run(
 
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
-        from_file=args.mapping,
-        selected_sources=args.sources,
-        selected_resources=args.resources,
-        selected_labels=args.labels,
+        from_file=mapping,
+        selected_sources=sources,
+        selected_resources=resources,
+        selected_labels=labels,
     )
 
     fhirstore = get_fhirstore()
