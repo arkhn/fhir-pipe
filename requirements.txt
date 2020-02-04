@@ -8,3 +8,4 @@ PyYAML==5.1.2
 requests==2.21.0
 pandas==0.25.3
 jsonschema==3.0.2
+uWSGI==2.0.18
