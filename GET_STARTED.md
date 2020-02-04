@@ -143,7 +143,7 @@ To clear the previously build dockers and databases to re-start from a clean sta
 
 ```
 docker-compose down mimic
-docker volume rm mimic
+docker volume rm mimic-db
 ```
 
 And, after that, if you have to re-build the docker (for example to take into account the values setup in `.env` file), please run :
