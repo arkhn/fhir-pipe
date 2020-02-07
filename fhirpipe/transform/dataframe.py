@@ -70,7 +70,7 @@ def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
                 df[col], script=script, id=df[primary_key_column], col=col
             )
 
-    for merging_script, cols_and_values in merging_scripts.items():
+    for merging_script, cols_and_values in merging_scripts:
         script = scripts.get_script(merging_script)
         for cols, statics in cols_and_values:
             args = [df[k] for k in cols] + statics

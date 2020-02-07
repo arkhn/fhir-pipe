@@ -53,6 +53,7 @@ def get_mapping_from_file(path, selected_resources, selected_labels):
 def get_mapping_from_graphql(selected_sources, selected_resources, selected_labels):
     # Build the query
     query = build_resources_query(selected_sources, selected_resources, selected_labels)
+
     # Run it
     resources = run_graphql_query(query)
 
@@ -114,14 +115,17 @@ def find_cols_joins_and_scripts(resource_mapping):
     all_merging_scripts = []
 
     for attribute in resource_mapping["attributes"]:
-        cols = set()
-        joins = set()
+        cols_merging = set()
         statics = []
         for input in attribute["inputs"]:
             if input["sqlValue"]:
                 sql = input["sqlValue"]
                 column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
-                cols.add(column_name)
+                all_cols.add(column_name)
+
+                if input["script"]:
+                    col_to_merge = new_col_name(input["script"], new_col_name)
+                cols_merging.add(col_to_merge)
 
                 for join in sql["joins"]:
                     tables = join["tables"]
@@ -131,7 +135,7 @@ def find_cols_joins_and_scripts(resource_mapping):
                     target_col = build_col_name(
                         tables[1]["table"], tables[1]["column"], tables[1]["owner"],
                     )
-                    joins.add((source_col, target_col))
+                    all_joins.add((source_col, target_col))
 
                 if input["script"]:
                     all_cleaning_scripts[input["script"]].append(column_name)
@@ -140,10 +144,7 @@ def find_cols_joins_and_scripts(resource_mapping):
                 statics.append(input["staticValue"])
 
         if attribute["mergingScript"]:
-            all_merging_scripts.append((attribute["mergingScript"], (cols, statics)))
-
-        all_cols = all_cols.union(cols)
-        all_joins = all_joins.union(joins)
+            all_merging_scripts.append((attribute["mergingScript"], (cols_merging, statics)))
 
     return all_cols, all_joins, all_cleaning_scripts, all_merging_scripts
 
@@ -221,34 +222,34 @@ def dict_concat(dict_1, dict_2):
         dict_1[key] += val
 
 
-def find_reference_attributes(tree, path=[]):
-    """ Function to find attributes that are reference.
-    We need this to bind them after having loaded the fhir objects.
-    """
-    references = []
-    if isinstance(tree, dict):
+# def find_reference_attributes(tree, path=[]):
+#     """ Function to find attributes that are reference.
+#     We need this to bind them after having loaded the fhir objects.
+#     """
+#     references = []
+#     if isinstance(tree, dict):
 
-        if "name" in tree:
-            if not path or not path[-1] == tree["name"]:
-                path.append(tree["name"])
+#         if "name" in tree:
+#             if not path or not path[-1] == tree["name"]:
+#                 path.append(tree["name"])
 
-        # If attribute is a reference, we add it to the result list
-        if tree["fhirType"] == "Reference":
-            references.append(tuple(path))
+#         # If attribute is a reference, we add it to the result list
+#         if tree["fhirType"] == "Reference":
+#             references.append(tuple(path))
 
-        # I don't think we can have nested references so
-        # if we are not in a leaf, we recurse
-        else:
-            if "attributes" in tree and tree["attributes"]:
-                return find_reference_attributes(tree["attributes"], path[:])
-            if "children" in tree and tree["children"]:
-                return find_reference_attributes(tree["children"], path[:])
+#         # I don't think we can have nested references so
+#         # if we are not in a leaf, we recurse
+#         else:
+#             if "attributes" in tree and tree["attributes"]:
+#                 return find_reference_attributes(tree["attributes"], path[:])
+#             if "children" in tree and tree["children"]:
+#                 return find_reference_attributes(tree["children"], path[:])
 
-    # If the current object is a list, we can repeat the same steps as above for each item
-    elif isinstance(tree, list) and len(tree) > 0:
-        for t in tree:
-            refs = find_reference_attributes(t, path[:])
+#     # If the current object is a list, we can repeat the same steps as above for each item
+#     elif isinstance(tree, list) and len(tree) > 0:
+#         for t in tree:
+#             refs = find_reference_attributes(t, path[:])
 
-            references.extend(refs)
+#             references.extend(refs)
 
-    return references
+#     return references

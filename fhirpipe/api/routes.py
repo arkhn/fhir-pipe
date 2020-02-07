@@ -10,7 +10,7 @@ api = Blueprint("api", __name__)
 
 default_params = {
     "mapping": None,
-    "sources": None,
+    "source": None,
     "resources": None,
     "labels": None,
     "reset_store": False,
@@ -31,17 +31,30 @@ def run():
     credentials = None
     connection_type = None
 
-    if "credential_id" in body:
+    if "credentialId" in body:
         try:
-            credentials = get_credentials(body["credential_id"])
+            credentials = get_credentials(body["credentialId"])
             connection_type = credentials["model"].lower()
+            # The structure expected is not exatly the same as the one provided by graphql query
+            credentials = {
+                "host": credentials["host"],
+                "port": credentials["port"],
+                "database": credentials["database"],
+                "user": credentials["login"],
+                "password": credentials["password"],
+            }
         except OperationOutcome as e:
             raise ValueError(f"Error while fetching credientials for DB: {e}.")
     else:
-        raise Exception("credential_id is required to run fhirpipe.")
+        raise Exception("credentialId is required to run fhirpipe.")
 
-    # Connect to DB and run
-    with get_connection(credentials, connection_type=connection_type) as connection:
-        fp_run(connection, **params)
+    try:
+        # Connect to DB and run
+        with get_connection(credentials, connection_type=connection_type) as connection:
+            fp_run(connection, **params)
+    except Exception as e:
+        # If something went wrong
+        # TODO is it the right way to send back error message?
+        return jsonify({"errors": str(e)})
 
     return jsonify(success=True)

@@ -26,7 +26,7 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
     """
     source_filter = (
         """source: {
-                name: { in: %s }
+                name: { equals: "%s" }
             }"""
         % selected_sources
         if selected_sources
@@ -44,14 +44,11 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
 
     return (
         """fragment entireColumn on Column {
-    id
     owner
     table
     column
     joins {
-        id
         tables {
-            id
             owner
             table
             column
@@ -60,7 +57,6 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
 }
 
 fragment entireInput on Input {
-    id
     sqlValue {
         ...entireColumn
     }
@@ -69,7 +65,6 @@ fragment entireInput on Input {
 }
 
 fragment a on Attribute {
-    id
     path
     mergingScript
     inputs {

@@ -3,7 +3,7 @@ import logging
 import numpy as np
 import multiprocessing as mp
 from functools import partial
-from collections import defaultdict
+# from collections import defaultdict
 
 from fhirpipe import set_global_config, setup_logging
 
@@ -14,7 +14,7 @@ from fhirpipe.extract.mapping import (
     get_primary_key,
     find_cols_joins_and_scripts,
     build_squash_rules,
-    find_reference_attributes,
+    # find_reference_attributes,
 )
 from fhirpipe.extract.sql import (
     build_sql_query,
@@ -26,7 +26,7 @@ from fhirpipe.transform.dataframe import squash_rows, apply_scripts
 from fhirpipe.transform.fhir import create_resource
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
-from fhirpipe.load.references import build_identifier_dict, bind_references
+# from fhirpipe.load.references import build_identifier_dict, bind_references
 
 
 def run(
@@ -62,7 +62,7 @@ def run(
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
-    reference_attributes = defaultdict(set)
+    # reference_attributes = defaultdict(set)
 
     for resource_mapping in resources:
         fhirType = resource_mapping["definition"]["type"]
@@ -75,17 +75,19 @@ def run(
         # Extract cols and joins
         cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_mapping)
 
+        # Add primary key column if it was not there
+        cols.add(primary_key_column)
+
         # Build the sql query
         sql_query = build_sql_query(cols, joins, primary_key_table)
         logging.info("sql query: %s", sql_query)
-        print(sql_query)
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, primary_key_table)
 
         # Get all the attributes that are references for future binding
-        for attr in find_reference_attributes(resource_mapping):
-            reference_attributes[fhirType].add(attr)
+        # for attr in find_reference_attributes(resource_mapping):
+        #     reference_attributes[fhirType].add(attr)
 
         # Run the sql query
         logging.info("Launching query...")
@@ -124,15 +126,15 @@ def run(
                 instances = create_resource(chunk, resource_mapping)
                 save_many(instances, bypass_validation)
 
-    identifier_dict = build_identifier_dict()
+    # identifier_dict = build_identifier_dict()
 
     # Now, we can bind the references
     # TODO I think we could find a more efficient way to bind references
     # using more advanced mongo features
-    if multiprocessing:
-        bind_references(reference_attributes, identifier_dict, pool)
-    else:
-        bind_references(reference_attributes, identifier_dict)
+    # if multiprocessing:
+    #     bind_references(reference_attributes, identifier_dict, pool)
+    # else:
+    #     bind_references(reference_attributes, identifier_dict)
 
     if multiprocessing:
         pool.close()
@@ -158,8 +160,9 @@ if __name__ == "__main__":
         run(
             connection=connection,
             mapping=args.mapping,
-            source=args.source,
+            sources=args.source,
             resources=args.resources,
+            labels=args.labels,
             reset_store=args.reset_store,
             chunksize=args.chunksize,
             bypass_validation=args.bypass_validation,
