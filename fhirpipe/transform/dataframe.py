@@ -72,11 +72,11 @@ def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
 
     for merging_script, cols_and_values in merging_scripts:
         script = scripts.get_script(merging_script)
-        for cols, statics in cols_and_values:
-            args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
-                *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
-            )
+        cols, statics = cols_and_values
+        args = [df[k] for k in cols] + statics
+        df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
+            *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
+        )
 
 
 def clean_and_log(val, script=None, id=None, col=None):

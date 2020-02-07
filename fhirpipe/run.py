@@ -32,7 +32,7 @@ from fhirpipe.load.fhirstore import get_fhirstore, save_many
 def run(
     connection,
     mapping,
-    sources,
+    source,
     resources,
     labels,
     reset_store,
@@ -48,7 +48,7 @@ def run(
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
         from_file=mapping,
-        selected_sources=sources,
+        selected_source=source,
         selected_resources=resources,
         selected_labels=labels,
     )
@@ -160,7 +160,7 @@ if __name__ == "__main__":
         run(
             connection=connection,
             mapping=args.mapping,
-            sources=args.source,
+            source=args.source,
             resources=args.resources,
             labels=args.labels,
             reset_store=args.reset_store,

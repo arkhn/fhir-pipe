@@ -91,6 +91,7 @@ def rec_bind_reference(fhir_object, identifier_dict, path):
 
             # If an instance was found, replace the provided
             # identifier with FHIR id found
+            # TODO do I also need to remove the logical reference?
             if fhirstore_id is not None:
                 fhir_object["reference"] = f"{ref_type}/{fhirstore_id}"
 

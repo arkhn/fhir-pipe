@@ -21,7 +21,7 @@ def cli_run():
         run(
             connection=connection,
             mapping=args.mapping,
-            sources=args.source,
+            source=args.source,
             resources=args.resources,
             labels=args.labels,
             reset_store=args.reset_store,

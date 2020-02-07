@@ -15,9 +15,7 @@ database["Patient"].insert_one(
         "gender": "female",
         "address": [{"city": "Paris", "country": "France"}],
         "identifier": [{"system": "system", "value": "0001"}],
-        "generalPractitioner": [
-            {"identifier": {"system": "HealthcareService", "value": "12345"}}
-        ],
+        "generalPractitioner": [{"identifier": {"value": "12345"}, "type": "HealthcareService"}],
     }
 )
 

@@ -11,7 +11,7 @@ from fhirpipe.utils import (
 
 
 def get_mapping(
-    from_file=None, selected_sources=None, selected_resources=None, selected_labels=None
+    from_file=None, selected_source=None, selected_resources=None, selected_labels=None
 ):
     """
     Get all available resources from a pyrog mapping.
@@ -23,14 +23,14 @@ def get_mapping(
         from_file: path to the static file to mock
             the pyrog API response.
     """
-    if selected_sources is None and from_file is None:
-        raise ValueError("You should provide selected_sources or from_file")
+    if selected_source is None and from_file is None:
+        raise ValueError("You should provide selected_source or from_file")
 
     if from_file:
         return get_mapping_from_file(from_file, selected_resources, selected_labels)
 
     else:
-        return get_mapping_from_graphql(selected_sources, selected_resources, selected_labels)
+        return get_mapping_from_graphql(selected_source, selected_resources, selected_labels)
 
 
 def get_mapping_from_file(path, selected_resources, selected_labels):
@@ -38,21 +38,21 @@ def get_mapping_from_file(path, selected_resources, selected_labels):
         path = os.path.join(os.getcwd(), path)
 
     with open(path) as json_file:
-        resources = json.load(json_file)
+        mapping = json.load(json_file)
 
-    resources[:] = [
+    resources = [
         r
-        for r in resources
-        if (selected_resources is None or r["fhirType"] in selected_resources)
+        for r in mapping["resources"]
+        if (selected_resources is None or r["definition"]["type"] in selected_resources)
         and (selected_labels is None or r["label"] in selected_labels)
     ]
 
     return resources
 
 
-def get_mapping_from_graphql(selected_sources, selected_resources, selected_labels):
+def get_mapping_from_graphql(selected_source, selected_resources, selected_labels):
     # Build the query
-    query = build_resources_query(selected_sources, selected_resources, selected_labels)
+    query = build_resources_query(selected_source, selected_resources, selected_labels)
 
     # Run it
     resources = run_graphql_query(query)
@@ -61,27 +61,27 @@ def get_mapping_from_graphql(selected_sources, selected_resources, selected_labe
         yield resource
 
 
-def get_primary_key(resource_structure):
+def get_primary_key(resource_mapping):
     """
     Return primary key table and column of the provided resource.
 
     args:
-        resource_structure: the object containing all the mapping rules
+        resource_mapping: the object containing all the mapping rules
 
     Return:
         A tuple with the table containing the primary key and the primary key column.
     """
-    if not resource_structure["primaryKeyTable"] or not resource_structure["primaryKeyColumn"]:
+    if not resource_mapping["primaryKeyTable"] or not resource_mapping["primaryKeyColumn"]:
         raise ValueError(
             "You need to provide a primary key table and column in the mapping for "
-            f"resource {resource_structure['fhirType']}."
+            f"resource {resource_mapping['definition']['type']}."
         )
     main_table = (
-        (f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}")
-        if resource_structure["primaryKeyOwner"]
-        else resource_structure["primaryKeyTable"]
+        (f"{resource_mapping['primaryKeyOwner']}.{resource_mapping['primaryKeyTable']}")
+        if resource_mapping["primaryKeyOwner"]
+        else resource_mapping["primaryKeyTable"]
     )
-    column = f"{main_table}.{resource_structure['primaryKeyColumn']}"
+    column = f"{main_table}.{resource_mapping['primaryKeyColumn']}"
     return main_table, column
 
 
@@ -115,7 +115,7 @@ def find_cols_joins_and_scripts(resource_mapping):
     all_merging_scripts = []
 
     for attribute in resource_mapping["attributes"]:
-        cols_merging = set()
+        cols_merging = []
         statics = []
         for input in attribute["inputs"]:
             if input["sqlValue"]:
@@ -124,8 +124,10 @@ def find_cols_joins_and_scripts(resource_mapping):
                 all_cols.add(column_name)
 
                 if input["script"]:
-                    col_to_merge = new_col_name(input["script"], new_col_name)
-                cols_merging.add(col_to_merge)
+                    all_cleaning_scripts[input["script"]].append(column_name)
+                    column_name = new_col_name(input["script"], column_name)
+
+                cols_merging.append(column_name)
 
                 for join in sql["joins"]:
                     tables = join["tables"]
@@ -136,9 +138,6 @@ def find_cols_joins_and_scripts(resource_mapping):
                         tables[1]["table"], tables[1]["column"], tables[1]["owner"],
                     )
                     all_joins.add((source_col, target_col))
-
-                if input["script"]:
-                    all_cleaning_scripts[input["script"]].append(column_name)
 
             elif input["staticValue"]:
                 statics.append(input["staticValue"])

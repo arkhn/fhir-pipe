@@ -18,7 +18,7 @@ query credential($credentialId: ID!) {
 """
 
 
-def build_resources_query(selected_sources=None, selected_resources=None, selected_labels=None):
+def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
     """ Builds a graphql query fetching all the resources needed.
 
     Note that the .replace("'", '"') is needed because the graphql needs to have
@@ -28,8 +28,8 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
         """source: {
                 name: { equals: "%s" }
             }"""
-        % selected_sources
-        if selected_sources
+        % selected_source
+        if selected_source
         else ""
     )
     resource_filter = (

@@ -50,7 +50,7 @@ def test_apply_scripts(get_script):
         },
     )
     cleaning = {"clean1": ["NAME"], "clean2": ["NAME", "ADDRESS"]}
-    merging = {"merge": [(["ADDRESS", "ID"], ["val"])]}
+    merging = [("merge", (["ADDRESS", "ID"], ["val"]))]
     primary_key_column = "ID"
 
     transform.apply_scripts(df, cleaning, merging, primary_key_column)

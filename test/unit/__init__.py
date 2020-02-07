@@ -9,8 +9,8 @@ def exported_source():
 
 
 @fixture(scope="session")
-def patient_pruned():
-    with open("test/fixtures/patient_pruned.json", "r") as fp:
+def patient_mapping():
+    with open("test/fixtures/patient_mapping.json", "r") as fp:
         return json.load(fp)
 
 
