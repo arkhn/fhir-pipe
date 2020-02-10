@@ -1,5 +1,4 @@
 from unittest import TestCase
-from pytest import fixture
 
 import fhirpipe
 import fhirpipe.run as run
@@ -7,59 +6,59 @@ from fhirpipe.load.fhirstore import get_mongo_client
 from fhirpipe.extract.sql import get_connection
 
 
-@fixture(scope="module")
-def connection():
-    fhirpipe.set_global_config("test/integration/config-test.yml")
-    return get_connection()
+fhirpipe.set_global_config("test/integration/config-test.yml")
 
 
 ### Run from mapping file ###
-def test_run_from_file(connection):
-    run.run(
-        connection=connection,
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
-        reset_store=True,
-        chunksize=None,
-        bypass_validation=True,
-        multiprocessing=False,
-    )
+def test_run_from_file():
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping="test/fixtures/mimic_mapping.json",
+            source=None,
+            resources=None,
+            labels=None,
+            reset_store=True,
+            chunksize=None,
+            bypass_validation=True,
+            multiprocessing=False,
+        )
     assert_result_as_expected()
 
 
 """
 ### Run with graphQL queries ###
-def test_run_from_gql(connection):
-    run.run(
-        connection=connection,
-        mapping=None,
-        source="mimic",
-        resources=None,
-        labels=None,
-        reset_store=True,
-        chunksize=None,
-        bypass_validation=True,
-        multiprocessing=False,
-    )
+def test_run_from_gql():
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping=None,
+            source="mimic",
+            resources=None,
+            labels=None,
+            reset_store=True,
+            chunksize=None,
+            bypass_validation=True,
+            multiprocessing=False,
+        )
     assert_result_as_expected()
 """
 
 
 ### Run for a list of resources ###
-def test_run_resource(connection):
-    run.run(
-        connection=connection,
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=["Patient", "not_existing_resource"],
-        labels=["pat_label"],
-        reset_store=True,
-        chunksize=None,
-        bypass_validation=True,
-        multiprocessing=False,
-    )
+def test_run_resource():
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping="test/fixtures/mimic_mapping.json",
+            source=None,
+            resources=["Patient", "not_existing_resource"],
+            labels=["pat_label"],
+            reset_store=True,
+            chunksize=None,
+            bypass_validation=True,
+            multiprocessing=False,
+        )
 
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
@@ -78,63 +77,67 @@ def test_run_resource(connection):
 # When using batch processing, df can be cut at any place and some rows that should
 # be squashed can be in different chunks
 """
-def test_run_batch(connection):
-    run.run(
-        connection=connection,
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
-        reset_store=True,
-        chunksize=10,
-        bypass_validation=True,
-        multiprocessing=False,
-    )
+def test_run_batch():
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping="test/fixtures/mimic_mapping.json",
+            source=None,
+            resources=None,
+            labels=None,
+            reset_store=True,
+            chunksize=10,
+            bypass_validation=True,
+            multiprocessing=False,
+        )
     assert_result_as_expected()
 """
 
 
-def test_run_multiprocessing(connection):
-    run.run(
-        connection=connection,
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
-        reset_store=True,
-        chunksize=None,
-        bypass_validation=True,
-        multiprocessing=True,
-    )
+def test_run_multiprocessing():
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping="test/fixtures/mimic_mapping.json",
+            source=None,
+            resources=None,
+            labels=None,
+            reset_store=True,
+            chunksize=None,
+            bypass_validation=True,
+            multiprocessing=True,
+        )
     assert_result_as_expected()
 
 
 ### Run without resetting the mongo DB ###
-def test_run_no_reset(connection):
-    run.run(
-        connection=connection,
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
-        reset_store=True,
-        chunksize=None,
-        bypass_validation=True,
-        multiprocessing=False,
-    )
+def test_run_no_reset():
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping="test/fixtures/mimic_mapping.json",
+            source=None,
+            resources=None,
+            labels=None,
+            reset_store=True,
+            chunksize=None,
+            bypass_validation=True,
+            multiprocessing=False,
+        )
     assert_result_as_expected()
 
-    run.run(
-        connection=connection,
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
-        reset_store=False,
-        chunksize=None,
-        bypass_validation=True,
-        multiprocessing=False,
-    )
+    with get_connection() as c:
+        run.run(
+            connection=c,
+            mapping="test/fixtures/mimic_mapping.json",
+            source=None,
+            resources=None,
+            labels=None,
+            reset_store=False,
+            chunksize=None,
+            bypass_validation=True,
+            multiprocessing=False,
+        )
     assert_result_as_expected(patients_count=200, services_count=326)
 
 

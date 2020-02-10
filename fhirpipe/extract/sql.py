@@ -1,6 +1,7 @@
 import psycopg2  # noqa
 import cx_Oracle  # noqa
 import pandas as pd
+from contextlib import contextmanager
 
 import fhirpipe
 from fhirpipe.utils import get_table_name
@@ -19,6 +20,7 @@ def build_sql_query(columns, joins, table_name):
     return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}"
 
 
+@contextmanager
 def get_connection(credentials=None, connection_type: str = None):
     """
     Return a sql connexion depending on the configuration provided in
@@ -36,6 +38,11 @@ def get_connection(credentials=None, connection_type: str = None):
 
     if connection_type is None:
         connection_type = sql_config["default"]
+    elif connection_type not in ["postgres", "oracle"]:
+        raise ValueError(
+            'Config specifies a wrong database type. '
+            'The only types supported are "postgres" and "oracle".'
+        )
 
     if credentials is None:
         args = sql_config[connection_type]["args"]
@@ -46,14 +53,14 @@ def get_connection(credentials=None, connection_type: str = None):
         kwargs = credentials
 
     if connection_type == "postgres":
-        return psycopg2.connect(*args, **kwargs)
+        connection = psycopg2.connect(*args, **kwargs)
     elif connection_type == "oracle":
-        return cx_Oracle.connect(*args, **kwargs)
-    else:
-        raise ValueError(
-            'Config specifies a wrong database type. \
-            The only types supported are "postgres" and "oracle".'
-        )
+        connection = cx_Oracle.connect(*args, **kwargs)
+
+    try:
+        yield connection
+    finally:
+        connection.close()
 
 
 def run_sql_query(connection, query, chunksize: int = None):

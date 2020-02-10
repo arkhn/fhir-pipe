@@ -17,4 +17,15 @@ def patient_mapping():
 mock_config = {
     "fhirstore": {"database": "fhirstore"},
     "graphql": {"token": "gql_token", "server": "gql_server"},
+    "sql": {
+        "default": "postgres",
+        "postgres": {
+            "args": ["postgres_arg1", "postgres_arg2"],
+            "kwargs": {"kwarg1": "postgres_kwarg1", "kwarg2": "postgres_kwarg2"},
+        },
+        "oracle": {
+            "args": ["oracle_arg1", "oracle_arg2"],
+            "kwargs": {"kwarg1": "oracle_kwarg1", "kwarg2": "oracle_kwarg2"},
+        },
+    },
 }
