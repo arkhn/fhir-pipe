@@ -26,6 +26,8 @@ def create_resource(chunk, resource_mapping):
 
 
 def create_instance(row, mapping):
+    """ Function used to create a single FHIR instance.
+    """
     # Modify the data structure so that it is easier to use
     path_attributes_map = {attr["path"]: attr for attr in mapping["attributes"]}
 
@@ -43,6 +45,9 @@ def create_instance(row, mapping):
 
 
 def build_fhir_object(row, path_attributes_map, index=None):
+    """ Function that actually builds a nested object from the dataframe row and the mapping.
+    Note that it can be used to build only a subpart of a fhir instance.
+    """
     fhir_object = recursive_defaultdict()
     arrays_done = set()
 
@@ -54,27 +59,28 @@ def build_fhir_object(row, path_attributes_map, index=None):
 
             if position_ind is None:
                 val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
-                if isinstance(val, tuple):
-                    if len(val) == 1:
-                        insert_in_fhir_object(fhir_object, path, val[0])
-                    elif index is not None:
-                        insert_in_fhir_object(fhir_object, path, val[index])
-                    else:
-                        insert_in_fhir_object(fhir_object, path, val)
+                if isinstance(val, tuple) and len(val) == 1:
+                    insert_in_fhir_object(fhir_object, path, val[0])
+                elif isinstance(val, tuple) and index is not None:
+                    insert_in_fhir_object(fhir_object, path, val[index])
                 else:
                     insert_in_fhir_object(fhir_object, path, val)
 
             else:
                 # Handle array case
                 array_path = ".".join(split_path[: position_ind + 1])
+                # If this path was already processed before, skip it
                 if array_path in arrays_done:
                     continue
+                # We retrieve all the attributes that start with the array path (with index)
                 attributes_in_array = {
                     remove_root_path(path, position_ind + 1): attr
                     for path, attr in path_attributes_map.items()
                     if path.startswith(array_path)
                 }
+                # Build the array of sub fhir object
                 array = handle_array_attributes(attributes_in_array, row)
+                # Insert them a the right position
                 if array:
                     insert_in_fhir_object(fhir_object, ".".join(split_path[: position_ind]), array)
                 arrays_done.add(array_path)
@@ -127,6 +133,7 @@ def handle_array_attributes(attributes_in_array, row):
         assert length == 1 or len(val) == length, "mismatch in array lengths"
         length = len(val)
 
+    # Now we can build the array
     array = []
     for index in range(length):
         element = build_fhir_object(row, attributes_in_array, index=index)
@@ -134,27 +141,6 @@ def handle_array_attributes(attributes_in_array, row):
             array.append(element)
 
     return array
-
-
-def clean_fhir_object(fhir_obj):
-    """ Remove duplicate list elements from fhir object
-    """
-    if isinstance(fhir_obj, dict):
-        for key in fhir_obj:
-            fhir_obj[key] = clean_fhir_object(fhir_obj[key])
-        return fhir_obj
-
-    elif isinstance(fhir_obj, list):
-        to_rm = []
-        for i in range(len(fhir_obj)):
-            for j in range(i + 1, len(fhir_obj)):
-                if fhir_obj[i] == fhir_obj[j]:
-                    to_rm.append(i)
-                    break
-        return list(np.delete(fhir_obj, to_rm))
-
-    else:
-        return fhir_obj
 
 
 def insert_in_fhir_object(fhir_object, path, value):
@@ -179,6 +165,27 @@ def insert_in_fhir_object(fhir_object, path, value):
         cur_location[path[-1]].extend(val)
     else:
         cur_location[path[-1]] = val
+
+
+def clean_fhir_object(fhir_obj):
+    """ Remove duplicate list elements from fhir object
+    """
+    if isinstance(fhir_obj, dict):
+        for key in fhir_obj:
+            fhir_obj[key] = clean_fhir_object(fhir_obj[key])
+        return fhir_obj
+
+    elif isinstance(fhir_obj, list):
+        to_rm = []
+        for i in range(len(fhir_obj)):
+            for j in range(i + 1, len(fhir_obj)):
+                if fhir_obj[i] == fhir_obj[j]:
+                    to_rm.append(i)
+                    break
+        return list(np.delete(fhir_obj, to_rm))
+
+    else:
+        return fhir_obj
 
 
 def get_position_first_index(path):
