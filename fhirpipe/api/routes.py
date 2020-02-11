@@ -35,7 +35,8 @@ def run():
         try:
             credentials = get_credentials(body["credentialId"])
             connection_type = credentials["model"].lower()
-            # The structure expected is not exatly the same as the one provided by graphql query
+            # The structure expected is not exactly the same as the one
+            # provided by the graphql query
             credentials = {
                 "host": credentials["host"],
                 "port": credentials["port"],
@@ -44,9 +45,9 @@ def run():
                 "password": credentials["password"],
             }
         except OperationOutcome as e:
-            raise ValueError(f"Error while fetching credientials for DB: {e}.")
+            raise OperationOutcome(f"Error while fetching credientials for DB: {e}.")
     else:
-        raise Exception("credentialId is required to run fhirpipe.")
+        raise OperationOutcome("credentialId is required to run fhirpipe.")
 
     try:
         # Connect to DB and run
@@ -54,7 +55,11 @@ def run():
             fp_run(connection, **params)
     except Exception as e:
         # If something went wrong
-        # TODO is it the right way to send back error message?
-        return jsonify({"errors": str(e)})
+        raise OperationOutcome(e)
 
     return jsonify(success=True)
+
+
+@api.errorhandler(OperationOutcome)
+def handle_bad_request(e):
+    return str(e), 400

@@ -3,7 +3,6 @@ import logging
 import numpy as np
 import multiprocessing as mp
 from functools import partial
-# from collections import defaultdict
 
 from fhirpipe import set_global_config, setup_logging
 
@@ -14,7 +13,6 @@ from fhirpipe.extract.mapping import (
     get_primary_key,
     find_cols_joins_and_scripts,
     build_squash_rules,
-    # find_reference_attributes,
 )
 from fhirpipe.extract.sql import (
     build_sql_query,
@@ -26,7 +24,6 @@ from fhirpipe.transform.dataframe import squash_rows, apply_scripts
 from fhirpipe.transform.fhir import create_resource
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
-# from fhirpipe.load.references import build_identifier_dict, bind_references
 
 
 def run(
@@ -62,8 +59,6 @@ def run(
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
-    # reference_attributes = defaultdict(set)
-
     for resource_mapping in resources:
         fhirType = resource_mapping["definition"]["type"]
 
@@ -84,10 +79,6 @@ def run(
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, primary_key_table)
-
-        # Get all the attributes that are references for future binding
-        # for attr in find_reference_attributes(resource_mapping):
-        #     reference_attributes[fhirType].add(attr)
 
         # Run the sql query
         logging.info("Launching query...")
@@ -128,6 +119,9 @@ def run(
 
     # identifier_dict = build_identifier_dict()
 
+    # TODO we cannot bind references for the moment because we don't have any information about
+    # the type of the attributes in the mapping. When this is fixed, we can uncomment what's below
+    # (and add something to find the references in the mapping).
     # Now, we can bind the references
     # TODO I think we could find a more efficient way to bind references
     # using more advanced mongo features

@@ -208,6 +208,7 @@ def test_build_squash_rules():
     assert actual == ["PATIENTS", [["ADMISSIONS", []]]]
 
 
+# TODO uncomment and reimplement test when referencing enabled
 # def test_find_reference_attributes(patient_mapping):
 #     # TODO this test is a bit light
 #     fhir_resource = patient_mapping

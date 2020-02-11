@@ -219,36 +219,3 @@ def build_join_graph(joins):
 def dict_concat(dict_1, dict_2):
     for key, val in dict_2.items():
         dict_1[key] += val
-
-
-# def find_reference_attributes(tree, path=[]):
-#     """ Function to find attributes that are reference.
-#     We need this to bind them after having loaded the fhir objects.
-#     """
-#     references = []
-#     if isinstance(tree, dict):
-
-#         if "name" in tree:
-#             if not path or not path[-1] == tree["name"]:
-#                 path.append(tree["name"])
-
-#         # If attribute is a reference, we add it to the result list
-#         if tree["fhirType"] == "Reference":
-#             references.append(tuple(path))
-
-#         # I don't think we can have nested references so
-#         # if we are not in a leaf, we recurse
-#         else:
-#             if "attributes" in tree and tree["attributes"]:
-#                 return find_reference_attributes(tree["attributes"], path[:])
-#             if "children" in tree and tree["children"]:
-#                 return find_reference_attributes(tree["children"], path[:])
-
-#     # If the current object is a list, we can repeat the same steps as above for each item
-#     elif isinstance(tree, list) and len(tree) > 0:
-#         for t in tree:
-#             refs = find_reference_attributes(t, path[:])
-
-#             references.extend(refs)
-
-#     return references
