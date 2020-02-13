@@ -1,3 +1,4 @@
+import os
 from flask import Flask
 
 from fhirpipe import set_global_config, setup_logging
@@ -8,7 +9,9 @@ def create_app():
     app = Flask(__name__)
     app.register_blueprint(api)
 
-    set_global_config("config.yml")
+    config_file = os.getenv("CONFIG_PATH", "config.yml")
+    print(f"Using config from {config_file}...")
+    set_global_config(config_file)
     setup_logging()
 
     return app
