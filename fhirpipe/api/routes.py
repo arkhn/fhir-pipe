@@ -4,9 +4,12 @@ from fhirpipe.errors import OperationOutcome
 from fhirpipe.run import run as fp_run
 from fhirpipe.extract.graphql import get_credentials
 from fhirpipe.extract.sql import get_connection
+from flask_cors import CORS
 
 
 api = Blueprint("api", __name__)
+# Enable CORS from all origins '*'.
+CORS(api)
 
 default_params = {
     "mapping": None,
