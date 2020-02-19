@@ -74,7 +74,7 @@ def get_primary_key(resource_mapping):
     if not resource_mapping["primaryKeyTable"] or not resource_mapping["primaryKeyColumn"]:
         raise ValueError(
             "You need to provide a primary key table and column in the mapping for "
-            f"resource {resource_mapping['definition']['type']}."
+            f"resource {resource_mapping['definitionId']}."
         )
     main_table = (
         (f"{resource_mapping['primaryKeyOwner']}.{resource_mapping['primaryKeyTable']}")

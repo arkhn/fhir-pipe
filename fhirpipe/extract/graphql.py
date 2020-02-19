@@ -33,9 +33,7 @@ def build_resources_query(selected_source=None, selected_resources=None, selecte
         else ""
     )
     resource_filter = (
-        """definition: {
-                type: { in: %s }
-            }"""
+        """definitionId: { in: %s }"""
         % selected_resources
         if selected_resources
         else ""
@@ -85,10 +83,7 @@ query {
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
-        definition {
-            id
-            type
-        }
+        definitionId
         attributes {
             ...a
         }

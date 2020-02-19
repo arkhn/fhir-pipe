@@ -20,9 +20,7 @@ def test_build_resources_query():
     query = gql.build_resources_query(selected_resources=["Patient", "Observation"])
 
     assert (
-        """definition: {
-                type: { in: ["Patient", "Observation"] }
-            }"""
+        """definitionId: { in: ["Patient", "Observation"] }"""
         in query
     )
 
@@ -42,9 +40,7 @@ def test_build_resources_query():
         """source: {
                 name: { equals: "mimic" }
             }
-            definition: {
-                type: { in: ["Patient", "Observation"] }
-            }
+            definitionId: { in: ["Patient", "Observation"] }
             label: { in: ["label"] }"""
         in query
     )

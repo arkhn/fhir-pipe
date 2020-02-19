@@ -164,7 +164,7 @@ def test_get_primary_key():
         "primaryKeyOwner": "",
         "primaryKeyTable": "",
         "primaryKeyColumn": "col",
-        "definition": {"type": "fhirtype"},
+        "definitionId": "fhirtype",
     }
     with pytest.raises(
         ValueError, match="You need to provide a primary key table and column in the mapping"

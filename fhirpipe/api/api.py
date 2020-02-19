@@ -6,13 +6,13 @@ from fhirpipe.api.routes import api
 
 
 def create_app():
+    set_global_config("config.yml")
+    setup_logging()
+
     app = Flask(__name__)
     app.register_blueprint(api)
 
     CORS(app)
-
-    set_global_config("config.yml")
-    setup_logging()
 
     return app
 
