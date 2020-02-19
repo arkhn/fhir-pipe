@@ -16,11 +16,12 @@ def test_run_from_file():
             connection=c,
             mapping="test/fixtures/mimic_mapping.json",
             source=None,
-            resources=None,
+            # resources=None,
+            resources=["MedicationRequest"],
             labels=None,
             reset_store=True,
             chunksize=None,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=False,
         )
     assert_result_as_expected()
@@ -38,7 +39,7 @@ def test_run_from_gql():
             labels=None,
             reset_store=True,
             chunksize=None,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=False,
         )
     assert_result_as_expected()
@@ -56,7 +57,7 @@ def test_run_resource():
             labels=["pat_label"],
             reset_store=True,
             chunksize=None,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=False,
         )
 
@@ -65,12 +66,7 @@ def test_run_resource():
     assert mongo_client.list_collection_names() == ["Patient"]
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
-    sample_simple = mongo_client["Patient"].find_one(
-        {"identifier.0.value": id_sample_patient_simple}
-    )
-    sample_list = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_list})
-
-    assert_sample_comparison(sample_simple, sample_list, mongo_client, referencing_done=False)
+    assert_sample_patient_comparison(mongo_client)
 
 
 ### Run by batch ###
@@ -87,7 +83,7 @@ def test_run_batch():
             labels=None,
             reset_store=True,
             chunksize=10,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=False,
         )
     assert_result_as_expected()
@@ -104,7 +100,7 @@ def test_run_multiprocessing():
             labels=None,
             reset_store=True,
             chunksize=None,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=True,
         )
     assert_result_as_expected()
@@ -121,12 +117,9 @@ def test_run_no_reset():
             labels=None,
             reset_store=True,
             chunksize=None,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=False,
         )
-    assert_result_as_expected()
-
-    with get_connection() as c:
         run.run(
             connection=c,
             mapping="test/fixtures/mimic_mapping.json",
@@ -135,95 +128,118 @@ def test_run_no_reset():
             labels=None,
             reset_store=False,
             chunksize=None,
-            bypass_validation=True,
+            bypass_validation=False,
             multiprocessing=False,
         )
-    assert_result_as_expected(patients_count=200, services_count=326)
+
+    assert_result_as_expected(
+        patients_count=2 * expected_patients_count,
+        episode_of_care_count=2 * expected_episode_of_care_count,
+        medication_request_count=2 * expected_med_req_count,
+        diagnostic_report_count=2 * expected_diagnostic_report_count,
+        practitioner_count=2 * expected_practitioner_count,
+    )
 
 
 ### Helper functions and variables for assertions ###
-id_sample_patient_simple = "40655"
-id_sample_patient_list = "10088"
 expected_patients_count = 100
-expected_services_count = 163
+expected_episode_of_care_count = 265
+expected_med_req_count = 10398
+expected_diagnostic_report_count = 1761
+expected_practitioner_count = 7567
+id_sample_patient = "30831"
+id_sample_med_req = "32600"
 
 
 def assert_result_as_expected(
-    patients_count=expected_patients_count, services_count=expected_services_count
+    patients_count=expected_patients_count,
+    episode_of_care_count=expected_episode_of_care_count,
+    medication_request_count=expected_med_req_count,
+    diagnostic_report_count=expected_diagnostic_report_count,
+    practitioner_count=expected_practitioner_count,
 ):
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
     TestCase().assertCountEqual(
-        mongo_client.list_collection_names(), ["Patient", "HealthcareService"]
+        mongo_client.list_collection_names(),
+        ["Patient", "EpisodeOfCare", "MedicationRequest", "DiagnosticReport", "Practitioner"],
     )
-    assert_document_counts(mongo_client, patients_count, services_count)
-
-    sample_simple = mongo_client["Patient"].find_one(
-        {"identifier.0.value": id_sample_patient_simple}
+    assert_document_counts(
+        mongo_client,
+        patients_count,
+        episode_of_care_count,
+        medication_request_count,
+        diagnostic_report_count,
+        practitioner_count,
     )
-    sample_list = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient_list})
 
-    assert_sample_comparison(sample_simple, sample_list, mongo_client)
+    assert_sample_patient_comparison(mongo_client)
+    assert_sample_med_req_comparison(mongo_client)
 
 
 def assert_document_counts(
-    mongo_client, patients_count=expected_patients_count, services_count=expected_services_count,
+    mongo_client,
+    patients_count=expected_patients_count,
+    episode_of_care_count=expected_episode_of_care_count,
+    medication_request_count=expected_med_req_count,
+    diagnostic_report_count=expected_diagnostic_report_count,
+    practitioner_count=expected_practitioner_count,
 ):
     assert mongo_client["Patient"].count_documents({}) == patients_count
-    assert mongo_client["HealthcareService"].count_documents({}) == services_count
+    assert mongo_client["EpisodeOfCare"].count_documents({}) == episode_of_care_count
+    assert mongo_client["MedicationRequest"].count_documents({}) == medication_request_count
+    assert mongo_client["DiagnosticReport"].count_documents({}) == diagnostic_report_count
+    assert mongo_client["Practitioner"].count_documents({}) == practitioner_count
 
 
-def assert_sample_comparison(sample_simple, sample_list, mongo_client, referencing_done=False):
-    vals_list = ["15067", "15068", "15069", "15070"]
-    if referencing_done:
-        ref_simple = mongo_client["HealthcareService"].find_one(
-            {"identifier": {"$elemMatch": {"value": "48902"}}}, ["id"]
-        )
-        refs_list = [
-            mongo_client["HealthcareService"].find_one(
-                {"identifier": {"$elemMatch": {"value": val}}}, ["id"]
-            )
-            for val in vals_list
-        ]
+def assert_sample_patient_comparison(mongo_client):
+    sample_patient = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
-    expected_simple = {
-        "_id": sample_simple["_id"],
-        "id": sample_simple["id"],
+    assert sample_patient == {
+        "_id": sample_patient["_id"],
+        "id": sample_patient["id"],
         "resourceType": "Patient",
-        "language": {"coding": [{"code": "ENGL"}]},
-        "identifier": sample_simple["identifier"],
+        "identifier": [{"value": "30831"}],
         "gender": "female",
-        "birthDate": "1844-07-18",
-        "address": {"city": "Paris", "country": "France"},
-        "generalPractitioner": [{"identifier": {"value": "48902"}, "type": "HealthcareService"}],
+        "maritalStatus": {"coding": [{"code": "U"}]},
+        "birthDate": "2063-07-05",
+        "deceasedBoolean": True,
+        "deceasedDateTime": "2130-11-03",
+        "generalPractitioner": [{"type": "/Practitioner/"}],
     }
-    if referencing_done:
-        expected_simple["generalPractitioner"][0]["reference"] = ref_simple["id"]
-    assert sample_simple == expected_simple
 
-    assert sample_list == {
-        "_id": sample_list["_id"],
-        "id": sample_list["id"],
-        "resourceType": "Patient",
-        "identifier": sample_list["identifier"],
-        "gender": "male",
-        "birthDate": "2029-07-09",
-        "address": {"city": "Paris", "country": "France"},
-        "generalPractitioner": sample_list["generalPractitioner"],
+
+def assert_sample_med_req_comparison(mongo_client):
+    sample_med_req = mongo_client["MedicationRequest"].find_one(
+        {"identifier.0.value": id_sample_med_req}
+    )
+
+    assert sample_med_req == {
+        "_id": sample_med_req["_id"],
+        "id": sample_med_req["id"],
+        "resourceType": "MedicationRequest",
+        "identifier": [{"value": "32600"}],
+        "subject": {"identifier": {"value": "42458"}, "type": "/Patient/"},
+        "medicationCodeableConcept": {
+            "coding": [
+                {
+                    "display": "Pneumococcal Vac Polyvalent",
+                    "code": "6494300",
+                    "system": "http://hl7.org/fhir/sid/ndc",
+                }
+            ],
+            "text": "Pneumococcal Vac Polyvalent",
+        },
+        "status": "unknown",
+        "intent": "order",
+        "dosageInstruction": [{"route": {"coding": [{"code": "IM"}]}}],
+        "dispenseRequest": {
+            "validityPeriod": {"start": "2146-07-21", "end": "2146-07-22"},
+            "quantity": {
+                "value": 0.5,
+                "unit": "mL",
+                "code": "mL",
+                "system": "https://unitsofmeasure.org/",
+            },
+        },
     }
-    if referencing_done:
-        TestCase().assertCountEqual(
-            sample_list["generalPractitioner"],
-            [
-                {"identifier": {"value": val}, "type": "HealthcareService", "reference": ref}
-                for val, ref in zip(vals_list, refs_list)
-            ],
-        )
-    else:
-        TestCase().assertCountEqual(
-            sample_list["generalPractitioner"],
-            [
-                {"identifier": {"value": val}, "type": "HealthcareService"}
-                for val in vals_list
-            ],
-        )

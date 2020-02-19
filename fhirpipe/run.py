@@ -60,7 +60,7 @@ def run(
         pool = mp.Pool(n_workers)
 
     for resource_mapping in resources:
-        fhirType = resource_mapping["definition"]["type"]
+        fhirType = resource_mapping["definitionId"]
 
         logging.info("Running for resource: %s", fhirType)
 

@@ -51,8 +51,7 @@ def test_get_mapping_from_file(exported_source):
             "path", selected_resources=["Patient"], selected_labels=None
         )
 
-    assert [r["definition"]["type"] for r in resources] == ["Patient"]
-    print(resources[0].keys())
+    assert [r["definitionId"] for r in resources] == ["Patient"]
     TestCase().assertCountEqual(
         resources[0].keys(),
         [
@@ -63,7 +62,7 @@ def test_get_mapping_from_file(exported_source):
             "primaryKeyColumn",
             "updatedAt",
             "createdAt",
-            "definition",
+            "definitionId",
             "attributes",
         ],
     )
@@ -74,7 +73,17 @@ def test_get_mapping_from_file(exported_source):
             "path", selected_resources=None, selected_labels=None
         )
 
-    assert [r["definition"]["type"] for r in resources] == ["Patient", "HealthcareService"]
+    TestCase().assertCountEqual(
+        [r["definitionId"] for r in resources],
+        [
+            "Patient",
+            "Practitioner",
+            "EpisodeOfCare",
+            "EpisodeOfCare",
+            "DiagnosticReport",
+            "MedicationRequest",
+        ],
+    )
     TestCase().assertCountEqual(
         resources[0].keys(),
         [
@@ -85,7 +94,7 @@ def test_get_mapping_from_file(exported_source):
             "primaryKeyColumn",
             "updatedAt",
             "createdAt",
-            "definition",
+            "definitionId",
             "attributes",
         ],
     )
@@ -93,14 +102,14 @@ def test_get_mapping_from_file(exported_source):
     # With selected labels
     with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
         resources = mapping.get_mapping_from_file(
-            "path", selected_resources=["Patient"], selected_labels=["wrong_label"]
+            "path", selected_resources=["EpisodeOfCare"], selected_labels=["wrong_label"]
         )
 
     assert resources == []
 
     with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
         resources = mapping.get_mapping_from_file(
-            "path", selected_resources=["Patient"], selected_labels=["pat_label"]
+            "path", selected_resources=["EpisodeOfCare"], selected_labels=["admissions"]
         )
 
     assert len(resources) == 1
@@ -169,29 +178,21 @@ def test_find_cols_joins_and_scripts(patient_mapping):
     cols, joins, cleaning, merging = mapping.find_cols_joins_and_scripts(fhir_resource)
 
     assert cols == {
-        "PATIENTS.SUBJECT_ID",
-        "PATIENTS.ROW_ID",
-        "PATIENTS.DOB",
         "PATIENTS.GENDER",
-        "ADMISSIONS.LANGUAGE",
-        "ADMISSIONS.HADM_ID",
-        "SERVICES.ROW_ID",
+        "PATIENTS.DOB",
+        "admissions.marital_status",
+        "patients.row_id",
+        "admissions.hospital_expire_flag",
+        "patients.dod",
     }
-    assert joins == {
-        ("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID"),
-        ("PATIENTS.SUBJECT_ID", "SERVICES.SUBJECT_ID"),
-    }
+    assert joins == {("patients.subject_id", "admissions.subject_id")}
     assert cleaning == {
-        "clean_date": ["PATIENTS.DOB"],
         "map_gender": ["PATIENTS.GENDER"],
-        "clean_phone": ["PATIENTS.ROW_ID"],
+        "clean_date": ["PATIENTS.DOB", "patients.dod"],
+        "map_marital_status": ["admissions.marital_status"],
+        "binary_to_bool_1": ["admissions.hospital_expire_flag"],
     }
-    assert merging == [
-        (
-            "select_first_not_empty",
-            (["PATIENTS.SUBJECT_ID", "clean_phone_PATIENTS.ROW_ID"], ["dummy"],),
-        )
-    ]
+    assert merging == []
 
 
 def test_build_squash_rules():

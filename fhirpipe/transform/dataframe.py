@@ -55,10 +55,20 @@ def squash_rows(df, squash_rules, parent_cols=[]):
         df.groupby(pivot_cols, as_index=False)
         .apply(lambda x: x.drop_duplicates())
         .groupby(pivot_cols, as_index=False)
-        .agg(tuple)
+        .agg(flat_tuple_agg)
     )
 
     return df
+
+
+def flat_tuple_agg(values):
+    res = ()
+    for _, val in values.iteritems():
+        if isinstance(val, tuple):
+            res += val
+        else:
+            res += (val, )
+    return res
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):

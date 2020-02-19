@@ -43,7 +43,7 @@ def get_mapping_from_file(path, selected_resources, selected_labels):
     resources = [
         r
         for r in mapping["resources"]
-        if (selected_resources is None or r["definition"]["type"] in selected_resources)
+        if (selected_resources is None or r["definitionId"] in selected_resources)
         and (selected_labels is None or r["label"] in selected_labels)
     ]
 

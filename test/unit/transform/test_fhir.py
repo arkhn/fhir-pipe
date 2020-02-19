@@ -8,25 +8,26 @@ from test.unit import patient_mapping
 
 def test_create_instance(patient_mapping):
     row = {
-        "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
+        "map_marital_status_admissions.marital_status": "D",
         "map_gender_PATIENTS.GENDER": "male",
-        "clean_date_PATIENTS.DOB": "2012-12-12",
-        "ADMISSIONS.LANGUAGE": "ENGL",
-        "ADMISSIONS.HADM_ID": "111",
-        "SERVICES.ROW_ID": "2345",
+        "clean_date_PATIENTS.DOB": "2000-10-10",
+        "patients.row_id": "123",
+        "binary_to_bool_1_admissions.hospital_expire_flag": "true",
+        "clean_date_patients.dod": "2100-01-01",
     }
     resource_structure = patient_mapping
     actual = transform.create_instance(row, resource_structure)
 
     assert actual == {
         "id": actual["id"],
-        "identifier": [{"value": "100092"}, {"value": "111"}],
+        "identifier": [{"value": "123"}],
         "resourceType": "Patient",
-        "language": {"coding": [{"code": "ENGL"}]},
         "gender": "male",
-        "birthDate": "2012-12-12",
-        "address": {"city": "Paris", "country": "France"},
-        "generalPractitioner": [{"identifier": {"value": "2345"}, "type": "HealthcareService"}],
+        "birthDate": "2000-10-10",
+        "deceasedBoolean": "true",
+        "deceasedDateTime": "2100-01-01",
+        "maritalStatus": {"coding": [{"code": "D"}]},
+        "generalPractitioner": [{"type": "/Practitioner/"}],
     }
 
 
@@ -34,20 +35,20 @@ def test_create_resource(patient_mapping):
     rows = pd.DataFrame(
         [
             {
-                "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
+                "map_marital_status_admissions.marital_status": "D",
                 "map_gender_PATIENTS.GENDER": "male",
-                "clean_date_PATIENTS.DOB": "2012-12-12",
-                "ADMISSIONS.LANGUAGE": "ENGL",
-                "ADMISSIONS.HADM_ID": "111",
-                "SERVICES.ROW_ID": "2345",
+                "clean_date_PATIENTS.DOB": "2000-10-10",
+                "patients.row_id": "123",
+                "binary_to_bool_1_admissions.hospital_expire_flag": "true",
+                "clean_date_patients.dod": "2100-01-01",
             },
             {
-                "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100093",
+                "map_marital_status_admissions.marital_status": "P",
                 "map_gender_PATIENTS.GENDER": "female",
-                "clean_date_PATIENTS.DOB": "2011-11-11",
-                "ADMISSIONS.LANGUAGE": "FREN",
-                "ADMISSIONS.HADM_ID": "222",
-                "SERVICES.ROW_ID": "2346",
+                "clean_date_PATIENTS.DOB": "2001-11-11",
+                "patients.row_id": "124",
+                "binary_to_bool_1_admissions.hospital_expire_flag": "false",
+                "clean_date_patients.dod": "2101-11-11",
             },
         ]
     )
@@ -57,23 +58,25 @@ def test_create_resource(patient_mapping):
     assert actual == [
         {
             "id": actual[0]["id"],
-            "identifier": [{"value": "100092"}, {"value": "111"}],
+            "identifier": [{"value": "123"}],
             "resourceType": "Patient",
-            "language": {"coding": [{"code": "ENGL"}]},
             "gender": "male",
-            "birthDate": "2012-12-12",
-            "address": {"city": "Paris", "country": "France"},
-            "generalPractitioner": [{"identifier": {"value": "2345"}, "type": "HealthcareService"}],
+            "birthDate": "2000-10-10",
+            "deceasedBoolean": "true",
+            "deceasedDateTime": "2100-01-01",
+            "maritalStatus": {"coding": [{"code": "D"}]},
+            "generalPractitioner": [{"type": "/Practitioner/"}],
         },
         {
             "id": actual[1]["id"],
-            "identifier": [{"value": "100093"}, {"value": "222"}],
+            "identifier": [{"value": "124"}],
             "resourceType": "Patient",
-            "language": {"coding": [{"code": "FREN"}]},
             "gender": "female",
-            "birthDate": "2011-11-11",
-            "address": {"city": "Paris", "country": "France"},
-            "generalPractitioner": [{"identifier": {"value": "2346"}, "type": "HealthcareService"}],
+            "birthDate": "2001-11-11",
+            "deceasedBoolean": "false",
+            "deceasedDateTime": "2101-11-11",
+            "maritalStatus": {"coding": [{"code": "P"}]},
+            "generalPractitioner": [{"type": "/Practitioner/"}],
         },
     ]
 
@@ -172,13 +175,19 @@ def test_clean_fhir_object():
 
 
 def test_get_position_first_index():
-    path = ["identifier", "0", "value"]
+    path = ["root", "identifier[0]", "value"]
     index = transform.get_position_first_index(path)
     assert index == 1
 
     path = ["identifier", "value"]
     index = transform.get_position_first_index(path)
     assert index is None
+
+
+def test_remove_index():
+    path = "root.identifier[0]"
+    result = transform.remove_index(path)
+    assert result == "root.identifier"
 
 
 def test_get_remove_root_path():

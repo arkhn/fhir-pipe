@@ -2,6 +2,7 @@ from uuid import uuid4
 import logging
 import numpy as np
 from collections import defaultdict
+import re
 
 from fhirpipe.utils import build_col_name, new_col_name
 
@@ -36,7 +37,7 @@ def create_instance(row, mapping):
 
     # Identify the fhir object
     fhir_object["id"] = str(uuid4())
-    fhir_object["resourceType"] = mapping["definition"]["type"]
+    fhir_object["resourceType"] = mapping["definitionId"]
 
     # Remove duplicates in fhir object
     fhir_object = clean_fhir_object(fhir_object)
@@ -91,7 +92,7 @@ def build_fhir_object(row, path_attributes_map, index=None):
                 array = handle_array_attributes(attributes_in_array, row)
                 # Insert them a the right position
                 if array:
-                    insert_in_fhir_object(fhir_object, ".".join(split_path[: position_ind]), array)
+                    insert_in_fhir_object(fhir_object, remove_index(array_path), array)
                 arrays_done.add(array_path)
 
     return fhir_object
@@ -165,15 +166,15 @@ def insert_in_fhir_object(fhir_object, path, value):
         # the values are identical and insert only one of them.
         # This can happen after a join on a table for which the other values are different
         # and have been squashed.
-        assert all(
-            [v == value[0] for v in value]
-        ), "Trying to insert several different values in a non-list attribute"
+        assert (
+            all([v == value[0] for v in value]) or path == "deceasedBoolean"
+        ), f"Trying to insert several different values in a non-list attribute: {value} in {path}"
         val = value[0]
-    elif isinstance(value, list) or value is not None:
-        val = value
-    else:
+    elif value is None or value == '':
         # If value is None, we don't want to do anything so we stop here.
         return
+    else:
+        val = value
 
     # Here we iterate through the path to go down the fhir object.
     # Note that the object is a recursive defaultdict so if the key doesn't exist,
@@ -215,9 +216,14 @@ def clean_fhir_object(fhir_obj):
 
 
 def get_position_first_index(path):
+    # Find first step which has an index
     for i, step in enumerate(path):
-        if step.isdigit():
+        if re.search(r"\[\d+\]$", step):
             return i
+
+
+def remove_index(path):
+    return re.sub(r"\[\d+\]$", "", path)
 
 
 def remove_root_path(path, index_end_root):
