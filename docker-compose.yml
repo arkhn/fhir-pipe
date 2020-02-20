@@ -1,5 +1,16 @@
 version: "3.7"
 services:
+  reverse-proxy:
+    image: nginx:1.17.3-alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - 80:80
+    depends_on:
+      - fhir-pipe
+    networks:
+      - arkhn
+
   fhir-pipe:
     image: arkhn/fhir-pipe:latest
     container_name: fhir-pipe
@@ -8,9 +19,11 @@ services:
     volumes:
       - ./test:/app/test
     ports:
-      - "5003:5003"
+      - 3000:3000
     depends_on:
       - mimic
+    networks:
+      - arkhn
 
   mimic:
     image: arkhn/mimic:latest
@@ -30,7 +43,9 @@ services:
     volumes:
       - mimic-db:/var/lib/postgresql/data
     ports:
-      - "5431:5432"
+      - 5431:5432
+    networks:
+      - arkhn
 
   mongo:
     image: mongo
@@ -41,8 +56,14 @@ services:
       - 27017:27017
     volumes:
       - fhirstore-db:/data/db
+    networks:
+      - arkhn
 
 volumes:
   mimic-db:
     name: mimic-db
   fhirstore-db:
+
+networks:
+  arkhn:
+    name: arkhn_network
