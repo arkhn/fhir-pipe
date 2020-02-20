@@ -30,8 +30,9 @@ def get_fhirstore():
     global _fhirstore
     if _fhirstore is None:
         _fhirstore = fhirstore.FHIRStore(
-            get_mongo_client(), fhirpipe.global_config["fhirstore"]["database"]
+            get_mongo_client(), None, fhirpipe.global_config["fhirstore"]["database"]
         )
+    _fhirstore.resume()
     return _fhirstore
 
 
@@ -43,7 +44,6 @@ def save_many(instances, bypass_validation=False):
         instances (list): list of instances
     """
     store = get_fhirstore()
-    store.resume()
     instances = tqdm(instances)
     for instance in instances:
         try:

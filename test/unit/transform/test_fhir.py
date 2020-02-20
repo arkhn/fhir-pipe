@@ -15,8 +15,8 @@ def test_create_instance(patient_mapping):
         "binary_to_bool_1_admissions.hospital_expire_flag": "true",
         "clean_date_patients.dod": "2100-01-01",
     }
-    resource_structure = patient_mapping
-    actual = transform.create_instance(row, resource_structure)
+    resource_mapping = patient_mapping
+    actual = transform.create_instance(row, resource_mapping)
 
     assert actual == {
         "id": actual["id"],
@@ -52,8 +52,8 @@ def test_create_resource(patient_mapping):
             },
         ]
     )
-    resource_structure = patient_mapping
-    actual = transform.create_resource(rows, resource_structure)
+    resource_mapping = patient_mapping
+    actual = transform.create_resource(rows, resource_mapping)
 
     assert actual == [
         {

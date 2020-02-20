@@ -17,7 +17,6 @@ def create_resource(chunk, resource_mapping):
         try:
             res.append(create_instance(row, resource_mapping))
         except Exception as e:
-            assert False
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
             logging.error(f"create_instance failed with: {e}")

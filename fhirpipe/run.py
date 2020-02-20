@@ -1,30 +1,20 @@
 import time
 import logging
-import numpy as np
 import multiprocessing as mp
-from functools import partial
 
 from fhirpipe import set_global_config, setup_logging
 
 from fhirpipe.cli import parse_args, WELCOME_MSG
 
-from fhirpipe.extract.mapping import (
-    get_mapping,
-    get_primary_key,
-    find_cols_joins_and_scripts,
-    build_squash_rules,
-)
-from fhirpipe.extract.sql import (
-    build_sql_filters,
-    build_sql_query,
-    run_sql_query,
-    get_connection,
-)
+from fhirpipe.analyze import Analyzer
+from fhirpipe.extract import Extractor
+from fhirpipe.transform import Transformer
+from fhirpipe.load import Loader
 
-from fhirpipe.transform.dataframe import squash_rows, apply_scripts
-from fhirpipe.transform.fhir import create_resource
-
-from fhirpipe.load.fhirstore import get_fhirstore, save_many
+from fhirpipe.analyze.mapping import get_mapping
+from fhirpipe.extract.sql import get_connection
+from fhirpipe.extract.graphql import get_resource_from_id
+from fhirpipe.load.fhirstore import get_fhirstore
 
 
 def run(
@@ -37,7 +27,6 @@ def run(
     chunksize,
     bypass_validation,
     multiprocessing,
-    primary_key_values,
 ):
     """
     """
@@ -56,73 +45,22 @@ def run(
     if reset_store:
         fhirstore.reset()
 
-    # TODO maybe we can find a more elegant way to handle multiprocessing
+    pool = None
     if multiprocessing:
-        n_workers = mp.cpu_count()
-        pool = mp.Pool(n_workers)
+        pool = mp.Pool()
+
+    analyzer = Analyzer()
+    extractor = Extractor(connection, chunksize)
+    transformer = Transformer(pool)
+    loader = Loader(fhirstore, bypass_validation, pool)
 
     for resource_mapping in resources:
-        fhirType = resource_mapping["definitionId"]
-
-        logging.info("Running for resource: %s", fhirType)
-
-        # Get primary key table
-        primary_key_table, primary_key_column = get_primary_key(resource_mapping)
-
-        # Extract cols and joins
-        cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_mapping)
-
-        # Add primary key column if it was not there
-        cols.add(primary_key_column)
-
-        # Build sql filters (for now, it's only for row selection)
-        sql_filters = build_sql_filters(primary_key_column, primary_key_values)
-
-        # Build the sql query
-        sql_query = build_sql_query(cols, joins, primary_key_table, sql_filters)
-        logging.info("sql query: %s", sql_query)
-
-        # Build squash rules
-        squash_rules = build_squash_rules(cols, joins, primary_key_table)
-
-        # Run the sql query
-        logging.info("Launching query...")
-        df = run_sql_query(connection, sql_query, chunksize=chunksize)
+        analysis = analyzer.analyze(resource_mapping)
+        df = extractor.extract(resource_mapping, analysis)
 
         for chunk in df:
-            # Change not string value to strings (to be validated by jsonSchema for resource)
-            chunk = chunk.applymap(lambda value: str(value) if value is not None else None)
-
-            # Force names of dataframe cols to be the same as in SQL query
-            chunk.columns = cols
-
-            # Apply cleaning and merging scripts on chunk
-            apply_scripts(chunk, cleaning, merging, primary_key_column)
-
-            # Apply join rule to merge some lines from the same resource
-            logging.info("Squashing rows...")
-            chunk = squash_rows(chunk, squash_rules)
-
-            # Bootstrap for resource if needed
-            if fhirType not in fhirstore.resources:
-                fhirstore.bootstrap(resource=fhirType, depth=3)
-
-            if multiprocessing:
-                fhir_objects_chunks = pool.map(
-                    partial(create_resource, resource_mapping=resource_mapping),
-                    np.array_split(chunk, n_workers),
-                )
-
-                # Save instances in fhirstore
-                pool.map(
-                    partial(save_many, bypass_validation=bypass_validation), fhir_objects_chunks,
-                )
-
-            else:
-                instances = create_resource(chunk, resource_mapping)
-                save_many(instances, bypass_validation)
-
-    # identifier_dict = build_identifier_dict()
+            fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
+            loader.load(fhirstore, fhir_instances, resource_mapping["definitionId"])
 
     # TODO we cannot bind references for the moment because we don't have any information about
     # the type of the attributes in the mapping. When this is fixed, we can uncomment what's below
@@ -130,16 +68,30 @@ def run(
     # Now, we can bind the references
     # TODO I think we could find a more efficient way to bind references
     # using more advanced mongo features
-    # if multiprocessing:
-    #     bind_references(reference_attributes, identifier_dict, pool)
-    # else:
-    #     bind_references(reference_attributes, identifier_dict)
+    # bind_references(extractor.reference_attributes, identifier_dict, pool)
 
     if multiprocessing:
         pool.close()
         pool.join()
 
     logging.info(f"Done in {time.time() - start_time}.")
+
+
+def preview(connection, resource_id, primary_key_values):
+    """ Run the ETL only for values where the primary key
+    """
+    # Get the resources we want to process from the pyrog mapping for a given source
+    resource_mapping = get_resource_from_id(resource_id=resource_id)
+
+    analyzer = Analyzer()
+    extractor = Extractor(connection)
+    transformer = Transformer()
+
+    analysis = analyzer.analyze(resource_mapping)
+    df = extractor.extract(resource_mapping, analysis, primary_key_values)
+    fhir_instances = transformer.transform(next(df), resource_mapping, analysis)
+
+    return fhir_instances[0]
 
 
 if __name__ == "__main__":
@@ -166,5 +118,11 @@ if __name__ == "__main__":
             chunksize=args.chunksize,
             bypass_validation=args.bypass_validation,
             multiprocessing=args.multiprocessing,
-            primary_key_values=args.primary_key_values,
         )
+
+        # res = preview(
+        #     connection=connection,
+        #     resource_id="ck6jicxba0001qzf8c4p7x5av",
+        #     primary_key_values=["10006"],
+        # )
+        # print(res)
