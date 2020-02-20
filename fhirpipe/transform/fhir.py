@@ -1,122 +1,234 @@
 from uuid import uuid4
 import logging
+import numpy as np
+from collections import defaultdict
+import re
 
 from fhirpipe.utils import build_col_name, new_col_name
 
 
-def create_resource(chunk, resource_structure):
+def recursive_defaultdict():
+    return defaultdict(recursive_defaultdict)
+
+
+def create_resource(chunk, resource_mapping):
     res = []
     for _, row in chunk.iterrows():
         try:
-            res.append(create_fhir_object(row, resource_structure))
+            res.append(create_instance(row, resource_mapping))
         except Exception as e:
+            assert False
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
-            logging.error(f"create_fhir_object failed with: {e}")
+            logging.error(f"create_instance failed with: {e}")
             continue
+
     return res
 
 
-def create_fhir_object(row, resource_structure):
-    # Identify the fhir object
-    fhir_object = {"id": str(uuid4()), "resourceType": resource_structure["fhirType"]}
+def create_instance(row, mapping):
+    """ Function used to create a single FHIR instance.
+    """
+    # Modify the data structure so that it is easier to use
+    path_attributes_map = {attr["path"]: attr for attr in mapping["attributes"]}
 
-    # The first node has a different structure so iterate outside the
-    # dfs_create_fhir function
-    for attr in resource_structure["attributes"]:
-        rec_create_fhir_object(fhir_object, attr, row)
+    # Build path value map
+    fhir_object = build_fhir_object(row, path_attributes_map)
+
+    # Identify the fhir object
+    fhir_object["id"] = str(uuid4())
+    fhir_object["resourceType"] = mapping["definitionId"]
+
+    # Remove duplicates in fhir object
+    fhir_object = clean_fhir_object(fhir_object)
 
     return fhir_object
 
 
-def build_fhir_leaf_attribute(structure, row, indices):
-    # TODO simplify (for instance, force merging script when several inputs)
-    cols_to_fetch = ([], [])
-    for inp in structure["inputs"]:
+def build_fhir_object(row, path_attributes_map, index=None):
+    """ Function that actually builds a nested object from the dataframe row and the mapping.
+    Note that it can be used to build only a subpart of a fhir instance.
+    """
+    fhir_object = recursive_defaultdict()
+    arrays_done = set()
 
-        # If a sql location is provided, then a sql value has been returned
-        if inp["sqlValue"]:
-            sql = inp["sqlValue"]
-            col_name = build_col_name(sql["table"], sql["column"], sql["owner"])
-            if inp["script"]:
-                # If there is a cleaning script, we fetch the value in the cleaned column
-                col_name = new_col_name(inp["script"], col_name)
-            cols_to_fetch[0].append(col_name)
+    for path, attr in path_attributes_map.items():
+        if attr["inputs"]:
 
-        # Else retrieve the static value
-        else:
-            cols_to_fetch[1].append(inp["staticValue"])
+            # Find if there is an index in the path
+            split_path = path.split(".")
+            position_ind = get_position_first_index(split_path)
 
-    if structure["mergingScript"]:
-        result = row[new_col_name(structure["mergingScript"], cols_to_fetch)]
-    else:
-        result = [row[c] for c in cols_to_fetch[0]]
-        result.extend(cols_to_fetch[1])
-
-    # Unlist
-    if isinstance(result, list) and len(result) == 1:
-        result = result[0]
-
-    if isinstance(result, tuple):
-        for ind in indices:
-            result = result[ind]
-
-    if isinstance(result, tuple):
-        if not all([el == result[0] for el in result[1:]]):
-            raise Exception(f"Cannot have as input a list with different values ({result}).")
-        result = result[0]
-
-    return result
-
-
-def rec_create_fhir_object(fhir_obj, structure, row, indices=[]):
-    if isinstance(structure, dict):
-        # If there are some inputs, we can build the objects to output
-        if "inputs" in structure.keys() and structure["inputs"]:
-            result = build_fhir_leaf_attribute(structure, row, indices)
-            fhir_obj[structure["name"]] = result
-
-        # Otherwise, we can recurse on children
-        else:
-            is_array = structure["fhirType"] == "array"
-
-            fhir_obj[structure["name"]] = [] if is_array else dict()
-
-            for attr in structure["children"]:
-                if is_array:
-                    create_fhir_list(fhir_obj, attr, structure["name"], row, indices)
+            if position_ind is None:
+                # If we didn't find an index in the path, then we don't worry about arrays
+                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+                if isinstance(val, tuple) and len(val) == 1:
+                    # If we have a tuple of length 1, we simply extract the value and put it in
+                    # the fhir object
+                    insert_in_fhir_object(fhir_object, path, val[0])
+                elif isinstance(val, tuple) and index is not None:
+                    # If index is not None, we met an array before. Here, val will have
+                    # several elements but we know which one we need
+                    insert_in_fhir_object(fhir_object, path, val[index])
                 else:
-                    rec_create_fhir_object(fhir_obj[structure["name"]], attr, row, indices)
+                    # Otherwise, we try to send it all to insert_in_fhir_object.
+                    # We could have a literal value or a tuple but in this case, this function
+                    # will check that all the values in the tuple are equal.
+                    insert_in_fhir_object(fhir_object, path, val)
 
-    # If the current object is a list, we can repeat the same steps as above for each item
-    elif isinstance(fhir_obj, list) and len(fhir_obj) > 0:
-        children = []
-        for child_spec in fhir_obj:
-            children.append(rec_create_fhir_object(dict(), child_spec, row, indices))
+            else:
+                # Handle array case
+                array_path = ".".join(split_path[: position_ind + 1])
+                # If this path was already processed before, skip it
+                if array_path in arrays_done:
+                    continue
+                # We retrieve all the attributes that start with the array path (with index)
+                attributes_in_array = {
+                    remove_root_path(path, position_ind + 1): attr
+                    for path, attr in path_attributes_map.items()
+                    if path.startswith(array_path)
+                }
+                # Build the array of sub fhir object
+                array = handle_array_attributes(attributes_in_array, row)
+                # Insert them a the right position
+                if array:
+                    insert_in_fhir_object(fhir_object, remove_index(array_path), array)
+                arrays_done.add(array_path)
 
-        fhir_obj[structure["name"]] = children
-
-    # Remove the attribute if it is null or has no children
-    prune_empty_attributes(fhir_obj, structure["name"])
+    return fhir_object
 
 
-def prune_empty_attributes(fhir_obj, key):
-    if isinstance(fhir_obj[key], (dict, list)) and not fhir_obj[key]:
-        del fhir_obj[key]
-    elif fhir_obj[key] is None:
-        del fhir_obj[key]
+def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
+    if len(mapping_inputs) == 1:
+        input = mapping_inputs[0]
+        if input["sqlValue"]:
+            sql = input["sqlValue"]
+            column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
+            if input["script"]:
+                column_name = new_col_name(input["script"], column_name)
+            return row[column_name]
+        else:
+            return input["staticValue"]
+
+    else:
+        if not merging_script:
+            raise ValueError(
+                "You need to provide a merging script for attributes with several inputs."
+            )
+
+        sql_columns, static_columns = [], []
+        for input in mapping_inputs:
+            # If there is some sql input, use it
+            if input["sqlValue"]:
+                sql = input["sqlValue"]
+                column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
+                if input["script"]:
+                    column_name = new_col_name(input["script"], column_name)
+                sql_columns.append(column_name)
+
+            # Else retrieve the static value
+            else:
+                static_columns.append(input["staticValue"])
+
+        df_col = new_col_name(merging_script, (sql_columns, static_columns))
+        return row[df_col]
 
 
-def create_fhir_list(fhir_obj, attr, name, row, indices):
-    index = 0
-    while True:
-        try:
-            child = {}
-            rec_create_fhir_object(child, attr, row, indices + [index])
-            child = list(child.values())[0]
-            if index > 0 and child == fhir_obj[name][-1]:
-                break
-            fhir_obj[name].append(child)
-            index += 1
-        except IndexError:
-            break
+def handle_array_attributes(attributes_in_array, row):
+    # Check lengths
+    # We check that all the values with more than one element that we will put in the array
+    # have the same length. We could not, for instance, build an object from
+    # {"adress.city": ("Paris", "NY"), "adress.country": ("France", "USA", "Spain")}
+    # Note that if one value has length 1, we can "factor" it:
+    # {"adress.city": ("Paris", "Lyon"), "adress.country": "France"} will give 2 elements:
+    # {"adress": [{"city": "Paris", "country": "France"}, {"city": "Lyon", "country": "France"}]}
+    length = 1
+    for attr in attributes_in_array.values():
+        val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+        if not isinstance(val, tuple) or len(val) == 1:
+            continue
+        assert length == 1 or len(val) == length, "mismatch in array lengths"
+        length = len(val)
+
+    # Now we can build the array
+    array = []
+    for index in range(length):
+        element = build_fhir_object(row, attributes_in_array, index=index)
+        if element:
+            array.append(element)
+
+    return array
+
+
+def insert_in_fhir_object(fhir_object, path, value):
+    if isinstance(value, tuple):
+        # If we try to insert a tuple in the fhir object, we need to make sure that all
+        # the values are identical and insert only one of them.
+        # This can happen after a join on a table for which the other values are different
+        # and have been squashed.
+        assert all(
+            [v == value[0] for v in value]
+        ), f"Trying to insert several different values in a non-list attribute: {value} in {path}"
+        val = value[0]
+    # TODO we return if value is "" because empty strings don't pass validation for some fhir
+    # attributes but it would be better to return None in the cleaning scripts if we don't want to
+    # add an empty string.
+    elif value is None or value == "":
+        # If value is None, we don't want to do anything so we stop here.
+        return
+    else:
+        val = value
+
+    # Here we iterate through the path to go down the fhir object.
+    # Note that the object is a recursive defaultdict so if the key doesn't exist,
+    # it will be created.
+    cur_location = fhir_object
+    path = path.split(".")
+    for step in path[:-1]:
+        cur_location = cur_location[step]
+
+    if isinstance(val, list):
+        # If are inserting a list
+        if path[-1] not in cur_location:
+            cur_location[path[-1]] = []
+        cur_location[path[-1]].extend(val)
+    else:
+        # Else, we are inserting a literal
+        cur_location[path[-1]] = val
+
+
+def clean_fhir_object(fhir_obj):
+    """ Remove duplicate list elements from fhir object
+    """
+    if isinstance(fhir_obj, dict):
+        for key in fhir_obj:
+            fhir_obj[key] = clean_fhir_object(fhir_obj[key])
+        return fhir_obj
+
+    elif isinstance(fhir_obj, list):
+        to_rm = []
+        for i in range(len(fhir_obj)):
+            for j in range(i + 1, len(fhir_obj)):
+                if fhir_obj[i] == fhir_obj[j]:
+                    to_rm.append(i)
+                    break
+        return list(np.delete(fhir_obj, to_rm))
+
+    else:
+        return fhir_obj
+
+
+def get_position_first_index(path):
+    # Find first step which has an index
+    for i, step in enumerate(path):
+        if re.search(r"\[\d+\]$", step):
+            return i
+
+
+def remove_index(path):
+    return re.sub(r"\[\d+\]$", "", path)
+
+
+def remove_root_path(path, index_end_root):
+    split_path = path.split(".")[index_end_root:]
+    return ".".join(split_path)

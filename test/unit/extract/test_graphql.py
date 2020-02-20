@@ -6,12 +6,12 @@ import fhirpipe.extract.graphql as gql
 
 
 def test_build_resources_query():
-    # With selected sources
-    query = gql.build_resources_query(selected_sources=["mimic"])
+    # With selected source
+    query = gql.build_resources_query(selected_source="mimic")
 
     assert (
         """source: {
-                name: { in: ["mimic"] }
+                name: { equals: "mimic" }
             }"""
         in query
     )
@@ -19,25 +19,28 @@ def test_build_resources_query():
     # With selected resources
     query = gql.build_resources_query(selected_resources=["Patient", "Observation"])
 
-    assert 'fhirType: { in: ["Patient", "Observation"] }' in query
+    assert (
+        """definitionId: { in: ["Patient", "Observation"] }"""
+        in query
+    )
 
-    # With selected sources
+    # With selected source
     query = gql.build_resources_query(selected_labels=["label"])
 
     assert 'label: { in: ["label"] }' in query
 
     # With all arguments
     query = gql.build_resources_query(
-        selected_sources=["mimic"],
+        selected_source="mimic",
         selected_resources=["Patient", "Observation"],
         selected_labels=["label"],
     )
 
     assert (
         """source: {
-                name: { in: ["mimic"] }
+                name: { equals: "mimic" }
             }
-            fhirType: { in: ["Patient", "Observation"] }
+            definitionId: { in: ["Patient", "Observation"] }
             label: { in: ["label"] }"""
         in query
     )

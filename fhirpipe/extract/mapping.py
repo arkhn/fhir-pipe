@@ -11,7 +11,7 @@ from fhirpipe.utils import (
 
 
 def get_mapping(
-    from_file=None, selected_sources=None, selected_resources=None, selected_labels=None
+    from_file=None, selected_source=None, selected_resources=None, selected_labels=None
 ):
     """
     Get all available resources from a pyrog mapping.
@@ -23,14 +23,14 @@ def get_mapping(
         from_file: path to the static file to mock
             the pyrog API response.
     """
-    if selected_sources is None and from_file is None:
-        raise ValueError("You should provide selected_sources or from_file")
+    if selected_source is None and from_file is None:
+        raise ValueError("You should provide selected_source or from_file")
 
     if from_file:
         return get_mapping_from_file(from_file, selected_resources, selected_labels)
 
     else:
-        return get_mapping_from_graphql(selected_sources, selected_resources, selected_labels)
+        return get_mapping_from_graphql(selected_source, selected_resources, selected_labels)
 
 
 def get_mapping_from_file(path, selected_resources, selected_labels):
@@ -38,21 +38,22 @@ def get_mapping_from_file(path, selected_resources, selected_labels):
         path = os.path.join(os.getcwd(), path)
 
     with open(path) as json_file:
-        resources = json.load(json_file)
+        mapping = json.load(json_file)
 
-    resources[:] = [
+    resources = [
         r
-        for r in resources
-        if (selected_resources is None or r["fhirType"] in selected_resources)
+        for r in mapping["resources"]
+        if (selected_resources is None or r["definitionId"] in selected_resources)
         and (selected_labels is None or r["label"] in selected_labels)
     ]
 
     return resources
 
 
-def get_mapping_from_graphql(selected_sources, selected_resources, selected_labels):
+def get_mapping_from_graphql(selected_source, selected_resources, selected_labels):
     # Build the query
-    query = build_resources_query(selected_sources, selected_resources, selected_labels)
+    query = build_resources_query(selected_source, selected_resources, selected_labels)
+
     # Run it
     resources = run_graphql_query(query)
 
@@ -60,68 +61,36 @@ def get_mapping_from_graphql(selected_sources, selected_resources, selected_labe
         yield resource
 
 
-def prune_fhir_resource(resource_structure):
-    """ Remove FHIR attributes that have not been mapped
-    from resource structure object.
-    """
-    resource_structure["attributes"][:] = [
-        attr for attr in resource_structure["attributes"] if rec_prune_resource(attr)
-    ]
-    return resource_structure
-
-
-def rec_prune_resource(attr_structure):
-    """ Helper recursive function called by prune_fhir_resource.
-    """
-    if isinstance(attr_structure, dict):
-        if "children" in attr_structure and attr_structure["children"]:
-            attr_structure["children"][:] = [
-                attr for attr in attr_structure["children"] if rec_prune_resource(attr)
-            ]
-            return len(attr_structure["children"]) > 0
-        elif "inputs" in attr_structure and attr_structure["inputs"]:
-            return True
-        else:
-            return False
-
-    elif isinstance(attr_structure, list):
-        attr_structure[:] = [attr for attr in attr_structure if rec_prune_resource(attr)]
-        return len(attr_structure) > 0
-
-    else:
-        raise Exception("attr_structure not a dict nor a list.")
-
-
-def get_primary_key(resource_structure):
+def get_primary_key(resource_mapping):
     """
     Return primary key table and column of the provided resource.
 
     args:
-        resource_structure: the object containing all the mapping rules
+        resource_mapping: the object containing all the mapping rules
 
     Return:
         A tuple with the table containing the primary key and the primary key column.
     """
-    if not resource_structure["primaryKeyTable"] or not resource_structure["primaryKeyColumn"]:
+    if not resource_mapping["primaryKeyTable"] or not resource_mapping["primaryKeyColumn"]:
         raise ValueError(
             "You need to provide a primary key table and column in the mapping for "
-            f"resource {resource_structure['fhirType']}."
+            f"resource {resource_mapping['definitionId']}."
         )
     main_table = (
-        (f"{resource_structure['primaryKeyOwner']}.{resource_structure['primaryKeyTable']}")
-        if resource_structure["primaryKeyOwner"]
-        else resource_structure["primaryKeyTable"]
+        (f"{resource_mapping['primaryKeyOwner']}.{resource_mapping['primaryKeyTable']}")
+        if resource_mapping["primaryKeyOwner"]
+        else resource_mapping["primaryKeyTable"]
     )
-    column = f"{main_table}.{resource_structure['primaryKeyColumn']}"
+    column = f"{main_table}.{resource_mapping['primaryKeyColumn']}"
     return main_table, column
 
 
-def find_cols_joins_and_scripts(tree):
+def find_cols_joins_and_scripts(resource_mapping):
     """
-    Run through the dict/tree of a Resource
-    To find:
+    Run through the attributes of a resource mapping to find:
     - All columns name to select
     - All joins necessary to collect the data
+    - All the scripts used in the mapping
 
     args:
         tree (dict): the fhir specification which has the structure of a tree
@@ -140,88 +109,43 @@ def find_cols_joins_and_scripts(tree):
     # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
     all_cleaning_scripts = defaultdict(list)
     # all_merging_scripts has the form
-    # {"script1": (["col1", "col3", ...], [static3]),
-    #  "script4": ([col2], [static1, static3, ...]),
-    #  ...}
-    all_merging_scripts = defaultdict(list)
-    if isinstance(tree, dict):
+    # ["script1", (["col1", "col3", ...], [static3]),
+    #  "script4", ([col2], [static1, static3, ...]),
+    #  ...]
+    all_merging_scripts = []
 
-        # If we are not in a leaf, we recurse
-        if "attributes" in tree and tree["attributes"]:
-            return find_cols_joins_and_scripts(tree["attributes"])
-        # If we are not in a leaf, we recurse
-        if "children" in tree and tree["children"]:
-            return find_cols_joins_and_scripts(tree["children"])
+    for attribute in resource_mapping["attributes"]:
+        cols_merging = []
+        statics = []
+        for input in attribute["inputs"]:
+            if input["sqlValue"]:
+                sql = input["sqlValue"]
+                column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
+                all_cols.add(column_name)
 
-        cols, joins, cleaning, merging = find_cjs_in_leaf(tree)
+                if input["script"]:
+                    all_cleaning_scripts[input["script"]].append(column_name)
+                    column_name = new_col_name(input["script"], column_name)
 
-        all_cols = all_cols.union(cols)
-        all_joins = all_joins.union(joins)
-        dict_concat(all_cleaning_scripts, cleaning)
-        dict_concat(all_merging_scripts, merging)
+                cols_merging.append(column_name)
 
-    # If the current object is a list, we can repeat the same steps as above for each item
-    elif isinstance(tree, list) and len(tree) > 0:
-        for t in tree:
-            (c_children, j_children, cs_children, ms_children,) = find_cols_joins_and_scripts(t)
+                for join in sql["joins"]:
+                    tables = join["tables"]
+                    source_col = build_col_name(
+                        tables[0]["table"], tables[0]["column"], tables[0]["owner"],
+                    )
+                    target_col = build_col_name(
+                        tables[1]["table"], tables[1]["column"], tables[1]["owner"],
+                    )
+                    all_joins.add((source_col, target_col))
 
-            all_cols = all_cols.union(c_children)
-            all_joins = all_joins.union(j_children)
-            dict_concat(all_cleaning_scripts, cs_children)
-            dict_concat(all_merging_scripts, ms_children)
+            elif input["staticValue"]:
+                statics.append(input["staticValue"])
+
+        if attribute["mergingScript"]:
+            all_merging_scripts.append((attribute["mergingScript"], (cols_merging, statics)))
 
     return all_cols, all_joins, all_cleaning_scripts, all_merging_scripts
-
-
-def find_cjs_in_leaf(leaf):
-    columns = set()
-    joins = set()
-    cleaning_scripts = defaultdict(list)
-    merging_scripts = defaultdict(list)
-
-    # Check if we need to build the object to put in merging_scripts
-    cols_to_merge = ([], []) if leaf["mergingScript"] is not None else None
-
-    for input in leaf["inputs"]:
-
-        # If table and column are defined, we have an sql input
-        if input["sqlValue"]:
-            sql = input["sqlValue"]
-            column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
-            columns.add(column_name)
-
-            # If there are joins, add them to the output
-            for join in sql["joins"]:
-                source_col = build_col_name(
-                    join["tables"][0]["table"],
-                    join["tables"][0]["column"],
-                    join["tables"][0]["owner"],
-                )
-                target_col = build_col_name(
-                    join["tables"][1]["table"],
-                    join["tables"][1]["column"],
-                    join["tables"][1]["owner"],
-                )
-                joins.add((source_col, target_col))
-
-            # If there is a cleaning script
-            if input["script"]:
-                cleaning_scripts[input["script"]].append(column_name)
-                if leaf["mergingScript"]:
-                    cols_to_merge[0].append(new_col_name(input["script"], column_name))
-            # Otherwise, simply add the column name
-            elif leaf["mergingScript"]:
-                cols_to_merge[0].append(column_name)
-
-        # If it's a static value add it in case we need it for the merging
-        elif input["staticValue"] and leaf["mergingScript"]:
-            cols_to_merge[1].append(input["staticValue"])
-
-    # Add merging script to scripts dict if needed
-    if leaf["mergingScript"]:
-        merging_scripts[leaf["mergingScript"]].append(cols_to_merge)
-
-    return columns, joins, cleaning_scripts, merging_scripts
 
 
 def build_squash_rules(columns, joins, main_table):
@@ -295,36 +219,3 @@ def build_join_graph(joins):
 def dict_concat(dict_1, dict_2):
     for key, val in dict_2.items():
         dict_1[key] += val
-
-
-def find_reference_attributes(tree, path=[]):
-    """ Function to find attributes that are reference.
-    We need this to bind them after having loaded the fhir objects.
-    """
-    references = []
-    if isinstance(tree, dict):
-
-        if "name" in tree:
-            if not path or not path[-1] == tree["name"]:
-                path.append(tree["name"])
-
-        # If attribute is a reference, we add it to the result list
-        if tree["fhirType"] == "Reference":
-            references.append(tuple(path))
-
-        # I don't think we can have nested references so
-        # if we are not in a leaf, we recurse
-        else:
-            if "attributes" in tree and tree["attributes"]:
-                return find_reference_attributes(tree["attributes"], path[:])
-            if "children" in tree and tree["children"]:
-                return find_reference_attributes(tree["children"], path[:])
-
-    # If the current object is a list, we can repeat the same steps as above for each item
-    elif isinstance(tree, list) and len(tree) > 0:
-        for t in tree:
-            refs = find_reference_attributes(t, path[:])
-
-            references.extend(refs)
-
-    return references

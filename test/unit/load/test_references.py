@@ -28,9 +28,7 @@ def test_bind_references(*_):
 
     references.bind_references(reference_attributes, identifier_dict)
 
-    patients = mock_mongo_client[mock_config["fhirstore"]["database"]]["Patient"].find(
-        {}
-    )
+    patients = mock_mongo_client[mock_config["fhirstore"]["database"]]["Patient"].find({})
 
     expected = {
         "_id": patients[0]["_id"],
@@ -40,7 +38,11 @@ def test_bind_references(*_):
         "address": [{"city": "Paris", "country": "France"}],
         "identifier": [{"system": "system", "value": "0001"}],
         "generalPractitioner": [
-            {"identifier": {"system": "HealthcareService", "value": "654321"}}
+            {
+                "identifier": {"value": "12345"},
+                "type": "HealthcareService",
+                "reference": "HealthcareService/654321",
+            }
         ],
     }
 

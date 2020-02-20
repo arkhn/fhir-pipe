@@ -3,7 +3,6 @@ import logging
 import numpy as np
 import multiprocessing as mp
 from functools import partial
-from collections import defaultdict
 
 from fhirpipe import set_global_config, setup_logging
 
@@ -11,11 +10,9 @@ from fhirpipe.cli import parse_args, WELCOME_MSG
 
 from fhirpipe.extract.mapping import (
     get_mapping,
-    prune_fhir_resource,
     get_primary_key,
     find_cols_joins_and_scripts,
     build_squash_rules,
-    find_reference_attributes,
 )
 from fhirpipe.extract.sql import (
     build_sql_query,
@@ -27,13 +24,12 @@ from fhirpipe.transform.dataframe import squash_rows, apply_scripts
 from fhirpipe.transform.fhir import create_resource
 
 from fhirpipe.load.fhirstore import get_fhirstore, save_many
-from fhirpipe.load.references import build_identifier_dict, bind_references
 
 
 def run(
     connection,
     mapping,
-    sources,
+    source,
     resources,
     labels,
     reset_store,
@@ -49,7 +45,7 @@ def run(
     # Get the resources we want to process from the pyrog mapping for a given source
     resources = get_mapping(
         from_file=mapping,
-        selected_sources=sources,
+        selected_source=source,
         selected_resources=resources,
         selected_labels=labels,
     )
@@ -63,19 +59,19 @@ def run(
         n_workers = mp.cpu_count()
         pool = mp.Pool(n_workers)
 
-    reference_attributes = defaultdict(set)
-
-    for resource_structure in resources:
-        fhirType = resource_structure["fhirType"]
+    for resource_mapping in resources:
+        fhirType = resource_mapping["definitionId"]
 
         logging.info("Running for resource: %s", fhirType)
-        resource_structure = prune_fhir_resource(resource_structure)
 
         # Get primary key table
-        primary_key_table, primary_key_column = get_primary_key(resource_structure)
+        primary_key_table, primary_key_column = get_primary_key(resource_mapping)
 
         # Extract cols and joins
-        cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_structure)
+        cols, joins, cleaning, merging = find_cols_joins_and_scripts(resource_mapping)
+
+        # Add primary key column if it was not there
+        cols.add(primary_key_column)
 
         # Build the sql query
         sql_query = build_sql_query(cols, joins, primary_key_table)
@@ -83,10 +79,6 @@ def run(
 
         # Build squash rules
         squash_rules = build_squash_rules(cols, joins, primary_key_table)
-
-        # Get all the attributes that are references for future binding
-        for attr in find_reference_attributes(resource_structure):
-            reference_attributes[fhirType].add(attr)
 
         # Run the sql query
         logging.info("Launching query...")
@@ -112,7 +104,7 @@ def run(
 
             if multiprocessing:
                 fhir_objects_chunks = pool.map(
-                    partial(create_resource, resource_structure=resource_structure),
+                    partial(create_resource, resource_mapping=resource_mapping),
                     np.array_split(chunk, n_workers),
                 )
 
@@ -122,18 +114,21 @@ def run(
                 )
 
             else:
-                instances = create_resource(chunk, resource_structure)
+                instances = create_resource(chunk, resource_mapping)
                 save_many(instances, bypass_validation)
 
-    identifier_dict = build_identifier_dict()
+    # identifier_dict = build_identifier_dict()
 
+    # TODO we cannot bind references for the moment because we don't have any information about
+    # the type of the attributes in the mapping. When this is fixed, we can uncomment what's below
+    # (and add something to find the references in the mapping).
     # Now, we can bind the references
     # TODO I think we could find a more efficient way to bind references
     # using more advanced mongo features
-    if multiprocessing:
-        bind_references(reference_attributes, identifier_dict, pool)
-    else:
-        bind_references(reference_attributes, identifier_dict)
+    # if multiprocessing:
+    #     bind_references(reference_attributes, identifier_dict, pool)
+    # else:
+    #     bind_references(reference_attributes, identifier_dict)
 
     if multiprocessing:
         pool.close()
@@ -161,6 +156,7 @@ if __name__ == "__main__":
             mapping=args.mapping,
             source=args.source,
             resources=args.resources,
+            labels=args.labels,
             reset_store=args.reset_store,
             chunksize=args.chunksize,
             bypass_validation=args.bypass_validation,

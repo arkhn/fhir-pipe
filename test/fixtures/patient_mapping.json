@@ -1,0 +1,234 @@
+{
+  "id": "ck6gi3w87000360r43o8wlhhk",
+  "label": "",
+  "primaryKeyOwner": "",
+  "primaryKeyTable": "patients",
+  "primaryKeyColumn": "subject_id",
+  "definitionId": "Patient",
+  "updatedAt": "2020-02-10T17:47:31.665Z",
+  "createdAt": "2020-02-10T13:37:29.571Z",
+  "attributes": [
+    {
+      "id": "ck6gi3w8u001660r4st5x27uq",
+      "path": "gender",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-10T13:37:29.572Z",
+      "createdAt": "2020-02-10T13:37:29.572Z",
+      "inputs": [
+        {
+          "id": "ck6gi3w8w001860r4z3fh7f7s",
+          "script": "map_gender",
+          "staticValue": null,
+          "updatedAt": "2020-02-11T12:44:14.223Z",
+          "createdAt": "2020-02-10T13:37:29.572Z",
+          "sqlValue": {
+            "id": "ck6gi3w8v001760r4cy2skt68",
+            "owner": "",
+            "table": "PATIENTS",
+            "column": "GENDER",
+            "updatedAt": "2020-02-10T13:37:29.572Z",
+            "createdAt": "2020-02-10T13:37:29.572Z",
+            "joins": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "ck6gi3w8x001960r44zwrtl3y",
+      "path": "birthDate",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-10T13:37:29.572Z",
+      "createdAt": "2020-02-10T13:37:29.572Z",
+      "inputs": [
+        {
+          "id": "ck6gi3w8z002160r4p5m8thgz",
+          "script": "clean_date",
+          "staticValue": null,
+          "updatedAt": "2020-02-10T13:37:29.572Z",
+          "createdAt": "2020-02-10T13:37:29.572Z",
+          "sqlValue": {
+            "id": "ck6gi3w8y002060r487hvatyr",
+            "owner": "",
+            "table": "PATIENTS",
+            "column": "DOB",
+            "updatedAt": "2020-02-10T13:37:29.572Z",
+            "createdAt": "2020-02-10T13:37:29.572Z",
+            "joins": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "ck6i20j2i03134wow3osbkx30",
+      "path": "maritalStatus.coding[0].code",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-11T15:42:31.049Z",
+      "createdAt": "2020-02-11T15:42:31.049Z",
+      "inputs": [
+        {
+          "id": "ck6i20j5o03154wowi1varhb5",
+          "script": "map_marital_status",
+          "staticValue": null,
+          "updatedAt": "2020-02-12T14:16:35.621Z",
+          "createdAt": "2020-02-11T15:42:31.159Z",
+          "sqlValue": {
+            "id": "ck6i20j5j03144wow2jx4qkp4",
+            "owner": "",
+            "table": "admissions",
+            "column": "marital_status",
+            "updatedAt": "2020-02-11T15:42:31.159Z",
+            "createdAt": "2020-02-11T15:42:31.159Z",
+            "joins": [
+              {
+                "id": "ck6i20m4w03164wows9jxbrf6",
+                "updatedAt": "2020-02-11T15:42:35.024Z",
+                "createdAt": "2020-02-11T15:42:35.024Z",
+                "tables": [
+                  {
+                    "id": "ck6i20m4y03174wowgsj64f8u",
+                    "owner": "",
+                    "table": "patients",
+                    "column": "subject_id",
+                    "updatedAt": "2020-02-11T15:42:57.622Z",
+                    "createdAt": "2020-02-11T15:42:35.024Z"
+                  },
+                  {
+                    "id": "ck6i20m4z03184wowha0p5e0k",
+                    "owner": "",
+                    "table": "admissions",
+                    "column": "subject_id",
+                    "updatedAt": "2020-02-11T15:42:57.622Z",
+                    "createdAt": "2020-02-11T15:42:35.024Z"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ck6j6hyrw00104unxsyn8e2fe",
+      "path": "identifier[0].value",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-12T10:35:49.195Z",
+      "createdAt": "2020-02-12T10:35:49.195Z",
+      "inputs": [
+        {
+          "id": "ck6j6hyur00124unxdei198dc",
+          "script": null,
+          "staticValue": null,
+          "updatedAt": "2020-02-12T10:35:49.296Z",
+          "createdAt": "2020-02-12T10:35:49.296Z",
+          "sqlValue": {
+            "id": "ck6j6hyuo00114unx7fg4e9cf",
+            "owner": "",
+            "table": "patients",
+            "column": "row_id",
+            "updatedAt": "2020-02-12T10:35:49.296Z",
+            "createdAt": "2020-02-12T10:35:49.296Z",
+            "joins": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "ck6hylaz401984wowahxogwcd",
+      "path": "deceasedBoolean",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-11T14:06:41.871Z",
+      "createdAt": "2020-02-11T14:06:41.871Z",
+      "inputs": [
+        {
+          "id": "ck6hylb3c02004wowsymawhz6",
+          "script": "binary_to_bool_1",
+          "staticValue": null,
+          "updatedAt": "2020-02-14T10:59:19.978Z",
+          "createdAt": "2020-02-11T14:06:42.020Z",
+          "sqlValue": {
+            "id": "ck6hylb3901994wow3l9jkimx",
+            "owner": "",
+            "table": "admissions",
+            "column": "hospital_expire_flag",
+            "updatedAt": "2020-02-11T14:06:42.020Z",
+            "createdAt": "2020-02-11T14:06:42.020Z",
+            "joins": [
+              {
+                "id": "ck6hylcck02014wowrbg764po",
+                "updatedAt": "2020-02-11T14:06:43.652Z",
+                "createdAt": "2020-02-11T14:06:43.652Z",
+                "tables": [
+                  {
+                    "id": "ck6hylccl02024wowgj5tcqqv",
+                    "owner": "",
+                    "table": "patients",
+                    "column": "subject_id",
+                    "updatedAt": "2020-02-11T14:06:58.600Z",
+                    "createdAt": "2020-02-11T14:06:43.652Z"
+                  },
+                  {
+                    "id": "ck6hylccn02034wowncbdeavf",
+                    "owner": "",
+                    "table": "admissions",
+                    "column": "subject_id",
+                    "updatedAt": "2020-02-11T14:06:58.600Z",
+                    "createdAt": "2020-02-11T14:06:43.652Z"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "ck6hzqv6u02304wown01kz6sk",
+      "path": "deceasedDateTime",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-11T14:39:00.965Z",
+      "createdAt": "2020-02-11T14:39:00.965Z",
+      "inputs": [
+        {
+          "id": "ck6hzqv9w02324wowm1ct0rlh",
+          "script": "clean_date",
+          "staticValue": null,
+          "updatedAt": "2020-02-11T14:39:03.920Z",
+          "createdAt": "2020-02-11T14:39:01.074Z",
+          "sqlValue": {
+            "id": "ck6hzqv9u02314wowc3k3qjc6",
+            "owner": "",
+            "table": "patients",
+            "column": "dod",
+            "updatedAt": "2020-02-11T14:39:01.074Z",
+            "createdAt": "2020-02-11T14:39:01.074Z",
+            "joins": []
+          }
+        }
+      ]
+    },
+    {
+      "id": "ck6j1m0ck00024unxxz59yixy",
+      "path": "generalPractitioner[0].type",
+      "mergingScript": null,
+      "comments": null,
+      "updatedAt": "2020-02-12T08:18:59.779Z",
+      "createdAt": "2020-02-12T08:18:59.779Z",
+      "inputs": [
+        {
+          "id": "ck6j1m0et00034unxxdb1z3i7",
+          "script": null,
+          "staticValue": "/Practitioner/",
+          "updatedAt": "2020-02-12T08:18:59.861Z",
+          "createdAt": "2020-02-12T08:18:59.861Z",
+          "sqlValue": null
+        }
+      ]
+    }
+  ]
+}

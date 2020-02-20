@@ -4,7 +4,7 @@ from unittest import mock, TestCase
 
 import fhirpipe.extract.mapping as mapping
 
-from test.unit import exported_source, patient_pruned
+from test.unit import exported_source, patient_mapping
 
 
 @mock.patch("fhirpipe.extract.mapping.get_mapping_from_file")
@@ -21,20 +21,20 @@ def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file):
     mock_get_mapping_from_file.reset_mock()
 
     # When providing source name
-    mapping.get_mapping(selected_sources=["source"], selected_resources=["sel"])
-    mock_get_mapping_from_graphql.assert_called_once_with(["source"], ["sel"], None)
+    mapping.get_mapping(selected_source="source", selected_resources=["sel"])
+    mock_get_mapping_from_graphql.assert_called_once_with("source", ["sel"], None)
     mock_get_mapping_from_graphql.reset_mock()
 
-    mapping.get_mapping(selected_sources=["source"])
-    mock_get_mapping_from_graphql.assert_called_once_with(["source"], None, None)
+    mapping.get_mapping(selected_source="source")
+    mock_get_mapping_from_graphql.assert_called_once_with("source", None, None)
     mock_get_mapping_from_graphql.reset_mock()
 
     # When providing both
-    mapping.get_mapping(from_file="file", selected_sources=["source"], selected_resources=["sel"])
+    mapping.get_mapping(from_file="file", selected_source="source", selected_resources=["sel"])
     mock_get_mapping_from_file.assert_called_once_with("file", ["sel"], None)
     mock_get_mapping_from_file.reset_mock()
 
-    mapping.get_mapping(from_file="file", selected_sources=["source"])
+    mapping.get_mapping(from_file="file", selected_source="source")
     mock_get_mapping_from_file.assert_called_once_with("file", None, None)
     mock_get_mapping_from_file.reset_mock()
 
@@ -51,19 +51,18 @@ def test_get_mapping_from_file(exported_source):
             "path", selected_resources=["Patient"], selected_labels=None
         )
 
-    assert [r["fhirType"] for r in resources] == ["Patient"]
+    assert [r["definitionId"] for r in resources] == ["Patient"]
     TestCase().assertCountEqual(
         resources[0].keys(),
         [
-            "fhirType",
             "id",
             "label",
-            "profile",
             "primaryKeyOwner",
             "primaryKeyTable",
             "primaryKeyColumn",
-            "createdAt",
             "updatedAt",
+            "createdAt",
+            "definitionId",
             "attributes",
         ],
     )
@@ -74,19 +73,28 @@ def test_get_mapping_from_file(exported_source):
             "path", selected_resources=None, selected_labels=None
         )
 
-    assert [r["fhirType"] for r in resources] == ["Patient", "HealthcareService"]
+    TestCase().assertCountEqual(
+        [r["definitionId"] for r in resources],
+        [
+            "Patient",
+            "Practitioner",
+            "EpisodeOfCare",
+            "EpisodeOfCare",
+            "DiagnosticReport",
+            "MedicationRequest",
+        ],
+    )
     TestCase().assertCountEqual(
         resources[0].keys(),
         [
-            "fhirType",
             "id",
             "label",
-            "profile",
             "primaryKeyOwner",
             "primaryKeyTable",
             "primaryKeyColumn",
-            "createdAt",
             "updatedAt",
+            "createdAt",
+            "definitionId",
             "attributes",
         ],
     )
@@ -94,14 +102,14 @@ def test_get_mapping_from_file(exported_source):
     # With selected labels
     with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
         resources = mapping.get_mapping_from_file(
-            "path", selected_resources=["Patient"], selected_labels=["wrong_label"]
+            "path", selected_resources=["EpisodeOfCare"], selected_labels=["wrong_label"]
         )
 
     assert resources == []
 
     with mock.patch("builtins.open", mock.mock_open(read_data=exported_source)):
         resources = mapping.get_mapping_from_file(
-            "path", selected_resources=["Patient"], selected_labels=["pat_label"]
+            "path", selected_resources=["EpisodeOfCare"], selected_labels=["admissions"]
         )
 
     assert len(resources) == 1
@@ -128,44 +136,63 @@ def test_get_mapping_from_graphql(mock_build_resources_query):
     ]
 
 
-def test_prune_fhir_resource(exported_source, patient_pruned):
-    resource = json.loads(exported_source)[0]
-    actual = mapping.prune_fhir_resource(resource)
+def test_get_primary_key():
+    # With owner
+    resource_mapping = {
+        "primaryKeyOwner": "owner",
+        "primaryKeyTable": "table",
+        "primaryKeyColumn": "col",
+    }
+    main_table, column = mapping.get_primary_key(resource_mapping)
 
-    # with open("test/fixtures/patient_pruned.json", "w") as fp:
-    #     json.dump(actual, fp, indent=2, separators=(",", ": "))
+    assert main_table == "owner.table"
+    assert column == "owner.table.col"
 
-    assert actual == patient_pruned
+    # Without owner
+    resource_mapping = {
+        "primaryKeyOwner": "",
+        "primaryKeyTable": "table",
+        "primaryKeyColumn": "col",
+    }
+    main_table, column = mapping.get_primary_key(resource_mapping)
+
+    assert main_table == "table"
+    assert column == "table.col"
+
+    # Raising error
+    resource_mapping = {
+        "primaryKeyOwner": "",
+        "primaryKeyTable": "",
+        "primaryKeyColumn": "col",
+        "definitionId": "fhirtype",
+    }
+    with pytest.raises(
+        ValueError, match="You need to provide a primary key table and column in the mapping"
+    ):
+        main_table, column = mapping.get_primary_key(resource_mapping)
 
 
-def test_find_cols_joins_and_scripts(patient_pruned):
-    fhir_resource = patient_pruned
+def test_find_cols_joins_and_scripts(patient_mapping):
+    fhir_resource = patient_mapping
 
     cols, joins, cleaning, merging = mapping.find_cols_joins_and_scripts(fhir_resource)
 
     assert cols == {
-        "PATIENTS.ROW_ID",
-        "PATIENTS.SUBJECT_ID",
-        "PATIENTS.DOB",
         "PATIENTS.GENDER",
-        "ADMISSIONS.LANGUAGE",
-        "SERVICES.ROW_ID",
+        "PATIENTS.DOB",
+        "admissions.marital_status",
+        "patients.row_id",
+        "admissions.hospital_expire_flag",
+        "patients.dod",
     }
-    assert joins == {
-        ("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID"),
-        ("PATIENTS.SUBJECT_ID", "SERVICES.SUBJECT_ID"),
-    }
+    assert joins == {("patients.subject_id", "admissions.subject_id")}
     assert cleaning == {
-        "clean_phone": ["PATIENTS.ROW_ID"],
         "map_gender": ["PATIENTS.GENDER"],
-        "make_title": ["ADMISSIONS.LANGUAGE"],
-        "clean_date": ["PATIENTS.DOB"],
+        "clean_date": ["PATIENTS.DOB", "patients.dod"],
+        "map_marital_status": ["admissions.marital_status"],
+        "binary_to_bool_1": ["admissions.hospital_expire_flag"],
     }
-    assert merging == {
-        "select_first_not_empty": [
-            (["PATIENTS.SUBJECT_ID", "clean_phone_PATIENTS.ROW_ID"], ["dummy"],)
-        ]
-    }
+    assert merging == []
 
 
 def test_build_squash_rules():
@@ -182,12 +209,13 @@ def test_build_squash_rules():
     assert actual == ["PATIENTS", [["ADMISSIONS", []]]]
 
 
-def test_find_reference_attributes(patient_pruned):
-    # TODO this test is a bit light
-    fhir_resource = patient_pruned
+# TODO uncomment and reimplement test when referencing enabled
+# def test_find_reference_attributes(patient_mapping):
+#     # TODO this test is a bit light
+#     fhir_resource = patient_mapping
 
-    actual = mapping.find_reference_attributes(fhir_resource)
+#     actual = mapping.find_reference_attributes(fhir_resource)
 
-    expected = [("generalPractitioner",)]
+#     expected = [("generalPractitioner",)]
 
-    assert actual == expected
+#     assert actual == expected

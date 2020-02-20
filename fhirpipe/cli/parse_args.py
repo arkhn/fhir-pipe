@@ -12,7 +12,7 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-s", "--sources", nargs="+", type=str, default=None, help="Names of sources to process",
+        "-s", "--source", type=str, default=None, help="Name of the source to process",
     )
 
     parser.add_argument(
@@ -44,6 +44,13 @@ def parse_args():
         action="store_true",
         default=False,
         help="Reset fhirstore before writing into it.",
+    )
+
+    parser.add_argument(
+        "--skip_ref_binding",
+        action="store_true",
+        default=False,
+        help="Bypass reference binding.",
     )
 
     parser.add_argument(

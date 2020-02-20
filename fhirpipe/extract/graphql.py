@@ -18,7 +18,7 @@ query credential($credentialId: ID!) {
 """
 
 
-def build_resources_query(selected_sources=None, selected_resources=None, selected_labels=None):
+def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
     """ Builds a graphql query fetching all the resources needed.
 
     Note that the .replace("'", '"') is needed because the graphql needs to have
@@ -26,25 +26,27 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
     """
     source_filter = (
         """source: {
-                name: { in: %s }
+                name: { equals: "%s" }
             }"""
-        % selected_sources
-        if selected_sources
+        % selected_source
+        if selected_source
         else ""
     )
-    resource_filter = "fhirType: { in: %s }" % selected_resources if selected_resources else ""
+    resource_filter = (
+        """definitionId: { in: %s }"""
+        % selected_resources
+        if selected_resources
+        else ""
+    )
     label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
 
     return (
         """fragment entireColumn on Column {
-    id
     owner
     table
     column
     joins {
-        id
         tables {
-            id
             owner
             table
             column
@@ -53,7 +55,6 @@ def build_resources_query(selected_sources=None, selected_resources=None, select
 }
 
 fragment entireInput on Input {
-    id
     sqlValue {
         ...entireColumn
     }
@@ -62,9 +63,7 @@ fragment entireInput on Input {
 }
 
 fragment a on Attribute {
-    id
-    name
-    fhirType
+    path
     mergingScript
     inputs {
         ...entireInput
@@ -81,54 +80,12 @@ query {
     })
     {
         id
-        fhirType
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
+        definitionId
         attributes {
             ...a
-            children {
-                ...a
-                children {
-                    ...a
-                    children {
-                        ...a
-                        children {
-                            ...a
-                            children {
-                                ...a
-                                children {
-                                    ...a
-                                    children {
-                                        ...a
-                                        children {
-                                            ...a
-                                            children {
-                                                ...a
-                                                children {
-                                                    ...a
-                                                    children {
-                                                        ...a
-                                                        children {
-                                                            ...a
-                                                            children {
-                                                                ...a
-                                                                children {
-                                                                    ...a
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
         }
     }
 }

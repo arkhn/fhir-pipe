@@ -55,10 +55,23 @@ def squash_rows(df, squash_rules, parent_cols=[]):
         df.groupby(pivot_cols, as_index=False)
         .apply(lambda x: x.drop_duplicates())
         .groupby(pivot_cols, as_index=False)
-        .agg(tuple)
+        .agg(flat_tuple_agg)
     )
 
     return df
+
+
+def flat_tuple_agg(values):
+    """ We don't want tuples of tuples when squashing several times a columns.
+    This function does the aggregation so that the resulting tuple isn't nested.
+    """
+    res = ()
+    for _, val in values.iteritems():
+        if isinstance(val, tuple):
+            res += val
+        else:
+            res += (val, )
+    return res
 
 
 def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
@@ -70,13 +83,13 @@ def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
                 df[col], script=script, id=df[primary_key_column], col=col
             )
 
-    for merging_script, cols_and_values in merging_scripts.items():
+    for merging_script, cols_and_values in merging_scripts:
         script = scripts.get_script(merging_script)
-        for cols, statics in cols_and_values:
-            args = [df[k] for k in cols] + statics
-            df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
-                *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
-            )
+        cols, statics = cols_and_values
+        args = [df[k] for k in cols] + statics
+        df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
+            *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
+        )
 
 
 def clean_and_log(val, script=None, id=None, col=None):

@@ -80,19 +80,20 @@ def rec_bind_reference(fhir_object, identifier_dict, path):
             # get id
             identifier = fhir_object["identifier"]["value"]
             # get referenced type (URI)
-            uri = fhir_object["identifier"]["system"]
+            ref_type = fhir_object["type"]
 
             # Get the fhir id
-            fhir_uri = (
-                identifier_dict[uri][identifier]
-                if uri in identifier_dict and identifier in identifier_dict[uri]
+            fhirstore_id = (
+                identifier_dict[ref_type][identifier]
+                if ref_type in identifier_dict and identifier in identifier_dict[ref_type]
                 else None
             )
 
             # If an instance was found, replace the provided
             # identifier with FHIR id found
-            if fhir_uri is not None:
-                fhir_object["identifier"]["value"] = fhir_uri
+            # TODO do I also need to remove the logical reference?
+            if fhirstore_id is not None:
+                fhir_object["reference"] = f"{ref_type}/{fhirstore_id}"
 
     elif isinstance(fhir_object, list):
         for child in fhir_object:

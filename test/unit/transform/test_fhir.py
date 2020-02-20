@@ -1,145 +1,196 @@
-import json
 import pandas as pd
-import pytest
-from unittest import mock
+from pytest import raises
 
 import fhirpipe.transform.fhir as transform
 
-from test.unit import patient_pruned
-from test.unit.load import mock_mongo_client
+from test.unit import patient_mapping
 
 
-def test_create_fhir_object(patient_pruned):
+def test_create_instance(patient_mapping):
     row = {
-        "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
+        "map_marital_status_admissions.marital_status": "D",
         "map_gender_PATIENTS.GENDER": "male",
-        "clean_date_PATIENTS.DOB": "2012-12-12",
-        "make_title_ADMISSIONS.LANGUAGE": "Engl",
-        "SERVICES.ROW_ID": "2345",
+        "clean_date_PATIENTS.DOB": "2000-10-10",
+        "patients.row_id": "123",
+        "binary_to_bool_1_admissions.hospital_expire_flag": "true",
+        "clean_date_patients.dod": "2100-01-01",
     }
-    resource_structure = patient_pruned
-    actual = transform.create_fhir_object(row, resource_structure)
+    resource_structure = patient_mapping
+    actual = transform.create_instance(row, resource_structure)
 
     assert actual == {
         "id": actual["id"],
-        "identifier": [{"value": "100092"}],
+        "identifier": [{"value": "123"}],
         "resourceType": "Patient",
-        "language": "Engl",
         "gender": "male",
-        "birthDate": "2012-12-12",
-        "address": [
-            {"city": "Paris", "country": "France"},
-            {"city": "NY", "state": "NY state", "country": "USA"},
-        ],
-        "generalPractitioner": [
-            {"identifier": {"system": "HealthcareService", "value": "2345"}}
-        ],
+        "birthDate": "2000-10-10",
+        "deceasedBoolean": "true",
+        "deceasedDateTime": "2100-01-01",
+        "maritalStatus": {"coding": [{"code": "D"}]},
+        "generalPractitioner": [{"type": "/Practitioner/"}],
     }
 
 
-def test_create_resource(patient_pruned):
+def test_create_resource(patient_mapping):
     rows = pd.DataFrame(
         [
             {
-                "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100092",
+                "map_marital_status_admissions.marital_status": "D",
                 "map_gender_PATIENTS.GENDER": "male",
-                "clean_date_PATIENTS.DOB": "2012-12-12",
-                "make_title_ADMISSIONS.LANGUAGE": "Engl",
-                "SERVICES.ROW_ID": "2345",
+                "clean_date_PATIENTS.DOB": "2000-10-10",
+                "patients.row_id": "123",
+                "binary_to_bool_1_admissions.hospital_expire_flag": "true",
+                "clean_date_patients.dod": "2100-01-01",
             },
             {
-                "select_first_not_empty_PATIENTS.SUBJECT_ID_clean_phone_PATIENTS.ROW_ID_dummy": "100093",
+                "map_marital_status_admissions.marital_status": "P",
                 "map_gender_PATIENTS.GENDER": "female",
-                "clean_date_PATIENTS.DOB": "2011-11-11",
-                "make_title_ADMISSIONS.LANGUAGE": "Fren",
-                "SERVICES.ROW_ID": "2346",
+                "clean_date_PATIENTS.DOB": "2001-11-11",
+                "patients.row_id": "124",
+                "binary_to_bool_1_admissions.hospital_expire_flag": "false",
+                "clean_date_patients.dod": "2101-11-11",
             },
         ]
     )
-    resource_structure = patient_pruned
+    resource_structure = patient_mapping
     actual = transform.create_resource(rows, resource_structure)
 
     assert actual == [
         {
             "id": actual[0]["id"],
-            "identifier": [{"value": "100092"}],
+            "identifier": [{"value": "123"}],
             "resourceType": "Patient",
-            "language": "Engl",
             "gender": "male",
-            "birthDate": "2012-12-12",
-            "address": [
-                {"city": "Paris", "country": "France"},
-                {"city": "NY", "state": "NY state", "country": "USA"},
-            ],
-            "generalPractitioner": [
-                {"identifier": {"system": "HealthcareService", "value": "2345"}}
-            ],
+            "birthDate": "2000-10-10",
+            "deceasedBoolean": "true",
+            "deceasedDateTime": "2100-01-01",
+            "maritalStatus": {"coding": [{"code": "D"}]},
+            "generalPractitioner": [{"type": "/Practitioner/"}],
         },
         {
             "id": actual[1]["id"],
-            "identifier": [{"value": "100093"}],
+            "identifier": [{"value": "124"}],
             "resourceType": "Patient",
-            "language": "Fren",
             "gender": "female",
-            "birthDate": "2011-11-11",
-            "address": [
-                {"city": "Paris", "country": "France"},
-                {"city": "NY", "state": "NY state", "country": "USA"},
-            ],
-            "generalPractitioner": [
-                {"identifier": {"system": "HealthcareService", "value": "2346"}}
-            ],
+            "birthDate": "2001-11-11",
+            "deceasedBoolean": "false",
+            "deceasedDateTime": "2101-11-11",
+            "maritalStatus": {"coding": [{"code": "P"}]},
+            "generalPractitioner": [{"type": "/Practitioner/"}],
         },
     ]
 
 
-# def test_min_length_leave():
-#     in_dict = {"a": [1, 2, 3], "b": {"c": [1, 2, 3], "d": 1}}
-#     res = transform.min_length_leave(in_dict)
+def test_fetch_values_from_dataframe():
+    # Without merging script
+    row = {
+        "PATIENTS.SUBJECT_ID": "123456",
+        "PATIENTS.DOB": "20000101",
+        "clean_date_PATIENTS.DOB": "2000-01-01",
+    }
+    mapping_inputs = [
+        {
+            "script": "clean_date",
+            "staticValue": None,
+            "sqlValue": {"owner": "", "table": "PATIENTS", "column": "DOB"},
+        }
+    ]
+    merging_script = ""
 
-#     assert res == 3
+    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
 
-#     # Should raise an exception
-#     in_dict = {"a": [1, 2, 3], "b": {"c": [1, 2], "d": 1}}
-#     with pytest.raises(Exception, match="Inconsistant lengths in child leaves."):
-#         res = transform.min_length_leave(in_dict)
+    assert value == "2000-01-01"
 
+    # With a merging script
+    row = {
+        "PATIENTS.SUBJECT_ID": "123456",
+        "clean_phone_PATIENTS.ROW_ID": "0987654321",
+        "merge_clean_phone_PATIENTS.ROW_ID_dummy": "value",
+    }
+    mapping_inputs = [
+        {
+            "script": "clean_phone",
+            "staticValue": None,
+            "sqlValue": {"owner": "", "table": "PATIENTS", "column": "ROW_ID", "joins": []},
+        },
+        {"script": None, "staticValue": "dummy", "sqlValue": None},
+    ]
+    merging_script = "merge"
 
-# def test_dl_2_ld():
-#     in_dict = {"a": [1, 2, 3], "b": {"c": [1, 2, 3], "d": 1}}
-#     actual = transform.dl_2_ld(in_dict, 3)
+    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
 
-#     expected = [
-#         {"a": 1, "b": {"c": 1, "d": 1}},
-#         {"a": 2, "b": {"c": 2, "d": 1}},
-#         {"a": 3, "b": {"c": 3, "d": 1}},
-#     ]
-
-#     assert actual == expected
-
-
-# def test_select_index_in_dl():
-#     in_dict = {"a": [1, 2, 3], "b": {"c": [1, 2, 3], "d": 1}}
-#     transform.select_index_in_dl(in_dict, 1)
-
-#     expected = {"a": 2, "b": {"c": 2, "d": 1}}
-
-#     assert in_dict == expected
+    assert value == "value"
 
 
-# def unlist_dict():
-#     in_dict = {"a": [1, 1], "b": {"c": [1], "d": 1}}
-#     unlist_dict(in_dict)
+def test_handle_array_attributes():
+    row = {
+        "PATIENTS.A": ("A1", "A2", "A3"),
+        "PATIENTS.B": "B",
+    }
+    attributes_in_array = {
+        "path1": {
+            "mergingScript": "",
+            "inputs": [
+                {"sqlValue": {"owner": "", "table": "PATIENTS", "column": "A"}, "script": ""}
+            ],
+        },
+        "path2": {
+            "mergingScript": "",
+            "inputs": [
+                {"sqlValue": {"owner": "", "table": "PATIENTS", "column": "B"}, "script": ""}
+            ],
+        },
+    }
 
-#     expected = {"a": 1, "b": {"c": 1, "d": 1}}
+    value = transform.handle_array_attributes(attributes_in_array, row)
 
-#     assert in_dict == expected
+    assert value == [
+        {"path1": "A1", "path2": "B"},
+        {"path1": "A2", "path2": "B"},
+        {"path1": "A3", "path2": "B"},
+    ]
 
-#     # Should raise an exception
-#     in_dict = {"a": [1, 2], "b": {"c": [1], "d": 1}}
-#     with pytest.raises(
-#         Exception,
-#         match="You cannot create a non-list attribute with a list of different values.",
-#     ):
-#         res = transform.min_length_leave(in_dict)
+    # With mismatch in lengths
+    row = {
+        "PATIENTS.A": ("A1", "A2", "A3"),
+        "PATIENTS.B": ("B1", "B2"),
+    }
+    with raises(AssertionError, match="mismatch in array lengths"):
+        transform.handle_array_attributes(attributes_in_array, row)
 
+
+def test_clean_fhir_object():
+    dirty = {
+        "a": {"b": [{"c": 123}, {"c": 123}, {"c": 123}, {"c": 222}, {"c": 222}]},
+        "d": [{"e": {"f": 456}}, {"e": {"f": 456}}, {"e": 456}],
+    }
+    clean = transform.clean_fhir_object(dirty)
+
+    expected = {
+        "a": {"b": [{"c": 123}, {"c": 222}]},
+        "d": [{"e": {"f": 456}}, {"e": 456}],
+    }
+
+    assert clean == expected
+
+
+def test_get_position_first_index():
+    path = ["root", "identifier[0]", "value"]
+    index = transform.get_position_first_index(path)
+    assert index == 1
+
+    path = ["identifier", "value"]
+    index = transform.get_position_first_index(path)
+    assert index is None
+
+
+def test_remove_index():
+    path = "root.identifier[0]"
+    result = transform.remove_index(path)
+    assert result == "root.identifier"
+
+
+def test_get_remove_root_path():
+    init_path = "identifier.0.value"
+    path = transform.remove_root_path(init_path, 2)
+    assert path == "value"
