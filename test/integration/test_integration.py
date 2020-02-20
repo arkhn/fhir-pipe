@@ -1,4 +1,5 @@
 from unittest import TestCase
+import pandas as pd
 
 import fhirpipe
 import fhirpipe.run as run
@@ -16,8 +17,7 @@ def test_run_from_file():
             connection=c,
             mapping="test/fixtures/mimic_mapping.json",
             source=None,
-            # resources=None,
-            resources=["MedicationRequest"],
+            resources=None,
             labels=None,
             reset_store=True,
             chunksize=None,
@@ -142,13 +142,23 @@ def test_run_no_reset():
 
 
 ### Helper functions and variables for assertions ###
-expected_patients_count = 100
-expected_episode_of_care_count = 265
-expected_med_req_count = 10398
-expected_diagnostic_report_count = 1761
-expected_practitioner_count = 7567
-id_sample_patient = "30831"
-id_sample_med_req = "32600"
+with get_connection() as c:
+    expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", c).at[0, "count"]
+    expected_episode_of_care_count = (
+        pd.read_sql_query("SELECT COUNT(*) FROM admissions", c).at[0, "count"]
+        + pd.read_sql_query("SELECT COUNT(*) FROM icustays", c).at[0, "count"]
+    )
+    expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions", c).at[
+        0, "count"
+    ]
+    expected_diagnostic_report_count = pd.read_sql_query(
+        "SELECT COUNT(*) FROM diagnoses_icd", c
+    ).at[0, "count"]
+    expected_practitioner_count = pd.read_sql_query("SELECT COUNT(*) FROM caregivers", c).at[
+        0, "count"
+    ]
+    id_sample_patient = "30831"
+    id_sample_med_req = "32600"
 
 
 def assert_result_as_expected(

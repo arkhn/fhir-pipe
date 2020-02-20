@@ -62,6 +62,9 @@ def squash_rows(df, squash_rules, parent_cols=[]):
 
 
 def flat_tuple_agg(values):
+    """ We don't want tuples of tuples when squashing several times a columns.
+    This function does the aggregation so that the resulting tuple isn't nested.
+    """
     res = ()
     for _, val in values.iteritems():
         if isinstance(val, tuple):

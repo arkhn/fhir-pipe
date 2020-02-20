@@ -166,11 +166,14 @@ def insert_in_fhir_object(fhir_object, path, value):
         # the values are identical and insert only one of them.
         # This can happen after a join on a table for which the other values are different
         # and have been squashed.
-        assert (
-            all([v == value[0] for v in value]) or path == "deceasedBoolean"
+        assert all(
+            [v == value[0] for v in value]
         ), f"Trying to insert several different values in a non-list attribute: {value} in {path}"
         val = value[0]
-    elif value is None or value == '':
+    # TODO we return if value is "" because empty strings don't pass validation for some fhir
+    # attributes but it would be better to return None in the cleaning scripts if we don't want to
+    # add an empty string.
+    elif value is None or value == "":
         # If value is None, we don't want to do anything so we stop here.
         return
     else:
