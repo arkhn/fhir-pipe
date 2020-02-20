@@ -6,7 +6,7 @@ from fhirpipe import set_global_config, setup_logging
 from fhirpipe.api.routes import api
 
 
-def create_app():    
+def create_app():
     config_file = os.getenv("CONFIG_PATH", "config.yml")
     print(f"Using config from {config_file}...")
     set_global_config(config_file)
