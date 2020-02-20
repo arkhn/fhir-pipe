@@ -20,6 +20,7 @@ default_params = {
     "chunksize": None,
     "bypass_validation": False,
     "multiprocessing": False,
+    "primary_key_values": None,
 }
 
 

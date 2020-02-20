@@ -15,6 +15,7 @@ from fhirpipe.extract.mapping import (
     build_squash_rules,
 )
 from fhirpipe.extract.sql import (
+    build_sql_filters,
     build_sql_query,
     run_sql_query,
     get_connection,
@@ -36,6 +37,7 @@ def run(
     chunksize,
     bypass_validation,
     multiprocessing,
+    primary_key_values,
 ):
     """
     """
@@ -73,8 +75,11 @@ def run(
         # Add primary key column if it was not there
         cols.add(primary_key_column)
 
+        # Build sql filters (for now, it's only for row selection)
+        sql_filters = build_sql_filters(primary_key_column, primary_key_values)
+
         # Build the sql query
-        sql_query = build_sql_query(cols, joins, primary_key_table)
+        sql_query = build_sql_query(cols, joins, primary_key_table, sql_filters)
         logging.info("sql query: %s", sql_query)
 
         # Build squash rules
@@ -161,4 +166,5 @@ if __name__ == "__main__":
             chunksize=args.chunksize,
             bypass_validation=args.bypass_validation,
             multiprocessing=args.multiprocessing,
+            primary_key_values=args.primary_key_values,
         )
