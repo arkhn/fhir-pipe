@@ -56,11 +56,8 @@ def run():
     return jsonify(success=True)
 
 
-@api.route("/preview", methods=["GET"])
-def preview():
-    resource_id = request.args.get("resourceId")
-    primary_key_value = request.args.get("primaryKeyValue")
-
+@api.route("/preview/<resource_id>/<primary_key_value>", methods=["GET"])
+def preview(resource_id, primary_key_value):
     resource_mapping = get_resource_from_id(resource_id)
 
     # Get credentials if given in request

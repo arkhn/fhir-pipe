@@ -35,7 +35,7 @@ fragment a on Attribute {
 }"""
 
 cred_fragment = """
-fragment cred on Attribute {
+fragment cred on Credential {
     model
     host
     port
