@@ -7,8 +7,24 @@ import fhirpipe
 from fhirpipe.utils import get_table_name
 
 
-def build_sql_query(columns, joins, table_name):
+def build_sql_filters(primary_key_column, primary_key_values):
     """
+    Build sql WHERE clauses.
+    Currently, it's only used for running the ETL on a few selected rows
+    but it will also be used to conditionally process a row.
+    """
+    if primary_key_values is None:
+        return None
+
+    if len(primary_key_values) == 1:
+        return f"\nWHERE {primary_key_column}={primary_key_values[0]}"
+
+    return f"\nWHERE {primary_key_column} IN {tuple(primary_key_values)}"
+
+
+def build_sql_query(columns, joins, table_name, sql_filters=None):
+    """
+    Writes the sql query from the information gathered by the Analyzer.
     """
     sql_cols = ", ".join(columns)
     sql_joins = "\n".join(
@@ -17,7 +33,7 @@ def build_sql_query(columns, joins, table_name):
             for join_source, join_target in joins
         ]
     )
-    return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}"
+    return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}{sql_filters or ''}"
 
 
 @contextmanager

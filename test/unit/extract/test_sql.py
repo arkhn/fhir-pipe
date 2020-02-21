@@ -6,6 +6,25 @@ from test.unit import mock_config
 import fhirpipe.extract.sql as sql
 
 
+def test_build_sql_filters():
+    primary_key_column = "owner.table.col"
+    primary_key_values = [1, 2, 3]
+
+    filters = sql.build_sql_filters(primary_key_column, primary_key_values)
+
+    assert filters == "\nWHERE owner.table.col IN (1, 2, 3)"
+
+    primary_key_values = [123]
+
+    filters = sql.build_sql_filters(primary_key_column, primary_key_values)
+
+    assert filters == "\nWHERE owner.table.col=123"
+
+    filters = sql.build_sql_filters(primary_key_column, None)
+
+    assert filters is None
+
+
 def test_build_sql_query():
     cols = [
         "ADMISSIONS.LANGUAGE",
@@ -57,6 +76,25 @@ def test_build_sql_query():
         "FROM PATIENTS\n"
         "LEFT JOIN ADMISSIONS ON PATIENTS.SUBJECT_ID=ADMISSIONS.SUBJECT_ID\n"
         "LEFT JOIN MEDICATION ON PATIENTS.SUBJECT_ID=MEDICATION.SUBJECT_ID"
+    )
+
+    # With filters
+    cols = [
+        "ADMISSIONS.LANGUAGE",
+        "PATIENTS.DOD",
+        "PATIENTS.SUBJECT_ID",
+    ]  # NOTE: I use a list instead of a set to keep the order of elements
+    joins = {("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID")}
+    table = "PATIENTS"
+    filters = "WHERE PATIENTS.SUBJECT_ID IN (123, 456)\n"
+
+    actual = sql.build_sql_query(cols, joins, table, filters)
+
+    assert actual == (
+        "SELECT ADMISSIONS.LANGUAGE, PATIENTS.DOD, PATIENTS.SUBJECT_ID\n"
+        "FROM PATIENTS\n"
+        "LEFT JOIN ADMISSIONS ON PATIENTS.SUBJECT_ID=ADMISSIONS.SUBJECT_ID"
+        "WHERE PATIENTS.SUBJECT_ID IN (123, 456)\n"
     )
 
 

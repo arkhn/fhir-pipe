@@ -1,14 +1,13 @@
-import json
 import pytest
 from unittest import mock, TestCase
 
-import fhirpipe.extract.mapping as mapping
+import fhirpipe.analyze.mapping as mapping
 
 from test.unit import exported_source, patient_mapping
 
 
-@mock.patch("fhirpipe.extract.mapping.get_mapping_from_file")
-@mock.patch("fhirpipe.extract.mapping.get_mapping_from_graphql")
+@mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
+@mock.patch("fhirpipe.analyze.mapping.get_mapping_from_graphql")
 def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file):
 
     # When providing file
@@ -121,8 +120,8 @@ def mock_run_graphql_query(graphql_query, variables=None):
     }
 
 
-@mock.patch("fhirpipe.extract.mapping.run_graphql_query", mock_run_graphql_query)
-@mock.patch("fhirpipe.extract.mapping.build_resources_query")
+@mock.patch("fhirpipe.analyze.mapping.run_graphql_query", mock_run_graphql_query)
+@mock.patch("fhirpipe.analyze.mapping.build_resources_query")
 def test_get_mapping_from_graphql(mock_build_resources_query):
     resources = mapping.get_mapping_from_graphql(["chimio"], ["Patient"], None)
     # Need to consume the generator for the assert_called_once_with to work

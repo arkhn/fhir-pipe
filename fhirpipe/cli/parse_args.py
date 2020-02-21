@@ -68,4 +68,13 @@ def parse_args():
         help="Use multiprocessing to build and save fhir objects.",
     )
 
+    parser.add_argument(
+        "-pk",
+        "--primary_key_values",
+        nargs="+",
+        type=str,
+        default=None,
+        help="Row selection from primary key values",
+    )
+
     return parser.parse_args()

@@ -53,7 +53,6 @@ def get_mapping_from_file(path, selected_resources, selected_labels):
 def get_mapping_from_graphql(selected_source, selected_resources, selected_labels):
     # Build the query
     query = build_resources_query(selected_source, selected_resources, selected_labels)
-
     # Run it
     resources = run_graphql_query(query)
 

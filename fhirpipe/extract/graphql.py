@@ -4,44 +4,8 @@ import fhirpipe
 from fhirpipe.errors import OperationOutcome
 
 
-credential_query = """
-query credential($credentialId: ID!) {
-    credential(credentialId: $credentialId) {
-        model
-        host
-        port
-        database
-        login
-        password
-    }
-}
-"""
-
-
-def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
-    """ Builds a graphql query fetching all the resources needed.
-
-    Note that the .replace("'", '"') is needed because the graphql needs to have
-    strings delimited by double quotes.
-    """
-    source_filter = (
-        """source: {
-                name: { equals: "%s" }
-            }"""
-        % selected_source
-        if selected_source
-        else ""
-    )
-    resource_filter = (
-        """definitionId: { in: %s }"""
-        % selected_resources
-        if selected_resources
-        else ""
-    )
-    label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
-
-    return (
-        """fragment entireColumn on Column {
+attr_fragment = """
+fragment entireColumn on Column {
     owner
     table
     column
@@ -68,7 +32,79 @@ fragment a on Attribute {
     inputs {
         ...entireInput
     }
+}"""
+
+cred_fragment = """
+fragment cred on Attribute {
+    model
+    host
+    port
+    database
+    login
+    password
 }
+"""
+
+credential_query = """
+%s
+
+query credential($credentialId: ID!) {
+    credential(credentialId: $credentialId) {
+        ...cred
+    }
+}
+""" % cred_fragment
+
+resource_from_id_query = """
+%s
+
+%s
+
+query resource($resourceId: ID!) {
+    resource(resourceId: $resourceId) {
+        id
+        primaryKeyOwner
+        primaryKeyTable
+        primaryKeyColumn
+        definitionId
+        attributes {
+            ...a
+        }
+        source {
+            id
+            credential {
+                ...cred
+            }
+        }
+    }
+}
+""" % (attr_fragment, cred_fragment)
+
+
+def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
+    """ Builds a graphql query fetching all the resources needed.
+
+    Note that the .replace("'", '"') is needed because the graphql needs to have
+    strings delimited by double quotes.
+    """
+    source_filter = (
+        """source: {
+                name: { equals: "%s" }
+            }"""
+        % selected_source
+        if selected_source
+        else ""
+    )
+    resource_filter = (
+        """definitionId: { in: %s }"""
+        % selected_resources
+        if selected_resources
+        else ""
+    )
+    label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
+
+    return (
+        """%s
 
 query {
     resources(filter: {
@@ -90,7 +126,7 @@ query {
     }
 }
 """
-        % (source_filter, resource_filter, label_filter)
+        % (attr_fragment, source_filter, resource_filter, label_filter)
     ).replace("'", '"')
 
 
@@ -129,3 +165,11 @@ def get_credentials(credential_id):
     if not credentials:
         raise OperationOutcome(f"Database using credentials ID {credential_id} does not exist")
     return credentials
+
+
+def get_resource_from_id(resource_id):
+    resp = run_graphql_query(resource_from_id_query, variables={"resourceId": resource_id})
+    resource = resp["data"]["resource"]
+    if not resource:
+        raise OperationOutcome(f"Resource with id {resource_id} does not exist")
+    return resource

@@ -8,13 +8,13 @@ from fhirpipe.utils import new_col_name
 
 def squash_rows(df, squash_rules, parent_cols=[]):
     """
-    Apply the OneToMany joins to have a single result with a list in it from
-    a list of "flat" results.
+    Apply the squash rules to have a single row for each instance. This is needed
+    because joins will create several rows with the same primary key.
 
     args:
-        rows (list<str>): all the results returned from a sql query
-        squash_rules (tuple<list>): which columns should serve as identifier to
-        merge the rows
+        df (dataframe): the original dataframe with possibly several rows for the same
+            primary key.
+        squash_rules (nested list): squash rules built by the Analyzer
         parent_cols (list): param used for recursive call
 
     Example:
@@ -27,14 +27,12 @@ def squash_rows(df, squash_rules, parent_cols=[]):
         Robert              21          Compte d'epargne    123456789
         David               51          Ibiza summer        100
 
-        Squash rule:
-        ('GUY', 'ACCOUNT') or in terms of columns ([0, ..., 5], [6, 7])
+        Squash rule: ['GUY', ['ACCOUNT', []]
 
         Output:
-        GUY.NAME    ...     GUY.AGE     ACCOUNT.NAME        ACCOUNT.AMOUNT
-        Robert              21        [(Compte courant   ,  17654         )
-                                       (Compte d'epargne ,  123456789     )]
-        David               51          Ibiza summer        100
+        GUY.NAME    ...     GUY.AGE   ACCOUNT.NAME                        ACCOUNT.AMOUNT
+        Robert              21        (Compte courant, Compte d'epargne)  (17654, 123456789)
+        David               51        Ibiza summer                        100
     """
     table, child_rules = squash_rules
 
