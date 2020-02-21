@@ -4,7 +4,7 @@ import fhirpipe
 from fhirpipe.errors import OperationOutcome
 
 
-fragments = """
+attr_fragment = """
 fragment entireColumn on Column {
     owner
     table
@@ -34,20 +34,30 @@ fragment a on Attribute {
     }
 }"""
 
-credential_query = """
-query credential($credentialId: ID!) {
-    credential(credentialId: $credentialId) {
-        model
-        host
-        port
-        database
-        login
-        password
-    }
+cred_fragment = """
+fragment cred on Attribute {
+    model
+    host
+    port
+    database
+    login
+    password
 }
 """
 
+credential_query = """
+%s
+
+query credential($credentialId: ID!) {
+    credential(credentialId: $credentialId) {
+        ...cred
+    }
+}
+""" % cred_fragment
+
 resource_from_id_query = """
+%s
+
 %s
 
 query resource($resourceId: ID!) {
@@ -63,17 +73,12 @@ query resource($resourceId: ID!) {
         source {
             id
             credential {
-                model
-                host
-                port
-                database
-                login
-                password
+                ...cred
             }
         }
     }
 }
-""" % fragments
+""" % (attr_fragment, cred_fragment)
 
 
 def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
@@ -121,7 +126,7 @@ query {
     }
 }
 """
-        % (fragments, source_filter, resource_filter, label_filter)
+        % (attr_fragment, source_filter, resource_filter, label_filter)
     ).replace("'", '"')
 
 

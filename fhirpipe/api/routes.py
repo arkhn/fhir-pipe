@@ -67,12 +67,10 @@ def preview():
     credentials = None
     connection_type = None
 
-    if resource_mapping["source"]["credential"]:
-        credentials, connection_type = transform_credentials(
-            resource_mapping["source"]["credential"]
-        )
-    else:
+    if not resource_mapping["source"]["credential"]:
         raise OperationOutcome("credentialId is required to run fhirpipe.")
+
+    credentials, connection_type = transform_credentials(resource_mapping["source"]["credential"])
 
     try:
         # Connect to DB and run

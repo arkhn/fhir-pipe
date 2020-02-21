@@ -16,11 +16,11 @@ class Extractor:
         logging.info("Extracting resource: %s", resource_mapping["definitionId"])
 
         # Build sql filters (for now, it's only for row selection)
-        sql_filters = build_sql_filters(analysis["primary_key_column"], primary_key_values)
+        sql_filters = build_sql_filters(analysis.primary_key_column, primary_key_values)
 
         # Build the sql query
         sql_query = build_sql_query(
-            analysis["cols"], analysis["joins"], analysis["primary_key_table"], sql_filters
+            analysis.cols, analysis.joins, analysis.primary_key_table, sql_filters
         )
         logging.info("sql query: %s", sql_query)
 

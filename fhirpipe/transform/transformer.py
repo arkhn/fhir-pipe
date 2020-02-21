@@ -17,19 +17,19 @@ class Transformer:
         chunk = chunk.applymap(lambda value: str(value) if value is not None else None)
 
         # Force names of dataframe cols to be the same as in SQL query
-        chunk.columns = analysis["cols"]
+        chunk.columns = analysis.cols
 
         # Apply cleaning and merging scripts on chunk
         apply_scripts(
             chunk,
-            analysis["cleaning"],
-            analysis["merging"],
-            analysis["primary_key_column"],
+            analysis.cleaning,
+            analysis.merging,
+            analysis.primary_key_column,
         )
 
         # Apply join rule to merge some lines from the same resource
         logging.info("Squashing rows...")
-        chunk = squash_rows(chunk, analysis["squash_rules"])
+        chunk = squash_rows(chunk, analysis.squash_rules)
 
         if self.pool:
             fhir_instances = self.pool.map(

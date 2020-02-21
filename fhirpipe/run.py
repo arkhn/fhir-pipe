@@ -119,10 +119,3 @@ if __name__ == "__main__":
             bypass_validation=args.bypass_validation,
             multiprocessing=args.multiprocessing,
         )
-
-        # res = preview(
-        #     connection=connection,
-        #     resource_id="ck6jicxba0001qzf8c4p7x5av",
-        #     primary_key_values=["10006"],
-        # )
-        # print(res)
