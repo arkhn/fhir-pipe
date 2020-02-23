@@ -47,22 +47,36 @@ def test_apply_scripts(get_script):
             "NAME": ["alice", "bob", "charlie"],
             "ADDRESS": ["addr1", "addr2", "addr3"],
             "ID": ["id1", "id2", "id3"],
+            "GENDER": ["M", "F", "F"],
+            "CODE": ["ABC", "DEF", "GHI"],
         },
     )
-    cleaning = {"clean1": ["NAME"], "clean2": ["NAME", "ADDRESS"]}
+    cleaning = {"clean1": ["NAME"], "clean2": ["NAME", "ADDRESS", "CODE"]}
+    concept_maps = {"mapgenderId": ["GENDER"], "mapcodeId": ["clean2_CODE"]}
+    dict_concept_maps = {
+        "mapgenderId": ("mapgender", {"M": "male", "F": "female"}),
+        "mapcodeId": ("mapcode", {"ABCcleaned": "abc", "DEFcleaned": "def", "GHIcleaned": "ghi"}),
+    }
     merging = [("merge", (["ADDRESS", "ID"], ["val"]))]
     primary_key_column = "ID"
 
-    transform.apply_scripts(df, cleaning, merging, primary_key_column)
+    transform.apply_scripts(
+        df, cleaning, concept_maps, dict_concept_maps, merging, primary_key_column
+    )
 
     expected = pd.DataFrame(
         {
             "NAME": ["alice", "bob", "charlie"],
             "ADDRESS": ["addr1", "addr2", "addr3"],
             "ID": ["id1", "id2", "id3"],
+            "GENDER": ["M", "F", "F"],
+            "CODE": ["ABC", "DEF", "GHI"],
             "clean1_NAME": ["alicecleaned", "bobcleaned", "charliecleaned"],
             "clean2_NAME": ["alicecleaned", "bobcleaned", "charliecleaned"],
             "clean2_ADDRESS": ["addr1cleaned", "addr2cleaned", "addr3cleaned"],
+            "clean2_CODE": ["ABCcleaned", "DEFcleaned", "GHIcleaned"],
+            "mapgender_GENDER": ["male", "female", "female"],
+            "mapcode_clean2_CODE": ["abc", "def", "ghi"],
             "merge_ADDRESS_ID_val": ["id1valmerge", "id2valmerge", "id3valmerge"],
         },
     )

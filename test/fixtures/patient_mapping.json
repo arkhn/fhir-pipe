@@ -11,6 +11,7 @@
     "derivation": "specialization",
     "url": "http://hl7.org/fhir/StructureDefinition/Patient"
   },
+  "filters": [],
   "updatedAt": "2020-02-10T17:47:31.665Z",
   "createdAt": "2020-02-10T13:37:29.571Z",
   "source": {

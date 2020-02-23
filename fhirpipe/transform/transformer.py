@@ -23,6 +23,8 @@ class Transformer:
         apply_scripts(
             chunk,
             analysis.cleaning,
+            analysis.concept_maps,
+            analysis.dict_concept_maps,
             analysis.merging,
             analysis.primary_key_column,
         )

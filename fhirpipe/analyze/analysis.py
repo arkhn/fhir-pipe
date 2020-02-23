@@ -7,3 +7,4 @@ class Analysis:
         self.cleaning = None
         self.merging = None
         self.squash_rules = None
+        self.concept_maps = None

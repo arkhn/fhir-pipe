@@ -68,17 +68,26 @@ def flat_tuple_agg(values):
         if isinstance(val, tuple):
             res += val
         else:
-            res += (val, )
+            res += (val,)
     return res
 
 
-def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
+def apply_scripts(
+    df, cleaning_scripts, concept_maps, dict_maps, merging_scripts, primary_key_column
+):
 
     for cleaning_script, columns in cleaning_scripts.items():
         script = scripts.get_script(cleaning_script)
         for col in columns:
             df[new_col_name(cleaning_script, col)] = np.vectorize(clean_and_log)(
                 df[col], script=script, id=df[primary_key_column], col=col
+            )
+
+    for concept_map_id, columns in concept_maps.items():
+        map_title, dict_map = dict_maps[concept_map_id]
+        for col in columns:
+            df[new_col_name(map_title, col)] = np.vectorize(map_and_log)(
+                df[col], map_title=map_title, dict_map=dict_map, id=df[primary_key_column], col=col
             )
 
     for merging_script, cols_and_values in merging_scripts:
@@ -95,6 +104,13 @@ def clean_and_log(val, script=None, id=None, col=None):
         return script(val)
     except Exception as e:
         logging.error(f"{script.__name__}: Error cleaning {col} (at id = {id}): {e}")
+
+
+def map_and_log(val, map_title=None, dict_map=None, id=None, col=None):
+    try:
+        return dict_map[val]
+    except Exception as e:
+        logging.error(f"{map_title}: Error cleaning {col} (at id = {id}): {e}")
 
 
 def merge_and_log(*val, script=None, id=None, cols=None):

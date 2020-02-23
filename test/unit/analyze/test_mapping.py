@@ -173,10 +173,56 @@ def test_get_primary_key():
         main_table, column = mapping.get_primary_key(resource_mapping)
 
 
-def test_find_cols_joins_and_scripts(patient_mapping):
+def test_get_concept_maps():
+    # TODO
+    pass
+
+
+def test_fecth_concept_map():
+    # TODO
+    pass
+
+
+def test_concept_map_to_dict():
+    concept_map = {
+        "sourceUri": "sourceUri",
+        "targetUri": "targetUri",
+        "group": [
+            {
+                "source": "src",
+                "target": "trgt",
+                "element": [
+                    {"code": "src_code", "target": [{"code": "trgt_code"}, {"code": "not_used"}]},
+                    {"code": "code1", "target": [{"code": "code2"}]},
+                ],
+            },
+            {
+                "source": "sys1",
+                "target": "sys2",
+                "element": [
+                    {"code": "11", "target": [{"code": "12"}]},
+                    {"code": "21", "target": [{"code": "22"}]},
+                    {"code": "31", "target": [{"code": "32"}]},
+                ],
+            }
+        ],
+    }
+
+    dict_map = mapping.concept_map_to_dict(concept_map)
+
+    assert dict_map == {
+        "src_code": "trgt_code",
+        "code1": "code2",
+        "11": "12",
+        "21": "22",
+        "31": "32",
+    }
+
+
+def test_find_cols_joins_maps_scripts(patient_mapping):
     fhir_resource = patient_mapping
 
-    cols, joins, cleaning, merging = mapping.find_cols_joins_and_scripts(fhir_resource)
+    cols, joins, cleaning, concept_maps, merging = mapping.find_cols_joins_maps_scripts(fhir_resource)
 
     assert cols == {
         "PATIENTS.GENDER",
@@ -193,6 +239,7 @@ def test_find_cols_joins_and_scripts(patient_mapping):
         "map_marital_status": ["admissions.marital_status"],
         "binary_to_bool_1": ["admissions.hospital_expire_flag"],
     }
+    assert concept_maps == {}
     assert merging == []
 
 
