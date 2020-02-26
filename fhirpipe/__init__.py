@@ -1,3 +1,4 @@
+import sys
 import yaml
 import logging
 
@@ -14,11 +15,17 @@ def set_global_config(config_path):
 
 
 def setup_logging():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(message)s")
     filename = None
     if global_config and global_config.get("logging"):
         filename = global_config["logging"].get("filename")
     else:
-        logging.warning("Logging configuration not found, logging on stdout...")
+        logger.warning("Logging configuration not found, logging on stdout...")
+        handler = logging.StreamHandler(sys.stderr)
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
 
     logging.basicConfig(
         filename=filename, format="%(asctime)s %(levelname)s %(message)s", level=logging.DEBUG,
