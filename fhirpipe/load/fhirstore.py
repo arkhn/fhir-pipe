@@ -36,7 +36,7 @@ def get_fhirstore():
     return _fhirstore
 
 
-def save_many(instances, bypass_validation=False):
+def save_many(instances, bypass_validation=False, multi_processing=False):
     """
     Save instances of FHIR resources in MongoDB through fhirstore.
 
@@ -44,6 +44,9 @@ def save_many(instances, bypass_validation=False):
         instances (list): list of instances
     """
     store = get_fhirstore()
+    if multi_processing:
+        store.resume()
+
     instances = tqdm(instances)
     for instance in instances:
         try:

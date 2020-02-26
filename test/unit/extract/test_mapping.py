@@ -3,8 +3,6 @@ from unittest import mock, TestCase
 
 import fhirpipe.analyze.mapping as mapping
 
-from test.unit import exported_source, patient_mapping
-
 
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_graphql")
@@ -62,6 +60,7 @@ def test_get_mapping_from_file(exported_source):
             "updatedAt",
             "createdAt",
             "definitionId",
+            "definition",
             "attributes",
         ],
     )

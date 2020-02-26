@@ -19,7 +19,7 @@ class Loader:
 
         if self.pool:
             self.pool.map(
-                partial(save_many, bypass_validation=self.bypass_validation),
+                partial(save_many, bypass_validation=self.bypass_validation, multi_processing=True),
                 fhir_instances,
             )
         else:
