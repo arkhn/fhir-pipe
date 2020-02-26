@@ -72,6 +72,9 @@ query resource($resourceId: ID!) {
         definitionId
         definition {
             type
+            kind
+            derivation
+            url
         }
         attributes {
             ...a
@@ -128,6 +131,9 @@ query {
         definitionId
         definition {
             type
+            kind
+            derivation
+            url
         }
         attributes {
             ...a

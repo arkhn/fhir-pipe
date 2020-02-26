@@ -1,4 +1,4 @@
-from unittest import TestCase
+from unittest import TestCase, mock
 import pandas as pd
 
 import fhirpipe
@@ -10,8 +10,18 @@ from fhirpipe.extract.sql import get_connection
 fhirpipe.set_global_config("test/integration/config-test.yml")
 
 
-### Run from mapping file ###
-def test_run_from_file():
+lastUpdated = "2017-01-01T00:00:00Z"
+
+
+class mockdatetime:
+    def strftime(self, _):
+        return lastUpdated
+
+
+# Run from mapping file
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_run_from_file(mock_datetime):
+    mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
             connection=c,
@@ -28,7 +38,7 @@ def test_run_from_file():
 
 
 """
-### Run with graphQL queries ###
+# Run with graphQL queries #
 def test_run_from_gql():
     with get_connection() as c:
         run.run(
@@ -46,8 +56,10 @@ def test_run_from_gql():
 """
 
 
-### Run for a list of resources ###
-def test_run_resource():
+# Run for a list of resources #
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_run_resource(mock_datetime):
+    mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
             connection=c,
@@ -69,7 +81,7 @@ def test_run_resource():
     assert_sample_patient_comparison(mongo_client)
 
 
-### Run by batch ###
+# Run by batch #
 # When using batch processing, df can be cut at any place and some rows that should
 # be squashed can be in different chunks
 """
@@ -90,7 +102,9 @@ def test_run_batch():
 """
 
 
-def test_run_multiprocessing():
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_run_multiprocessing(mock_datetime):
+    mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
             connection=c,
@@ -106,8 +120,10 @@ def test_run_multiprocessing():
     assert_result_as_expected()
 
 
-### Run without resetting the mongo DB ###
-def test_run_no_reset():
+# Run without resetting the mongo DB #
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_run_no_reset(mock_datetime):
+    mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
             connection=c,
@@ -141,7 +157,7 @@ def test_run_no_reset():
     )
 
 
-### Helper functions and variables for assertions ###
+# Helper functions and variables for assertions #
 with get_connection() as c:
     expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", c).at[0, "count"]
     expected_episode_of_care_count = (
@@ -206,6 +222,7 @@ def assert_sample_patient_comparison(mongo_client):
     sample_patient = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
     assert sample_patient == {
+        "meta": {"lastUpdated": lastUpdated},
         "_id": sample_patient["_id"],
         "id": sample_patient["id"],
         "resourceType": "Patient",
@@ -225,6 +242,7 @@ def assert_sample_med_req_comparison(mongo_client):
     )
 
     assert sample_med_req == {
+        "meta": {"lastUpdated": lastUpdated},
         "_id": sample_med_req["_id"],
         "id": sample_med_req["id"],
         "resourceType": "MedicationRequest",
