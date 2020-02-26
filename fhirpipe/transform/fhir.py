@@ -36,7 +36,7 @@ def create_instance(row, mapping):
 
     # Identify the fhir object
     fhir_object["id"] = str(uuid4())
-    fhir_object["resourceType"] = mapping["definitionId"]
+    fhir_object["resourceType"] = mapping["definition"]["type"]
 
     # Remove duplicates in fhir object
     fhir_object = clean_fhir_object(fhir_object)

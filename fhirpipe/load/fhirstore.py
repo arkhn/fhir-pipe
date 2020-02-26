@@ -32,7 +32,7 @@ def get_fhirstore():
         _fhirstore = fhirstore.FHIRStore(
             get_mongo_client(), None, fhirpipe.global_config["fhirstore"]["database"]
         )
-    _fhirstore.resume()
+        _fhirstore.resume()
     return _fhirstore
 
 
