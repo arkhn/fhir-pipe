@@ -1,7 +1,7 @@
 from unittest import mock
 from pytest import raises
 
-from test.unit import mock_config
+from test.unit.conftest import mock_config
 import fhirpipe.extract.graphql as gql
 
 
@@ -19,10 +19,7 @@ def test_build_resources_query():
     # With selected resources
     query = gql.build_resources_query(selected_resources=["Patient", "Observation"])
 
-    assert (
-        """definitionId: { in: ["Patient", "Observation"] }"""
-        in query
-    )
+    assert """definitionId: { in: ["Patient", "Observation"] }""" in query
 
     # With selected source
     query = gql.build_resources_query(selected_labels=["label"])
