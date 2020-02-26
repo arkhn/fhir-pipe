@@ -3,8 +3,6 @@ from pytest import raises
 
 import fhirpipe.transform.fhir as transform
 
-from test.unit import patient_mapping
-
 
 def test_create_instance(patient_mapping):
     row = {

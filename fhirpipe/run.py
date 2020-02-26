@@ -60,7 +60,7 @@ def run(
 
         for chunk in df:
             fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
-            loader.load(fhirstore, fhir_instances, resource_mapping["definitionId"])
+            loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
     # TODO we cannot bind references for the moment because we don't have any information about
     # the type of the attributes in the mapping. When this is fixed, we can uncomment what's below

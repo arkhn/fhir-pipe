@@ -1,7 +1,7 @@
 from unittest import mock
 from pytest import raises
 
-from test.unit import mock_config
+from test.unit.conftest import mock_config
 
 import fhirpipe.extract.sql as sql
 

@@ -14,6 +14,9 @@
       "primaryKeyTable": "caregivers",
       "primaryKeyColumn": "row_id",
       "definitionId": "Practitioner",
+      "definition": {
+        "type": "Practitioner"
+      },
       "updatedAt": "2020-02-10T15:31:14.230Z",
       "createdAt": "2020-02-10T15:30:45.334Z",
       "attributes": [
@@ -52,6 +55,9 @@
       "primaryKeyTable": "admissions",
       "primaryKeyColumn": "row_id",
       "definitionId": "EpisodeOfCare",
+      "definition": {
+        "type": "EpisodeOfCare"
+      },
       "updatedAt": "2020-02-17T18:04:13.146Z",
       "createdAt": "2020-02-10T14:59:56.562Z",
       "attributes": [
@@ -222,6 +228,9 @@
       "primaryKeyTable": "diagnoses_icd",
       "primaryKeyColumn": "row_id",
       "definitionId": "DiagnosticReport",
+      "definition": {
+        "type": "DiagnosticReport"
+      },
       "updatedAt": "2020-02-10T17:22:03.361Z",
       "createdAt": "2020-02-10T14:55:03.900Z",
       "attributes": [
@@ -348,6 +357,9 @@
       "primaryKeyTable": "patients",
       "primaryKeyColumn": "subject_id",
       "definitionId": "Patient",
+      "definition": {
+        "type": "Patient"
+      },
       "updatedAt": "2020-02-10T17:47:31.665Z",
       "createdAt": "2020-02-10T13:37:29.571Z",
       "attributes": [
@@ -558,6 +570,9 @@
       "primaryKeyTable": "icustays",
       "primaryKeyColumn": "row_id",
       "definitionId": "EpisodeOfCare",
+      "definition": {
+        "type": "EpisodeOfCare"
+      },
       "updatedAt": "2020-02-11T14:51:51.571Z",
       "createdAt": "2020-02-11T14:51:40.036Z",
       "attributes": [
@@ -736,6 +751,9 @@
       "primaryKeyTable": "prescriptions",
       "primaryKeyColumn": "row_id",
       "definitionId": "MedicationRequest",
+      "definition": {
+        "type": "MedicationRequest"
+      },
       "updatedAt": "2020-02-11T15:09:41.048Z",
       "createdAt": "2020-02-10T14:01:20.825Z",
       "attributes": [

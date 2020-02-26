@@ -1,7 +1,8 @@
 from unittest import mock
 
 import fhirpipe.load.references as references
-from test.unit import mock_config
+
+from test.unit.conftest import mock_config
 from test.unit.load import mock_mongo_client
 
 

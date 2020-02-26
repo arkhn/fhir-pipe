@@ -45,7 +45,8 @@ fragment cred on Credential {
 }
 """
 
-credential_query = """
+credential_query = (
+    """
 %s
 
 query credential($credentialId: ID!) {
@@ -53,7 +54,9 @@ query credential($credentialId: ID!) {
         ...cred
     }
 }
-""" % cred_fragment
+"""
+    % cred_fragment
+)
 
 resource_from_id_query = """
 %s
@@ -67,6 +70,9 @@ query resource($resourceId: ID!) {
         primaryKeyTable
         primaryKeyColumn
         definitionId
+        definition {
+            type
+        }
         attributes {
             ...a
         }
@@ -78,7 +84,10 @@ query resource($resourceId: ID!) {
         }
     }
 }
-""" % (attr_fragment, cred_fragment)
+""" % (
+    attr_fragment,
+    cred_fragment,
+)
 
 
 def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
@@ -96,10 +105,7 @@ def build_resources_query(selected_source=None, selected_resources=None, selecte
         else ""
     )
     resource_filter = (
-        """definitionId: { in: %s }"""
-        % selected_resources
-        if selected_resources
-        else ""
+        """definitionId: { in: %s }""" % selected_resources if selected_resources else ""
     )
     label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
 
@@ -120,6 +126,9 @@ query {
         primaryKeyTable
         primaryKeyColumn
         definitionId
+        definition {
+            type
+        }
         attributes {
             ...a
         }
