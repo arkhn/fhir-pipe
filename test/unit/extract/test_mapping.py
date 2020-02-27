@@ -61,6 +61,7 @@ def test_get_mapping_from_file(exported_source):
             "createdAt",
             "definitionId",
             "definition",
+            "source",
             "attributes",
         ],
     )
@@ -94,6 +95,7 @@ def test_get_mapping_from_file(exported_source):
             "createdAt",
             "definitionId",
             "definition",
+            "source",
             "attributes",
         ],
     )
