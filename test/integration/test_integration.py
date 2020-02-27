@@ -5,6 +5,7 @@ import fhirpipe
 import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
 from fhirpipe.extract.sql import get_connection
+from fhirpipe.transform.fhir import ARKHN_TERMINOLOGY_SYSTEM
 
 
 fhirpipe.set_global_config("test/integration/config-test.yml")
@@ -222,7 +223,16 @@ def assert_sample_patient_comparison(mongo_client):
     sample_patient = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
     assert sample_patient == {
-        "meta": {"lastUpdated": lastUpdated},
+        "meta": {
+            "lastUpdated": lastUpdated,
+            "tag": [
+                {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "mimicSourceId"},
+                {
+                    "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
+                    "code": "ck6gi3w87000360r43o8wlhhk",
+                },
+            ],
+        },
         "_id": sample_patient["_id"],
         "id": sample_patient["id"],
         "resourceType": "Patient",
@@ -242,7 +252,16 @@ def assert_sample_med_req_comparison(mongo_client):
     )
 
     assert sample_med_req == {
-        "meta": {"lastUpdated": lastUpdated},
+        "meta": {
+            "lastUpdated": lastUpdated,
+            "tag": [
+                {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "mimicSourceId"},
+                {
+                    "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
+                    "code": "ck6giykl600054vr43432gg3j",
+                },
+            ],
+        },
         "_id": sample_med_req["_id"],
         "id": sample_med_req["id"],
         "resourceType": "MedicationRequest",

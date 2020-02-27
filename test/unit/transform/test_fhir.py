@@ -3,6 +3,7 @@ import pandas as pd
 from pytest import raises
 
 import fhirpipe.transform.fhir as transform
+from fhirpipe.transform.fhir import ARKHN_TERMINOLOGY_SYSTEM
 
 
 class mockdatetime:
@@ -25,7 +26,16 @@ def test_create_instance(mock_datetime, patient_mapping):
     actual = transform.create_instance(row, resource_mapping)
 
     assert actual == {
-        "meta": {"lastUpdated": "now"},
+        "meta": {
+            "lastUpdated": "now",
+            "tag": [
+                {
+                    "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source",
+                    "code": patient_mapping["source"]["id"],
+                },
+                {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": patient_mapping["id"]},
+            ],
+        },
         "id": actual["id"],
         "identifier": [{"value": "123"}],
         "resourceType": "Patient",
@@ -66,7 +76,19 @@ def test_create_resource(mock_datetime, patient_mapping):
 
     assert actual == [
         {
-            "meta": {"lastUpdated": "now"},
+            "meta": {
+                "lastUpdated": "now",
+                "tag": [
+                    {
+                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source",
+                        "code": patient_mapping["source"]["id"],
+                    },
+                    {
+                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
+                        "code": patient_mapping["id"],
+                    },
+                ],
+            },
             "id": actual[0]["id"],
             "identifier": [{"value": "123"}],
             "resourceType": "Patient",
@@ -78,7 +100,19 @@ def test_create_resource(mock_datetime, patient_mapping):
             "generalPractitioner": [{"type": "/Practitioner/"}],
         },
         {
-            "meta": {"lastUpdated": "now"},
+            "meta": {
+                "lastUpdated": "now",
+                "tag": [
+                    {
+                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source",
+                        "code": patient_mapping["source"]["id"],
+                    },
+                    {
+                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
+                        "code": patient_mapping["id"],
+                    },
+                ],
+            },
             "id": actual[1]["id"],
             "identifier": [{"value": "124"}],
             "resourceType": "Patient",
@@ -96,20 +130,33 @@ def test_create_resource(mock_datetime, patient_mapping):
 def test_build_metadata(mock_datetime, patient_mapping):
     mock_datetime.now.return_value = mockdatetime()
     mapping = {
-        "kind": "resource",
-        "derivation": "specialization",
-        "url": "u/r/l",
+        "id": "resourceId",
+        "definition": {"kind": "resource", "derivation": "specialization", "url": "u/r/l"},
+        "source": {"id": "sourceId"},
     }
     metadata = transform.build_metadata(mapping)
-    assert metadata == {"lastUpdated": "now"}
+    assert metadata == {
+        "lastUpdated": "now",
+        "tag": [
+            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "sourceId"},
+            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": "resourceId"},
+        ],
+    }
 
     mapping = {
-        "kind": "resource",
-        "derivation": "constraint",
-        "url": "u/r/l",
+        "id": "resourceId",
+        "definition": {"kind": "resource", "derivation": "constraint", "url": "u/r/l"},
+        "source": {"id": "sourceId"},
     }
     metadata = transform.build_metadata(mapping)
-    assert metadata == {"lastUpdated": "now", "profile": ["u/r/l"]}
+    assert metadata == {
+        "lastUpdated": "now",
+        "profile": ["u/r/l"],
+        "tag": [
+            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "sourceId"},
+            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": "resourceId"},
+        ],
+    }
 
 
 def test_fetch_values_from_dataframe():

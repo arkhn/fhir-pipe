@@ -135,6 +135,9 @@ query {
             derivation
             url
         }
+        source {
+            id
+        }
         attributes {
             ...a
         }

@@ -9,6 +9,9 @@ import numpy as np
 from fhirpipe.utils import build_col_name, new_col_name
 
 
+ARKHN_TERMINOLOGY_SYSTEM = "http://terminology.arkhn.org/CodeSystem"
+
+
 def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
@@ -27,19 +30,19 @@ def create_resource(chunk, resource_mapping):
     return res
 
 
-def create_instance(row, mapping):
+def create_instance(row, resource_mapping):
     """ Function used to create a single FHIR instance.
     """
     # Modify the data structure so that it is easier to use
-    path_attributes_map = {attr["path"]: attr for attr in mapping["attributes"]}
+    path_attributes_map = {attr["path"]: attr for attr in resource_mapping["attributes"]}
 
     # Build path value map
     fhir_object = build_fhir_object(row, path_attributes_map)
 
     # Identify the fhir object
     fhir_object["id"] = str(uuid4())
-    fhir_object["resourceType"] = mapping["definition"]["type"]
-    fhir_object["meta"] = build_metadata(mapping["definition"])
+    fhir_object["resourceType"] = resource_mapping["definition"]["type"]
+    fhir_object["meta"] = build_metadata(resource_mapping)
 
     # Remove duplicates in fhir object
     fhir_object = clean_fhir_object(fhir_object)
@@ -47,10 +50,20 @@ def create_instance(row, mapping):
     return fhir_object
 
 
-def build_metadata(definition):
-    metadata = {"lastUpdated": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")}
+def build_metadata(resource_mapping):
+    metadata = {}
+
+    # add a timestamp
+    metadata["lastUpdated"] = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    # add custom tags
+    metadata["tag"] = [
+        {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": resource_mapping["source"]["id"]},
+        {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": resource_mapping["id"]},
+    ]
 
     # in case the definition is a profile, add the profile to the resource metadata
+    definition = resource_mapping["definition"]
     if definition["kind"] == "resource" and definition["derivation"] == "constraint":
         metadata["profile"] = [definition["url"]]
 

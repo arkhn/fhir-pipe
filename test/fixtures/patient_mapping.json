@@ -1,5 +1,5 @@
 {
-  "id": "ck6gi3w87000360r43o8wlhhk",
+  "id": "patientResourceId",
   "label": "",
   "primaryKeyOwner": "",
   "primaryKeyTable": "patients",
@@ -13,6 +13,9 @@
   },
   "updatedAt": "2020-02-10T17:47:31.665Z",
   "createdAt": "2020-02-10T13:37:29.571Z",
+  "source": {
+    "id": "mimicSourceId"
+  },
   "attributes": [
     {
       "id": "ck6gi3w8u001660r4st5x27uq",
