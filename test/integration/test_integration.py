@@ -1,11 +1,12 @@
 from unittest import TestCase, mock
 import pandas as pd
 
+from fhirstore import ARKHN_CODE_SYSTEMS
+
 import fhirpipe
 import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
 from fhirpipe.extract.sql import get_connection
-from fhirpipe.transform.fhir import ARKHN_TERMINOLOGY_SYSTEM
 
 
 fhirpipe.set_global_config("test/integration/config-test.yml")
@@ -30,7 +31,7 @@ def test_run_from_file(mock_datetime):
             source=None,
             resources=None,
             labels=None,
-            reset_store=True,
+            override=False,
             chunksize=None,
             bypass_validation=False,
             multiprocessing=False,
@@ -48,7 +49,7 @@ def test_run_from_gql():
             source="mimic",
             resources=None,
             labels=None,
-            reset_store=True,
+            override=False,
             chunksize=None,
             bypass_validation=False,
             multiprocessing=False,
@@ -68,7 +69,7 @@ def test_run_resource(mock_datetime):
             source=None,
             resources=["Patient", "not_existing_resource"],
             labels=["pat_label"],
-            reset_store=True,
+            override=False,
             chunksize=None,
             bypass_validation=False,
             multiprocessing=False,
@@ -94,7 +95,7 @@ def test_run_batch():
             source=None,
             resources=None,
             labels=None,
-            reset_store=True,
+            override=False,
             chunksize=10,
             bypass_validation=False,
             multiprocessing=False,
@@ -113,7 +114,7 @@ def test_run_multiprocessing(mock_datetime):
             source=None,
             resources=None,
             labels=None,
-            reset_store=True,
+            override=False,
             chunksize=None,
             bypass_validation=False,
             multiprocessing=True,
@@ -121,18 +122,19 @@ def test_run_multiprocessing(mock_datetime):
     assert_result_as_expected()
 
 
-# Run without resetting the mongo DB #
+# Run with the override option enabled, this will delete
+# documents previously inserted using the same mapping rules
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_run_no_reset(mock_datetime):
+def test_run_override(mock_datetime):
     mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
             connection=c,
             mapping="test/fixtures/mimic_mapping.json",
             source=None,
-            resources=None,
+            resources=["Patient"],
             labels=None,
-            reset_store=True,
+            override=False,
             chunksize=None,
             bypass_validation=False,
             multiprocessing=False,
@@ -141,21 +143,15 @@ def test_run_no_reset(mock_datetime):
             connection=c,
             mapping="test/fixtures/mimic_mapping.json",
             source=None,
-            resources=None,
+            resources=["Patient"],
             labels=None,
-            reset_store=False,
+            override=True,
             chunksize=None,
             bypass_validation=False,
             multiprocessing=False,
         )
-
-    assert_result_as_expected(
-        patients_count=2 * expected_patients_count,
-        episode_of_care_count=2 * expected_episode_of_care_count,
-        medication_request_count=2 * expected_med_req_count,
-        diagnostic_report_count=2 * expected_diagnostic_report_count,
-        practitioner_count=2 * expected_practitioner_count,
-    )
+    mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
+    assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
 
 # Helper functions and variables for assertions #
@@ -226,11 +222,8 @@ def assert_sample_patient_comparison(mongo_client):
         "meta": {
             "lastUpdated": lastUpdated,
             "tag": [
-                {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "mimicSourceId"},
-                {
-                    "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
-                    "code": "ck6gi3w87000360r43o8wlhhk",
-                },
+                {"system": ARKHN_CODE_SYSTEMS.source, "code": "mimicSourceId"},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "ck6gi3w87000360r43o8wlhhk"},
             ],
         },
         "_id": sample_patient["_id"],
@@ -255,11 +248,8 @@ def assert_sample_med_req_comparison(mongo_client):
         "meta": {
             "lastUpdated": lastUpdated,
             "tag": [
-                {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "mimicSourceId"},
-                {
-                    "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
-                    "code": "ck6giykl600054vr43432gg3j",
-                },
+                {"system": ARKHN_CODE_SYSTEMS.source, "code": "mimicSourceId"},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "ck6giykl600054vr43432gg3j"},
             ],
         },
         "_id": sample_med_req["_id"],

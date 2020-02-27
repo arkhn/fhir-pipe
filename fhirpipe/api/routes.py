@@ -17,7 +17,7 @@ default_params = {
     "source": None,
     "resources": None,
     "labels": None,
-    "reset_store": False,
+    "override": False,
     "chunksize": None,
     "bypass_validation": False,
     "multiprocessing": False,

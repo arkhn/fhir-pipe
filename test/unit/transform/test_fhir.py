@@ -3,7 +3,7 @@ import pandas as pd
 from pytest import raises
 
 import fhirpipe.transform.fhir as transform
-from fhirpipe.transform.fhir import ARKHN_TERMINOLOGY_SYSTEM
+from fhirstore import ARKHN_CODE_SYSTEMS
 
 
 class mockdatetime:
@@ -29,11 +29,8 @@ def test_create_instance(mock_datetime, patient_mapping):
         "meta": {
             "lastUpdated": "now",
             "tag": [
-                {
-                    "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source",
-                    "code": patient_mapping["source"]["id"],
-                },
-                {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": patient_mapping["id"]},
+                {"system": ARKHN_CODE_SYSTEMS.source, "code": patient_mapping["source"]["id"]},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": patient_mapping["id"]},
             ],
         },
         "id": actual["id"],
@@ -79,14 +76,8 @@ def test_create_resource(mock_datetime, patient_mapping):
             "meta": {
                 "lastUpdated": "now",
                 "tag": [
-                    {
-                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source",
-                        "code": patient_mapping["source"]["id"],
-                    },
-                    {
-                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
-                        "code": patient_mapping["id"],
-                    },
+                    {"system": ARKHN_CODE_SYSTEMS.source, "code": patient_mapping["source"]["id"]},
+                    {"system": ARKHN_CODE_SYSTEMS.resource, "code": patient_mapping["id"]},
                 ],
             },
             "id": actual[0]["id"],
@@ -103,14 +94,8 @@ def test_create_resource(mock_datetime, patient_mapping):
             "meta": {
                 "lastUpdated": "now",
                 "tag": [
-                    {
-                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source",
-                        "code": patient_mapping["source"]["id"],
-                    },
-                    {
-                        "system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource",
-                        "code": patient_mapping["id"],
-                    },
+                    {"system": ARKHN_CODE_SYSTEMS.source, "code": patient_mapping["source"]["id"]},
+                    {"system": ARKHN_CODE_SYSTEMS.resource, "code": patient_mapping["id"]},
                 ],
             },
             "id": actual[1]["id"],
@@ -138,8 +123,8 @@ def test_build_metadata(mock_datetime, patient_mapping):
     assert metadata == {
         "lastUpdated": "now",
         "tag": [
-            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "sourceId"},
-            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": "resourceId"},
+            {"system": ARKHN_CODE_SYSTEMS.source, "code": "sourceId"},
+            {"system": ARKHN_CODE_SYSTEMS.resource, "code": "resourceId"},
         ],
     }
 
@@ -153,8 +138,8 @@ def test_build_metadata(mock_datetime, patient_mapping):
         "lastUpdated": "now",
         "profile": ["u/r/l"],
         "tag": [
-            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": "sourceId"},
-            {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": "resourceId"},
+            {"system": ARKHN_CODE_SYSTEMS.source, "code": "sourceId"},
+            {"system": ARKHN_CODE_SYSTEMS.resource, "code": "resourceId"},
         ],
     }
 

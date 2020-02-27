@@ -5,11 +5,9 @@ from collections import defaultdict
 
 from uuid import uuid4
 import numpy as np
+from fhirstore import ARKHN_CODE_SYSTEMS
 
 from fhirpipe.utils import build_col_name, new_col_name
-
-
-ARKHN_TERMINOLOGY_SYSTEM = "http://terminology.arkhn.org/CodeSystem"
 
 
 def recursive_defaultdict():
@@ -58,8 +56,8 @@ def build_metadata(resource_mapping):
 
     # add custom tags
     metadata["tag"] = [
-        {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/source", "code": resource_mapping["source"]["id"]},
-        {"system": f"{ARKHN_TERMINOLOGY_SYSTEM}/resource", "code": resource_mapping["id"]},
+        {"system": ARKHN_CODE_SYSTEMS.source, "code": resource_mapping["source"]["id"]},
+        {"system": ARKHN_CODE_SYSTEMS.resource, "code": resource_mapping["id"]},
     ]
 
     # in case the definition is a profile, add the profile to the resource metadata

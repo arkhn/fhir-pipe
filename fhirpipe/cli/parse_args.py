@@ -40,17 +40,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--reset_store",
+        "--override",
         action="store_true",
         default=False,
         help="Reset fhirstore before writing into it.",
     )
 
     parser.add_argument(
-        "--skip_ref_binding",
-        action="store_true",
-        default=False,
-        help="Bypass reference binding.",
+        "--skip_ref_binding", action="store_true", default=False, help="Bypass reference binding.",
     )
 
     parser.add_argument(
