@@ -1,10 +1,18 @@
+from unittest import mock
 import pandas as pd
 from pytest import raises
 
 import fhirpipe.transform.fhir as transform
 
 
-def test_create_instance(patient_mapping):
+class mockdatetime:
+    def strftime(self, _):
+        return "now"
+
+
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_create_instance(mock_datetime, patient_mapping):
+    mock_datetime.now.return_value = mockdatetime()
     row = {
         "map_marital_status_admissions.marital_status": "D",
         "map_gender_PATIENTS.GENDER": "male",
@@ -17,6 +25,7 @@ def test_create_instance(patient_mapping):
     actual = transform.create_instance(row, resource_mapping)
 
     assert actual == {
+        "meta": {"lastUpdated": "now"},
         "id": actual["id"],
         "identifier": [{"value": "123"}],
         "resourceType": "Patient",
@@ -29,7 +38,9 @@ def test_create_instance(patient_mapping):
     }
 
 
-def test_create_resource(patient_mapping):
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_create_resource(mock_datetime, patient_mapping):
+    mock_datetime.now.return_value = mockdatetime()
     rows = pd.DataFrame(
         [
             {
@@ -55,6 +66,7 @@ def test_create_resource(patient_mapping):
 
     assert actual == [
         {
+            "meta": {"lastUpdated": "now"},
             "id": actual[0]["id"],
             "identifier": [{"value": "123"}],
             "resourceType": "Patient",
@@ -66,6 +78,7 @@ def test_create_resource(patient_mapping):
             "generalPractitioner": [{"type": "/Practitioner/"}],
         },
         {
+            "meta": {"lastUpdated": "now"},
             "id": actual[1]["id"],
             "identifier": [{"value": "124"}],
             "resourceType": "Patient",
@@ -77,6 +90,26 @@ def test_create_resource(patient_mapping):
             "generalPractitioner": [{"type": "/Practitioner/"}],
         },
     ]
+
+
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_build_metadata(mock_datetime, patient_mapping):
+    mock_datetime.now.return_value = mockdatetime()
+    mapping = {
+        "kind": "resource",
+        "derivation": "specialization",
+        "url": "u/r/l",
+    }
+    metadata = transform.build_metadata(mapping)
+    assert metadata == {"lastUpdated": "now"}
+
+    mapping = {
+        "kind": "resource",
+        "derivation": "constraint",
+        "url": "u/r/l",
+    }
+    metadata = transform.build_metadata(mapping)
+    assert metadata == {"lastUpdated": "now", "profile": ["u/r/l"]}
 
 
 def test_fetch_values_from_dataframe():

@@ -1,8 +1,10 @@
-from uuid import uuid4
+from datetime import datetime
 import logging
-import numpy as np
-from collections import defaultdict
 import re
+from collections import defaultdict
+
+from uuid import uuid4
+import numpy as np
 
 from fhirpipe.utils import build_col_name, new_col_name
 
@@ -37,11 +39,22 @@ def create_instance(row, mapping):
     # Identify the fhir object
     fhir_object["id"] = str(uuid4())
     fhir_object["resourceType"] = mapping["definition"]["type"]
+    fhir_object["meta"] = build_metadata(mapping["definition"])
 
     # Remove duplicates in fhir object
     fhir_object = clean_fhir_object(fhir_object)
 
     return fhir_object
+
+
+def build_metadata(definition):
+    metadata = {"lastUpdated": datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")}
+
+    # in case the definition is a profile, add the profile to the resource metadata
+    if definition["kind"] == "resource" and definition["derivation"] == "constraint":
+        metadata["profile"] = [definition["url"]]
+
+    return metadata
 
 
 def build_fhir_object(row, path_attributes_map, index=None):
