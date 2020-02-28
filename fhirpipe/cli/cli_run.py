@@ -24,7 +24,7 @@ def cli_run():
             source=args.source,
             resources=args.resources,
             labels=args.labels,
-            reset_store=args.reset_store,
+            override=args.override,
             chunksize=args.chunksize,
             bypass_validation=args.bypass_validation,
             multiprocessing=args.multiprocessing,

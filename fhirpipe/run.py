@@ -2,6 +2,7 @@ import time
 import logging
 import multiprocessing as mp
 
+from fhirstore import NotFoundError
 from fhirpipe import set_global_config, setup_logging
 
 from fhirpipe.cli import parse_args, WELCOME_MSG
@@ -23,7 +24,7 @@ def run(
     source,
     resources,
     labels,
-    reset_store,
+    override,
     chunksize,
     bypass_validation,
     multiprocessing,
@@ -42,8 +43,6 @@ def run(
     )
 
     fhirstore = get_fhirstore()
-    if reset_store:
-        fhirstore.reset()
 
     pool = None
     if multiprocessing:
@@ -57,6 +56,16 @@ def run(
     for resource_mapping in resources:
         analysis = analyzer.analyze(resource_mapping)
         df = extractor.extract(resource_mapping, analysis)
+
+        # If the override option is enabled, delete all previous
+        # documents matching the resource's mapping id.
+        if override:
+            try:
+                fhirstore.delete(
+                    resource_mapping["definition"]["type"], resource_id=resource_mapping["id"]
+                )
+            except NotFoundError as e:
+                logging.warning(f"error while trying to delete previous documents: {e}")
 
         for chunk in df:
             fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
@@ -114,7 +123,7 @@ if __name__ == "__main__":
             source=args.source,
             resources=args.resources,
             labels=args.labels,
-            reset_store=args.reset_store,
+            override=args.override,
             chunksize=args.chunksize,
             bypass_validation=args.bypass_validation,
             multiprocessing=args.multiprocessing,
