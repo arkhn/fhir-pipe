@@ -95,7 +95,7 @@ def get_dict_concept_maps(resource_mapping):
                 map_id = input["conceptMapId"]
                 if map_id not in concept_maps:
                     # fetch map
-                    concept_map = fecth_concept_map(map_id)
+                    concept_map = fetch_concept_map(map_id)
                     # convert it to a dict
                     dict_map = concept_map_to_dict(concept_map)
                     # store it
@@ -104,7 +104,7 @@ def get_dict_concept_maps(resource_mapping):
     return concept_maps
 
 
-def fecth_concept_map(concept_map_id):
+def fetch_concept_map(concept_map_id):
     api_url = fhirpipe.global_config["fhir-api"]["url"]
     try:
         response = requests.get(

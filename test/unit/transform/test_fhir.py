@@ -23,7 +23,7 @@ def test_create_instance(mock_datetime, patient_mapping):
         "clean_date_patients.dod": "2100-01-01",
     }
     resource_mapping = patient_mapping
-    actual = transform.create_instance(row, resource_mapping)
+    actual = transform.create_instance(row, resource_mapping, {})
 
     assert actual == {
         "meta": {
@@ -69,7 +69,7 @@ def test_create_resource(mock_datetime, patient_mapping):
         ]
     )
     resource_mapping = patient_mapping
-    actual = transform.create_resource(rows, resource_mapping)
+    actual = transform.create_resource(rows, resource_mapping, {})
 
     assert actual == [
         {
@@ -155,12 +155,13 @@ def test_fetch_values_from_dataframe():
         {
             "script": "clean_date",
             "staticValue": None,
+            "conceptMapId": None,
             "sqlValue": {"owner": "", "table": "PATIENTS", "column": "DOB"},
         }
     ]
     merging_script = ""
 
-    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
+    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script, {})
 
     assert value == "2000-01-01"
 
@@ -174,13 +175,14 @@ def test_fetch_values_from_dataframe():
         {
             "script": "clean_phone",
             "staticValue": None,
+            "conceptMapId": None,
             "sqlValue": {"owner": "", "table": "PATIENTS", "column": "ROW_ID", "joins": []},
         },
         {"script": None, "staticValue": "dummy", "sqlValue": None},
     ]
     merging_script = "merge"
 
-    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
+    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script, {})
 
     assert value == "value"
 
@@ -194,18 +196,26 @@ def test_handle_array_attributes():
         "path1": {
             "mergingScript": "",
             "inputs": [
-                {"sqlValue": {"owner": "", "table": "PATIENTS", "column": "A"}, "script": ""}
+                {
+                    "conceptMapId": None,
+                    "sqlValue": {"owner": "", "table": "PATIENTS", "column": "A"},
+                    "script": "",
+                }
             ],
         },
         "path2": {
             "mergingScript": "",
             "inputs": [
-                {"sqlValue": {"owner": "", "table": "PATIENTS", "column": "B"}, "script": ""}
+                {
+                    "conceptMapId": None,
+                    "sqlValue": {"owner": "", "table": "PATIENTS", "column": "B"},
+                    "script": "",
+                }
             ],
         },
     }
 
-    value = transform.handle_array_attributes(attributes_in_array, row)
+    value = transform.handle_array_attributes(attributes_in_array, row, {})
 
     assert value == [
         {"path1": "A1", "path2": "B"},
@@ -219,7 +229,7 @@ def test_handle_array_attributes():
         "PATIENTS.B": ("B1", "B2"),
     }
     with raises(AssertionError, match="mismatch in array lengths"):
-        transform.handle_array_attributes(attributes_in_array, row)
+        transform.handle_array_attributes(attributes_in_array, row, {})
 
 
 def test_clean_fhir_object():

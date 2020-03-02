@@ -32,6 +32,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-11T12:44:14.223Z",
           "createdAt": "2020-02-10T13:37:29.572Z",
+          "conceptMapId": null,
           "sqlValue": {
             "id": "ck6gi3w8v001760r4cy2skt68",
             "owner": "",
@@ -58,6 +59,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-10T13:37:29.572Z",
           "createdAt": "2020-02-10T13:37:29.572Z",
+          "conceptMapId": null,
           "sqlValue": {
             "id": "ck6gi3w8y002060r487hvatyr",
             "owner": "",
@@ -84,6 +86,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-12T14:16:35.621Z",
           "createdAt": "2020-02-11T15:42:31.159Z",
+          "conceptMapId": null,
           "sqlValue": {
             "id": "ck6i20j5j03144wow2jx4qkp4",
             "owner": "",
@@ -134,6 +137,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-12T10:35:49.296Z",
           "createdAt": "2020-02-12T10:35:49.296Z",
+          "conceptMapId": null,
           "sqlValue": {
             "id": "ck6j6hyuo00114unx7fg4e9cf",
             "owner": "",
@@ -160,6 +164,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-14T10:59:19.978Z",
           "createdAt": "2020-02-11T14:06:42.020Z",
+          "conceptMapId": null,
           "sqlValue": {
             "id": "ck6hylb3901994wow3l9jkimx",
             "owner": "",
@@ -210,6 +215,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-11T14:39:03.920Z",
           "createdAt": "2020-02-11T14:39:01.074Z",
+          "conceptMapId": null,
           "sqlValue": {
             "id": "ck6hzqv9u02314wowc3k3qjc6",
             "owner": "",
@@ -233,6 +239,7 @@
         {
           "id": "ck6j1m0et00034unxxdb1z3i7",
           "script": null,
+          "conceptMapId": null,
           "staticValue": "/Practitioner/",
           "updatedAt": "2020-02-12T08:18:59.861Z",
           "createdAt": "2020-02-12T08:18:59.861Z",

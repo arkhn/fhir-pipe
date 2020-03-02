@@ -258,8 +258,8 @@ def test_get_dict_concept_maps():
 
 @mock.patch("fhirpipe.analyze.mapping.fhirpipe.global_config", mock_config)
 @mock.patch("fhirpipe.analyze.mapping.requests.get", mock_api_get_maps)
-def test_fecth_concept_map():
-    concept_map = mapping.fecth_concept_map("123")
+def test_fetch_concept_map():
+    concept_map = mapping.fetch_concept_map("123")
 
     assert concept_map == {
         "group": [
