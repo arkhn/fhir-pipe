@@ -1,7 +1,9 @@
 import os
 import json
+import requests
 from collections import defaultdict
 
+import fhirpipe
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
 from fhirpipe.utils import (
     build_col_name,
@@ -103,7 +105,15 @@ def get_dict_concept_maps(resource_mapping):
 
 
 def fecth_concept_map(concept_map_id):
-    pass
+    api_url = fhirpipe.global_config["fhir-api"]["url"]
+    try:
+        response = requests.get(
+            f"{api_url}/ConceptMap/{concept_map_id}", headers={"content-type": "application/json"}
+        )
+    except Exception:
+        # If something went wrong during the api call
+        raise Exception(f"Error while fetching concept map with id {concept_map_id}.")
+    return response.json()
 
 
 def concept_map_to_dict(concept_map):
@@ -172,9 +182,7 @@ def find_cols_joins_maps_scripts(resource_mapping):
                     cleaning_scripts[input["script"]].append(column_name)
                     column_name = new_col_name(input["script"], column_name)
 
-                # TODO remove the "conceptMapId" in input and test with a
-                # mapping having the conceptMapId fields
-                if "conceptMapId" in input and input["conceptMapId"]:
+                if input["conceptMapId"]:
                     concept_maps[input["conceptMapId"]].append(column_name)
                     column_name = new_col_name(input["conceptMapId"], column_name)
 

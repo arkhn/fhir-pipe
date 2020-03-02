@@ -110,7 +110,7 @@ def map_and_log(val, map_title=None, dict_map=None, id=None, col=None):
     try:
         return dict_map[val]
     except Exception as e:
-        logging.error(f"{map_title}: Error cleaning {col} (at id = {id}): {e}")
+        logging.error(f"{map_title}: Error mapping {col} (at id = {id}): {e}")
 
 
 def merge_and_log(*val, script=None, id=None, cols=None):

@@ -28,4 +28,5 @@ mock_config = {
             "kwargs": {"kwarg1": "oracle_kwarg1", "kwarg2": "oracle_kwarg2"},
         },
     },
+    "fhir-api": {"url": "https://url/api"},
 }

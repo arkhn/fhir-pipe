@@ -14,11 +14,11 @@ def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
 
-def create_resource(chunk, resource_mapping):
+def create_resource(chunk, resource_mapping, dict_maps):
     res = []
     for _, row in chunk.iterrows():
         try:
-            res.append(create_instance(row, resource_mapping))
+            res.append(create_instance(row, resource_mapping, dict_maps))
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
@@ -28,14 +28,14 @@ def create_resource(chunk, resource_mapping):
     return res
 
 
-def create_instance(row, resource_mapping):
+def create_instance(row, resource_mapping, dict_maps):
     """ Function used to create a single FHIR instance.
     """
     # Modify the data structure so that it is easier to use
     path_attributes_map = {attr["path"]: attr for attr in resource_mapping["attributes"]}
 
     # Build path value map
-    fhir_object = build_fhir_object(row, path_attributes_map)
+    fhir_object = build_fhir_object(row, path_attributes_map, dict_maps)
 
     # Identify the fhir object
     fhir_object["id"] = str(uuid4())
@@ -68,7 +68,7 @@ def build_metadata(resource_mapping):
     return metadata
 
 
-def build_fhir_object(row, path_attributes_map, index=None):
+def build_fhir_object(row, path_attributes_map, dict_maps, index=None):
     """ Function that actually builds a nested object from the dataframe row and the mapping.
     Note that it can be used to build only a subpart of a fhir instance.
     """
@@ -84,7 +84,9 @@ def build_fhir_object(row, path_attributes_map, index=None):
 
             if position_ind is None:
                 # If we didn't find an index in the path, then we don't worry about arrays
-                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+                val = fetch_values_from_dataframe(
+                    row, attr["inputs"], attr["mergingScript"], dict_maps
+                )
                 if isinstance(val, tuple) and len(val) == 1:
                     # If we have a tuple of length 1, we simply extract the value and put it in
                     # the fhir object
@@ -112,7 +114,7 @@ def build_fhir_object(row, path_attributes_map, index=None):
                     if path.startswith(array_path)
                 }
                 # Build the array of sub fhir object
-                array = handle_array_attributes(attributes_in_array, row)
+                array = handle_array_attributes(attributes_in_array, row, dict_maps)
                 # Insert them a the right position
                 if array:
                     insert_in_fhir_object(fhir_object, remove_index(array_path), array)
@@ -121,7 +123,7 @@ def build_fhir_object(row, path_attributes_map, index=None):
     return fhir_object
 
 
-def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
+def fetch_values_from_dataframe(row, mapping_inputs, merging_script, dict_maps):
     if len(mapping_inputs) == 1:
         input = mapping_inputs[0]
         if input["sqlValue"]:
@@ -129,6 +131,9 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
             column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
             if input["script"]:
                 column_name = new_col_name(input["script"], column_name)
+            if input["conceptMapId"]:
+                map_title, _ = dict_maps[input["conceptMapId"]]
+                column_name = new_col_name(map_title, column_name)
             return row[column_name]
         else:
             return input["staticValue"]
@@ -157,7 +162,7 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
         return row[df_col]
 
 
-def handle_array_attributes(attributes_in_array, row):
+def handle_array_attributes(attributes_in_array, row, dict_maps):
     # Check lengths
     # We check that all the values with more than one element that we will put in the array
     # have the same length. We could not, for instance, build an object from
@@ -167,7 +172,7 @@ def handle_array_attributes(attributes_in_array, row):
     # {"adress": [{"city": "Paris", "country": "France"}, {"city": "Lyon", "country": "France"}]}
     length = 1
     for attr in attributes_in_array.values():
-        val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+        val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"], dict_maps)
         if not isinstance(val, tuple) or len(val) == 1:
             continue
         assert length == 1 or len(val) == length, "mismatch in array lengths"
@@ -176,7 +181,7 @@ def handle_array_attributes(attributes_in_array, row):
     # Now we can build the array
     array = []
     for index in range(length):
-        element = build_fhir_object(row, attributes_in_array, index=index)
+        element = build_fhir_object(row, attributes_in_array, dict_maps, index=index)
         if element:
             array.append(element)
 
