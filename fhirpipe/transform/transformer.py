@@ -22,9 +22,9 @@ class Transformer:
         # Apply cleaning and merging scripts on chunk
         apply_scripts(
             chunk,
-            analysis.cleaning,
+            analysis.cleaning_scripts,
             analysis.concept_maps,
-            analysis.merging,
+            analysis.merging_scripts,
             analysis.primary_key_column,
         )
 

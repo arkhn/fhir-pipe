@@ -1,7 +1,6 @@
 from unittest import mock
 
-import fhirpipe.analyze.mapping as mapping
-from fhirpipe.analyze.concept_map import ConceptMap
+from fhirpipe.analyze.concept_map import get_concept_maps, ConceptMap
 
 from test.unit.conftest import mock_config
 
@@ -115,7 +114,7 @@ def test_get_concept_maps():
             {"inputs": [{"conceptMapId": "789"}]},
         ]
     }
-    concept_maps = mapping.get_concept_maps(resource_mapping)
+    concept_maps = get_concept_maps(resource_mapping)
 
     assert concept_maps == {
         "123": ConceptMap(cm_123),

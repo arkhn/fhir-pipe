@@ -3,6 +3,8 @@ from unittest import mock
 
 import fhirpipe.transform.dataframe as transform
 from fhirpipe.analyze.concept_map import ConceptMap
+from fhirpipe.analyze.cleaning_script import CleaningScript
+from fhirpipe.analyze.merging_script import MergingScript
 
 
 def test_squash_rows():
@@ -41,8 +43,9 @@ def mock_get_script(*args):
         return args[1] + args[2] + "merge"
 
 
-@mock.patch("fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script)
-def test_apply_scripts(get_script, fhir_concept_map_code, fhir_concept_map_gender):
+@mock.patch("fhirpipe.analyze.cleaning_script.scripts.get_script", return_value=mock_get_script)
+@mock.patch("fhirpipe.analyze.merging_script.scripts.get_script", return_value=mock_get_script)
+def test_apply_scripts(_, __, fhir_concept_map_code, fhir_concept_map_gender):
     df = pd.DataFrame(
         {
             "NAME": ["alice", "bob", "charlie"],
@@ -52,17 +55,27 @@ def test_apply_scripts(get_script, fhir_concept_map_code, fhir_concept_map_gende
             "CODE": ["ABC", "DEF", "GHI"],
         },
     )
-    cleaning = {"clean1": ["NAME"], "clean2": ["NAME", "ADDRESS", "CODE"]}
+    primary_key_column = "ID"
+
+    # mock cleaning scripts
+    cleaning_scripts = {"clean1": CleaningScript("clean1"), "clean2": CleaningScript("clean2")}
+    cleaning_scripts["clean1"].columns.append("NAME")
+    cleaning_scripts["clean2"].columns.extend(["NAME", "ADDRESS", "CODE"])
+
+    # mock concept maps
     concept_maps = {
         "cm_gender": ConceptMap(fhir_concept_map_gender),
         "cm_code": ConceptMap(fhir_concept_map_code),
     }
     concept_maps["cm_gender"].columns.append("GENDER")
     concept_maps["cm_code"].columns.append("clean2_CODE")
-    merging = [("merge", (["ADDRESS", "ID"], ["val"]))]
-    primary_key_column = "ID"
 
-    transform.apply_scripts(df, cleaning, concept_maps, merging, primary_key_column)
+    # mock merging scripts
+    merging_scripts = {"merge": MergingScript("merge")}
+    merging_scripts["merge"].static_values.append("val")
+    merging_scripts["merge"].columns.extend(["ADDRESS", "ID"])
+
+    transform.apply_scripts(df, cleaning_scripts, concept_maps, merging_scripts, primary_key_column)
 
     expected = pd.DataFrame(
         {

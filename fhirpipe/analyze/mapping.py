@@ -10,6 +10,8 @@ from fhirpipe.utils import (
     get_table_name,
 )
 from fhirpipe.analyze.concept_map import ConceptMap
+from fhirpipe.analyze.cleaning_script import CleaningScript
+from fhirpipe.analyze.merging_script import MergingScript
 
 
 def get_mapping(
@@ -86,21 +88,12 @@ def get_primary_key(resource_mapping):
     return main_table, column
 
 
-def get_concept_maps(resource_mapping) -> Dict[str, ConceptMap]:
-    concept_maps = {}
-
-    for attribute in resource_mapping["attributes"]:
-        for input in attribute["inputs"]:
-            if input["conceptMapId"]:
-                map_id = input["conceptMapId"]
-                if map_id not in concept_maps:
-                    # fetch map, convert it to a proper form and store it
-                    concept_maps[map_id] = ConceptMap.fetch(map_id)
-
-    return concept_maps
-
-
-def find_cols_joins_maps_scripts(resource_mapping, concept_maps: Dict[str, ConceptMap]):
+def find_cols_joins_maps_scripts(
+    resource_mapping,
+    concept_maps: Dict[str, ConceptMap],
+    cleaning_scripts: Dict[str, CleaningScript],
+    merging_scripts: Dict[str, MergingScript],
+):
     """
     Run through the attributes of a resource mapping to find:
     - All columns name to select
@@ -112,23 +105,18 @@ def find_cols_joins_maps_scripts(resource_mapping, concept_maps: Dict[str, Conce
         resource_mapping: the mapping dict for a single resoure.
         concept_maps: the concept maps used in the mapping and on which columns they
             are used.
+        cleaning_scripts: the cleaning scripts used in the mapping and on which columns they
+            are used.
+        merging_scripts: the merging scripts used in the mapping and on which columns they
+            are used.
 
     return:
         cols: the columns of the source DB that should be used in the fhir resource.
         joins: the joins used in the mapping (ie how to use a column which does not
             come from the primary key table).
-        cleaning_scripts: the cleaning scripts used in the mapping and on which columns they
-            are used.
-        merging_scripts: the merging scripts used in the mapping and on which columns they
-            are used.
     """
     cols = set()
     joins = set()
-    # The following dicts are used to store script names and concept maps
-    # and on which columns they are used.
-    # cleaning_scripts has the form
-    # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
-    cleaning_scripts = defaultdict(list)
     # merging_scripts has the form
     # ["script1", (["col1", "col3", ...], [static3]),
     #  "script4", ([col2], [static1, static3, ...]),
@@ -137,7 +125,7 @@ def find_cols_joins_maps_scripts(resource_mapping, concept_maps: Dict[str, Conce
 
     for attribute in resource_mapping["attributes"]:
         cols_merging = []
-        statics = []
+        static_values = []
         for input in attribute["inputs"]:
             if input["sqlValue"]:
                 sql = input["sqlValue"]
@@ -145,7 +133,7 @@ def find_cols_joins_maps_scripts(resource_mapping, concept_maps: Dict[str, Conce
                 cols.add(column_name)
 
                 if input["script"]:
-                    cleaning_scripts[input["script"]].append(column_name)
+                    cleaning_scripts[input["script"]].columns.append(column_name)
                     column_name = new_col_name(input["script"], column_name)
 
                 if input["conceptMapId"]:
@@ -165,12 +153,13 @@ def find_cols_joins_maps_scripts(resource_mapping, concept_maps: Dict[str, Conce
                     joins.add((source_col, target_col))
 
             elif input["staticValue"]:
-                statics.append(input["staticValue"])
+                static_values.append(input["staticValue"])
 
         if attribute["mergingScript"]:
-            merging_scripts.append((attribute["mergingScript"], (cols_merging, statics)))
+            merging_scripts[attribute["mergingScript"]].columns.append(cols_merging)
+            merging_scripts[attribute["mergingScript"]].static_values.append(static_values)
 
-    return cols, joins, cleaning_scripts, merging_scripts
+    return cols, joins
 
 
 def build_squash_rules(columns, joins, main_table):

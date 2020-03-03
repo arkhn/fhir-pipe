@@ -3,6 +3,7 @@ from unittest import mock, TestCase
 
 import fhirpipe.analyze.mapping as mapping
 from fhirpipe.analyze.concept_map import ConceptMap
+from fhirpipe.analyze.cleaning_script import CleaningScript
 
 
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
@@ -178,8 +179,16 @@ def test_get_primary_key():
 
 def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifier):
     concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
-    cols, joins, cleaning, merging = mapping.find_cols_joins_maps_scripts(
-        patient_mapping, concept_maps
+    cleaning_scripts = {
+        "map_gender": CleaningScript("map_gender"),
+        "clean_date": CleaningScript("clean_date"),
+        "map_marital_status": CleaningScript("map_marital_status"),
+        "binary_to_bool_1": CleaningScript("binary_to_bool_1"),
+    }
+    merging_scripts = {}
+
+    cols, joins = mapping.find_cols_joins_maps_scripts(
+        patient_mapping, concept_maps, cleaning_scripts, merging_scripts
     )
 
     assert cols == {
@@ -191,14 +200,14 @@ def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifi
         "patients.dod",
     }
     assert joins == {("patients.subject_id", "admissions.subject_id")}
-    assert cleaning == {
-        "map_gender": ["PATIENTS.GENDER"],
-        "clean_date": ["PATIENTS.DOB", "patients.dod"],
-        "map_marital_status": ["admissions.marital_status"],
-        "binary_to_bool_1": ["admissions.hospital_expire_flag"],
-    }
+
+    assert cleaning_scripts["map_gender"].columns == ["PATIENTS.GENDER"]
+    assert cleaning_scripts["clean_date"].columns == ["PATIENTS.DOB", "patients.dod"]
+    assert cleaning_scripts["map_marital_status"].columns == ["admissions.marital_status"]
+    assert cleaning_scripts["binary_to_bool_1"].columns == ["admissions.hospital_expire_flag"]
+
     assert concept_maps["cm_identifier"].columns == ["patients.row_id"]
-    assert merging == []
+    assert merging_scripts == {}
 
 
 def test_build_squash_rules():
