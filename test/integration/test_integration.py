@@ -22,7 +22,7 @@ class mockdatetime:
 
 # Run from mapping file
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_run_from_file(mock_datetime):
+def test_run_from_file(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
@@ -60,7 +60,7 @@ def test_run_from_gql():
 
 # Run for a list of resources #
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_run_resource(mock_datetime):
+def test_run_resource(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
@@ -77,7 +77,7 @@ def test_run_resource(mock_datetime):
 
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
-    assert mongo_client.list_collection_names() == ["Patient"]
+    assert "Patient" in mongo_client.list_collection_names()
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
     assert_sample_patient_comparison(mongo_client)
@@ -105,7 +105,7 @@ def test_run_batch():
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_run_multiprocessing(mock_datetime):
+def test_run_multiprocessing(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
@@ -125,7 +125,7 @@ def test_run_multiprocessing(mock_datetime):
 # Run with the override option enabled, this will delete
 # documents previously inserted using the same mapping rules
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_run_override(mock_datetime):
+def test_run_override(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     with get_connection() as c:
         run.run(
@@ -158,7 +158,11 @@ def test_run_override(mock_datetime):
 with get_connection() as c:
     expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", c).at[0, "count"]
     expected_episode_of_care_count = (
-        pd.read_sql_query("SELECT COUNT(*) FROM admissions", c).at[0, "count"]
+        pd.read_sql_query(
+            # include a filter in the count to reflect the filter contained in the mimic_mapping
+            "SELECT COUNT(*) FROM admissions WHERE admissions.admittime >= '2150-08-29 18:20:00'",
+            c,
+        ).at[0, "count"]
         + pd.read_sql_query("SELECT COUNT(*) FROM icustays", c).at[0, "count"]
     )
     expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions", c).at[
@@ -185,7 +189,14 @@ def assert_result_as_expected(
 
     TestCase().assertCountEqual(
         mongo_client.list_collection_names(),
-        ["Patient", "EpisodeOfCare", "MedicationRequest", "DiagnosticReport", "Practitioner"],
+        [
+            "ConceptMap",
+            "Patient",
+            "EpisodeOfCare",
+            "MedicationRequest",
+            "DiagnosticReport",
+            "Practitioner",
+        ],
     )
     assert_document_counts(
         mongo_client,
@@ -223,7 +234,7 @@ def assert_sample_patient_comparison(mongo_client):
             "lastUpdated": lastUpdated,
             "tag": [
                 {"system": ARKHN_CODE_SYSTEMS.source, "code": "mimicSourceId"},
-                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "ck6gi3w87000360r43o8wlhhk"},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "Patient_resourceId"},
             ],
         },
         "_id": sample_patient["_id"],
@@ -249,7 +260,7 @@ def assert_sample_med_req_comparison(mongo_client):
             "lastUpdated": lastUpdated,
             "tag": [
                 {"system": ARKHN_CODE_SYSTEMS.source, "code": "mimicSourceId"},
-                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "ck6giykl600054vr43432gg3j"},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "MedicationRequest_resourceId"},
             ],
         },
         "_id": sample_med_req["_id"],
