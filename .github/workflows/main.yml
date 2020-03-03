@@ -33,6 +33,7 @@ jobs:
         run: |
           docker-compose -f test/integration/docker-compose.test.yml up -d
           ./scripts/wait_for_db.sh localhost 5431 mockdb mockdb mockdb
+          ./scripts/wait_for_api.sh http://localhost:2000
           python -m pytest -svv test/
 
   publish:

@@ -43,9 +43,7 @@ class ConceptMap:
             raise OperationOutcome(f"Could not connect to the fhir-api service: {e}")
 
         if response.status_code != 200:
-            raise Exception(
-                f"Error while fetching concept map {concept_map_id}: {response.json()}."
-            )
+            raise Exception(f"Error while fetching concept map {concept_map_id}: {response.text}.")
         return ConceptMap(response.json())
 
     def get(self, source_code: str) -> str:
