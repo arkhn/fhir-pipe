@@ -1,15 +1,15 @@
 import os
 import json
-import requests
+from typing import Dict
 from collections import defaultdict
 
-import fhirpipe
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
 from fhirpipe.utils import (
     build_col_name,
     new_col_name,
     get_table_name,
 )
+from fhirpipe.analyze.concept_map import ConceptMap
 
 
 def get_mapping(
@@ -86,7 +86,7 @@ def get_primary_key(resource_mapping):
     return main_table, column
 
 
-def get_dict_concept_maps(resource_mapping):
+def get_concept_maps(resource_mapping) -> Dict[str, ConceptMap]:
     concept_maps = {}
 
     for attribute in resource_mapping["attributes"]:
@@ -94,44 +94,13 @@ def get_dict_concept_maps(resource_mapping):
             if input["conceptMapId"]:
                 map_id = input["conceptMapId"]
                 if map_id not in concept_maps:
-                    # fetch map
-                    concept_map = fetch_concept_map(map_id)
-                    # convert it to a dict
-                    dict_map = concept_map_to_dict(concept_map)
-                    # store it
-                    concept_maps[map_id] = (concept_map["title"], dict_map)
+                    # fetch map, convert it to a proper form and store it
+                    concept_maps[map_id] = ConceptMap.fetch(map_id)
 
     return concept_maps
 
 
-def fetch_concept_map(concept_map_id):
-    api_url = fhirpipe.global_config["fhir-api"]["url"]
-    try:
-        response = requests.get(
-            f"{api_url}/ConceptMap/{concept_map_id}", headers={"content-type": "application/json"}
-        )
-    except Exception:
-        # If something went wrong during the api call
-        raise Exception(f"Error while fetching concept map with id {concept_map_id}.")
-    return response.json()
-
-
-def concept_map_to_dict(concept_map):
-    """
-    Convert a fhir concept map to a dictionary which is easier to use.
-    """
-    dict_map = {}
-    for group in concept_map["group"]:
-        for element in group["element"]:
-            # NOTE fhirpipe can only handle a single target for each source
-            source_code = element["code"]
-            target_code = element["target"][0]["code"]
-            dict_map[source_code] = target_code
-
-    return dict_map
-
-
-def find_cols_joins_maps_scripts(resource_mapping):
+def find_cols_joins_maps_scripts(resource_mapping, concept_maps: Dict[str, ConceptMap]):
     """
     Run through the attributes of a resource mapping to find:
     - All columns name to select
@@ -141,14 +110,14 @@ def find_cols_joins_maps_scripts(resource_mapping):
 
     args:
         resource_mapping: the mapping dict for a single resoure.
+        concept_maps: the concept maps used in the mapping and on which columns they
+            are used.
 
     return:
         cols: the columns of the source DB that should be used in the fhir resource.
         joins: the joins used in the mapping (ie how to use a column which does not
             come from the primary key table).
         cleaning_scripts: the cleaning scripts used in the mapping and on which columns they
-            are used.
-        concept_maps: the concept maps used in the mapping and on which columns they
             are used.
         merging_scripts: the merging scripts used in the mapping and on which columns they
             are used.
@@ -160,9 +129,6 @@ def find_cols_joins_maps_scripts(resource_mapping):
     # cleaning_scripts has the form
     # {"script1": ["col1", "col3", ...], "script4": [col2], ...}
     cleaning_scripts = defaultdict(list)
-    # concept_maps has the form
-    # {"map_id1": ["col1", "col3", ...], "map_id2": [col2], ...}
-    concept_maps = defaultdict(list)
     # merging_scripts has the form
     # ["script1", (["col1", "col3", ...], [static3]),
     #  "script4", ([col2], [static1, static3, ...]),
@@ -183,7 +149,7 @@ def find_cols_joins_maps_scripts(resource_mapping):
                     column_name = new_col_name(input["script"], column_name)
 
                 if input["conceptMapId"]:
-                    concept_maps[input["conceptMapId"]].append(column_name)
+                    concept_maps[input["conceptMapId"]].columns.append(column_name)
                     column_name = new_col_name(input["conceptMapId"], column_name)
 
                 cols_merging.append(column_name)
@@ -204,7 +170,7 @@ def find_cols_joins_maps_scripts(resource_mapping):
         if attribute["mergingScript"]:
             merging_scripts.append((attribute["mergingScript"], (cols_merging, statics)))
 
-    return cols, joins, cleaning_scripts, concept_maps, merging_scripts
+    return cols, joins, cleaning_scripts, merging_scripts
 
 
 def build_squash_rules(columns, joins, main_table):

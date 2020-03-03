@@ -3,6 +3,56 @@ from pytest import fixture
 
 
 @fixture(scope="session")
+def fhir_concept_map_code():
+    return {
+        "group": [
+            {
+                "element": [
+                    {"code": "ABCcleaned", "target": [{"code": "abc"}]},
+                    {"code": "DEFcleaned", "target": [{"code": "def"}]},
+                    {"code": "GHIcleaned", "target": [{"code": "ghi"}]},
+                ],
+            }
+        ],
+        "resourceType": "ConceptMap",
+        "title": "mapcode",
+    }
+
+
+@fixture(scope="session")
+def fhir_concept_map_identifier():
+    return {
+        "group": [
+            {
+                "element": [
+                    {"code": "1", "target": [{"code": "A"}]},
+                    {"code": "2", "target": [{"code": "B"}]},
+                    {"code": "3", "target": [{"code": "C"}]},
+                ],
+            }
+        ],
+        "resourceType": "ConceptMap",
+        "title": "mapidentifier",
+    }
+
+
+@fixture(scope="session")
+def fhir_concept_map_gender():
+    return {
+        "group": [
+            {
+                "element": [
+                    {"code": "M", "target": [{"code": "male"}]},
+                    {"code": "F", "target": [{"code": "female"}]},
+                ],
+            }
+        ],
+        "resourceType": "ConceptMap",
+        "title": "mapgender",
+    }
+
+
+@fixture(scope="session")
 def exported_source():
     with open("test/fixtures/mimic_mapping.json", "r") as fp:
         return fp.read()

@@ -2,8 +2,10 @@ from unittest import mock
 import pandas as pd
 from pytest import raises
 
-import fhirpipe.transform.fhir as transform
 from fhirstore import ARKHN_CODE_SYSTEMS
+
+import fhirpipe.transform.fhir as transform
+from fhirpipe.analyze.concept_map import ConceptMap
 
 
 class mockdatetime:
@@ -12,18 +14,21 @@ class mockdatetime:
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_create_instance(mock_datetime, patient_mapping):
+def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
     row = {
         "map_marital_status_admissions.marital_status": "D",
         "map_gender_PATIENTS.GENDER": "male",
         "clean_date_PATIENTS.DOB": "2000-10-10",
-        "patients.row_id": "123",
+        "patients.row_id": "1",
+        "mapidentifier_patients.row_id": "A",  # cleaned "patients.row_id" column
         "binary_to_bool_1_admissions.hospital_expire_flag": "true",
         "clean_date_patients.dod": "2100-01-01",
     }
+    concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
     resource_mapping = patient_mapping
-    actual = transform.create_instance(row, resource_mapping, {})
+
+    actual = transform.create_instance(row, resource_mapping, concept_maps)
 
     assert actual == {
         "meta": {
@@ -34,7 +39,7 @@ def test_create_instance(mock_datetime, patient_mapping):
             ],
         },
         "id": actual["id"],
-        "identifier": [{"value": "123"}],
+        "identifier": [{"value": "A"}],
         "resourceType": "Patient",
         "gender": "male",
         "birthDate": "2000-10-10",
@@ -46,7 +51,7 @@ def test_create_instance(mock_datetime, patient_mapping):
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_create_resource(mock_datetime, patient_mapping):
+def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
     rows = pd.DataFrame(
         [
@@ -54,7 +59,8 @@ def test_create_resource(mock_datetime, patient_mapping):
                 "map_marital_status_admissions.marital_status": "D",
                 "map_gender_PATIENTS.GENDER": "male",
                 "clean_date_PATIENTS.DOB": "2000-10-10",
-                "patients.row_id": "123",
+                "patients.row_id": "1",
+                "mapidentifier_patients.row_id": "A",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "true",
                 "clean_date_patients.dod": "2100-01-01",
             },
@@ -62,14 +68,16 @@ def test_create_resource(mock_datetime, patient_mapping):
                 "map_marital_status_admissions.marital_status": "P",
                 "map_gender_PATIENTS.GENDER": "female",
                 "clean_date_PATIENTS.DOB": "2001-11-11",
-                "patients.row_id": "124",
+                "patients.row_id": "2",
+                "mapidentifier_patients.row_id": "B",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "false",
                 "clean_date_patients.dod": "2101-11-11",
             },
         ]
     )
+    concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
     resource_mapping = patient_mapping
-    actual = transform.create_resource(rows, resource_mapping, {})
+    actual = transform.create_resource(rows, resource_mapping, concept_maps)
 
     assert actual == [
         {
@@ -81,7 +89,7 @@ def test_create_resource(mock_datetime, patient_mapping):
                 ],
             },
             "id": actual[0]["id"],
-            "identifier": [{"value": "123"}],
+            "identifier": [{"value": "A"}],
             "resourceType": "Patient",
             "gender": "male",
             "birthDate": "2000-10-10",
@@ -99,7 +107,7 @@ def test_create_resource(mock_datetime, patient_mapping):
                 ],
             },
             "id": actual[1]["id"],
-            "identifier": [{"value": "124"}],
+            "identifier": [{"value": "B"}],
             "resourceType": "Patient",
             "gender": "female",
             "birthDate": "2001-11-11",

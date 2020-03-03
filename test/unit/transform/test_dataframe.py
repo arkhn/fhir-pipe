@@ -2,6 +2,7 @@ import pandas as pd
 from unittest import mock
 
 import fhirpipe.transform.dataframe as transform
+from fhirpipe.analyze.concept_map import ConceptMap
 
 
 def test_squash_rows():
@@ -41,7 +42,7 @@ def mock_get_script(*args):
 
 
 @mock.patch("fhirpipe.transform.dataframe.scripts.get_script", return_value=mock_get_script)
-def test_apply_scripts(get_script):
+def test_apply_scripts(get_script, fhir_concept_map_code, fhir_concept_map_gender):
     df = pd.DataFrame(
         {
             "NAME": ["alice", "bob", "charlie"],
@@ -52,17 +53,16 @@ def test_apply_scripts(get_script):
         },
     )
     cleaning = {"clean1": ["NAME"], "clean2": ["NAME", "ADDRESS", "CODE"]}
-    concept_maps = {"mapgenderId": ["GENDER"], "mapcodeId": ["clean2_CODE"]}
-    dict_concept_maps = {
-        "mapgenderId": ("mapgender", {"M": "male", "F": "female"}),
-        "mapcodeId": ("mapcode", {"ABCcleaned": "abc", "DEFcleaned": "def", "GHIcleaned": "ghi"}),
+    concept_maps = {
+        "cm_gender": ConceptMap(fhir_concept_map_gender),
+        "cm_code": ConceptMap(fhir_concept_map_code),
     }
+    concept_maps["cm_gender"].columns.append("GENDER")
+    concept_maps["cm_code"].columns.append("clean2_CODE")
     merging = [("merge", (["ADDRESS", "ID"], ["val"]))]
     primary_key_column = "ID"
 
-    transform.apply_scripts(
-        df, cleaning, concept_maps, dict_concept_maps, merging, primary_key_column
-    )
+    transform.apply_scripts(df, cleaning, concept_maps, merging, primary_key_column)
 
     expected = pd.DataFrame(
         {

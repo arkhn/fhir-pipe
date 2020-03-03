@@ -24,7 +24,6 @@ class Transformer:
             chunk,
             analysis.cleaning,
             analysis.concept_maps,
-            analysis.dict_concept_maps,
             analysis.merging,
             analysis.primary_key_column,
         )
@@ -38,11 +37,11 @@ class Transformer:
                 partial(
                     create_resource,
                     resource_mapping=resource_mapping,
-                    dict_maps=analysis.dict_concept_maps,
+                    concept_maps=analysis.concept_maps,
                 ),
                 np.array_split(chunk, self.pool._processes),
             )
         else:
-            fhir_instances = create_resource(chunk, resource_mapping, analysis.dict_concept_maps)
+            fhir_instances = create_resource(chunk, resource_mapping, analysis.concept_maps)
 
         return fhir_instances

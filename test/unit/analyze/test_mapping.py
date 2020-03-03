@@ -2,8 +2,7 @@ import pytest
 from unittest import mock, TestCase
 
 import fhirpipe.analyze.mapping as mapping
-
-from test.unit.conftest import mock_config
+from fhirpipe.analyze.concept_map import ConceptMap
 
 
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
@@ -65,6 +64,7 @@ def test_get_mapping_from_file(exported_source):
             "definition",
             "source",
             "attributes",
+            "filters",
         ],
     )
 
@@ -99,6 +99,7 @@ def test_get_mapping_from_file(exported_source):
             "definition",
             "source",
             "attributes",
+            "filters",
         ],
     )
 
@@ -175,148 +176,10 @@ def test_get_primary_key():
         main_table, column = mapping.get_primary_key(resource_mapping)
 
 
-def mock_api_get_maps(*args, **kwargs):
-    class MockResponse:
-        def __init__(self, json_data, status_code):
-            self.json_data = json_data
-            self.status_code = status_code
-
-        def json(self):
-            return self.json_data
-
-    if args[0] == "https://url/api/ConceptMap/123":
-        return MockResponse(
-            {
-                "group": [
-                    {
-                        "element": [
-                            {"code": "1", "target": [{"code": "A"}]},
-                            {"code": "2", "target": [{"code": "B"}]},
-                            {"code": "3", "target": [{"code": "C"}]},
-                        ],
-                    }
-                ],
-                "resourceType": "ConceptMap",
-                "title": "cm123",
-            },
-            200,
-        )
-    elif args[0] == "https://url/api/ConceptMap/456":
-        return MockResponse(
-            {
-                "group": [
-                    {
-                        "element": [
-                            {"code": "4", "target": [{"code": "D"}]},
-                            {"code": "5", "target": [{"code": "E"}]},
-                            {"code": "6", "target": [{"code": "F"}]},
-                        ],
-                    }
-                ],
-                "resourceType": "ConceptMap",
-                "title": "cm456",
-            },
-            200,
-        )
-    elif args[0] == "https://url/api/ConceptMap/789":
-        return MockResponse(
-            {
-                "group": [
-                    {
-                        "element": [
-                            {"code": "7", "target": [{"code": "G"}]},
-                            {"code": "8", "target": [{"code": "H"}]},
-                            {"code": "9", "target": [{"code": "I"}]},
-                        ],
-                    }
-                ],
-                "resourceType": "ConceptMap",
-                "title": "cm789",
-            },
-            200,
-        )
-    return MockResponse(None, 404)
-
-
-@mock.patch("fhirpipe.analyze.mapping.fhirpipe.global_config", mock_config)
-@mock.patch("fhirpipe.analyze.mapping.requests.get", mock_api_get_maps)
-def test_get_dict_concept_maps():
-    resource_mapping = {
-        "attributes": [
-            {"inputs": [{"conceptMapId": "123"}, {"conceptMapId": "456"}]},
-            {"inputs": [{"conceptMapId": "789"}]},
-        ]
-    }
-    dicts = mapping.get_dict_concept_maps(resource_mapping)
-
-    assert dicts == {
-        "123": ("cm123", {"1": "A", "2": "B", "3": "C"}),
-        "456": ("cm456", {"4": "D", "5": "E", "6": "F"}),
-        "789": ("cm789", {"7": "G", "8": "H", "9": "I"}),
-    }
-
-
-@mock.patch("fhirpipe.analyze.mapping.fhirpipe.global_config", mock_config)
-@mock.patch("fhirpipe.analyze.mapping.requests.get", mock_api_get_maps)
-def test_fetch_concept_map():
-    concept_map = mapping.fetch_concept_map("123")
-
-    assert concept_map == {
-        "group": [
-            {
-                "element": [
-                    {"code": "1", "target": [{"code": "A"}]},
-                    {"code": "2", "target": [{"code": "B"}]},
-                    {"code": "3", "target": [{"code": "C"}]},
-                ],
-            }
-        ],
-        "resourceType": "ConceptMap",
-        "title": "cm123",
-    }
-
-
-def test_concept_map_to_dict():
-    concept_map = {
-        "sourceUri": "sourceUri",
-        "targetUri": "targetUri",
-        "group": [
-            {
-                "source": "src",
-                "target": "trgt",
-                "element": [
-                    {"code": "src_code", "target": [{"code": "trgt_code"}, {"code": "not_used"}]},
-                    {"code": "code1", "target": [{"code": "code2"}]},
-                ],
-            },
-            {
-                "source": "sys1",
-                "target": "sys2",
-                "element": [
-                    {"code": "11", "target": [{"code": "12"}]},
-                    {"code": "21", "target": [{"code": "22"}]},
-                    {"code": "31", "target": [{"code": "32"}]},
-                ],
-            },
-        ],
-    }
-
-    dict_map = mapping.concept_map_to_dict(concept_map)
-
-    assert dict_map == {
-        "src_code": "trgt_code",
-        "code1": "code2",
-        "11": "12",
-        "21": "22",
-        "31": "32",
-    }
-
-
-def test_find_cols_joins_maps_scripts(patient_mapping):
-    fhir_resource = patient_mapping
-
-    cols, joins, cleaning, concept_maps, merging = mapping.find_cols_joins_maps_scripts(
-        fhir_resource
+def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifier):
+    concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
+    cols, joins, cleaning, merging = mapping.find_cols_joins_maps_scripts(
+        patient_mapping, concept_maps
     )
 
     assert cols == {
@@ -334,7 +197,7 @@ def test_find_cols_joins_maps_scripts(patient_mapping):
         "map_marital_status": ["admissions.marital_status"],
         "binary_to_bool_1": ["admissions.hospital_expire_flag"],
     }
-    assert concept_maps == {}
+    assert concept_maps["cm_identifier"].columns == ["patients.row_id"]
     assert merging == []
 
 

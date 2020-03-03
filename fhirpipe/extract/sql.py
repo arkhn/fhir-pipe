@@ -21,7 +21,7 @@ def build_sql_filters(resource_mapping, primary_key_column, primary_key_values=N
         else:
             filters += f"\nWHERE {primary_key_column} IN {tuple(primary_key_values)}"
 
-    if "filters" in resource_mapping and resource_mapping["filters"]:
+    if resource_mapping["filters"]:
         for filter in resource_mapping["filters"]:
             sql_col = filter["sqlColumn"]
             col_name = build_col_name(sql_col["table"], sql_col["column"], sql_col["owner"])
