@@ -21,7 +21,7 @@
     {
       "id": "ck6gi3w8u001660r4st5x27uq",
       "path": "gender",
-      "mergingScript": null,
+      "mergingScript": "select_first_not_empty",
       "comments": null,
       "updatedAt": "2020-02-10T13:37:29.572Z",
       "createdAt": "2020-02-10T13:37:29.572Z",
@@ -42,6 +42,15 @@
             "createdAt": "2020-02-10T13:37:29.572Z",
             "joins": []
           }
+        },
+        {
+          "id": "ck6j1m0et00034unxxdb1z3i9",
+          "script": null,
+          "conceptMapId": null,
+          "staticValue": "unknown",
+          "updatedAt": "2020-02-12T08:18:59.861Z",
+          "createdAt": "2020-02-12T08:18:59.861Z",
+          "sqlValue": null
         }
       ]
     },

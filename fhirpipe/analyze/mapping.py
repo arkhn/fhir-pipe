@@ -88,12 +88,7 @@ def get_primary_key(resource_mapping):
     return main_table, column
 
 
-def find_cols_joins_maps_scripts(
-    resource_mapping,
-    concept_maps: Dict[str, ConceptMap],
-    cleaning_scripts: Dict[str, CleaningScript],
-    merging_scripts: Dict[str, MergingScript],
-):
+def find_cols_joins_maps_scripts(resource_mapping):
     """
     Run through the attributes of a resource mapping to find:
     - All columns name to select
@@ -117,11 +112,9 @@ def find_cols_joins_maps_scripts(
     """
     cols = set()
     joins = set()
-    # merging_scripts has the form
-    # ["script1", (["col1", "col3", ...], [static3]),
-    #  "script4", ([col2], [static1, static3, ...]),
-    #  ...]
-    merging_scripts = []
+    concept_maps: Dict[str, ConceptMap] = {}
+    cleaning_scripts: Dict[str, CleaningScript] = {}
+    merging_scripts: Dict[str, MergingScript] = {}
 
     for attribute in resource_mapping["attributes"]:
         cols_merging = []
@@ -133,10 +126,16 @@ def find_cols_joins_maps_scripts(
                 cols.add(column_name)
 
                 if input["script"]:
+                    if input["script"] not in cleaning_scripts:
+                        cleaning_scripts[input["script"]] = CleaningScript(input["script"])
                     cleaning_scripts[input["script"]].columns.append(column_name)
                     column_name = new_col_name(input["script"], column_name)
 
                 if input["conceptMapId"]:
+                    if input["conceptMapId"] not in concept_maps:
+                        concept_maps[input["conceptMapId"]] = ConceptMap.fetch(
+                            input["conceptMapId"]
+                        )
                     concept_maps[input["conceptMapId"]].columns.append(column_name)
                     column_name = new_col_name(input["conceptMapId"], column_name)
 
@@ -156,10 +155,14 @@ def find_cols_joins_maps_scripts(
                 static_values.append(input["staticValue"])
 
         if attribute["mergingScript"]:
+            if attribute["mergingScript"] not in merging_scripts:
+                merging_scripts[attribute["mergingScript"]] = MergingScript(
+                    attribute["mergingScript"]
+                )
             merging_scripts[attribute["mergingScript"]].columns.append(cols_merging)
             merging_scripts[attribute["mergingScript"]].static_values.append(static_values)
 
-    return cols, joins
+    return cols, joins, concept_maps, cleaning_scripts, merging_scripts
 
 
 def build_squash_rules(columns, joins, main_table):

@@ -1,55 +1,80 @@
 import json
 from pytest import fixture
 
+cm_code = {
+    "group": [
+        {
+            "element": [
+                {"code": "ABCcleaned", "target": [{"code": "abc"}]},
+                {"code": "DEFcleaned", "target": [{"code": "def"}]},
+                {"code": "GHIcleaned", "target": [{"code": "ghi"}]},
+            ],
+        }
+    ],
+    "resourceType": "ConceptMap",
+    "title": "cm_code",
+}
+
+cm_gender = {
+    "group": [
+        {
+            "element": [
+                {"code": "M", "target": [{"code": "male"}]},
+                {"code": "F", "target": [{"code": "female"}]},
+            ],
+        }
+    ],
+    "resourceType": "ConceptMap",
+    "title": "cm_gender",
+}
+
+cm_identifier = {
+    "group": [
+        {
+            "element": [
+                {"code": "1", "target": [{"code": "A"}]},
+                {"code": "2", "target": [{"code": "B"}]},
+                {"code": "3", "target": [{"code": "C"}]},
+            ],
+        }
+    ],
+    "resourceType": "ConceptMap",
+    "title": "cm_identifier",
+}
+
 
 @fixture(scope="session")
 def fhir_concept_map_code():
-    return {
-        "group": [
-            {
-                "element": [
-                    {"code": "ABCcleaned", "target": [{"code": "abc"}]},
-                    {"code": "DEFcleaned", "target": [{"code": "def"}]},
-                    {"code": "GHIcleaned", "target": [{"code": "ghi"}]},
-                ],
-            }
-        ],
-        "resourceType": "ConceptMap",
-        "title": "mapcode",
-    }
+    return cm_code
 
 
 @fixture(scope="session")
 def fhir_concept_map_identifier():
-    return {
-        "group": [
-            {
-                "element": [
-                    {"code": "1", "target": [{"code": "A"}]},
-                    {"code": "2", "target": [{"code": "B"}]},
-                    {"code": "3", "target": [{"code": "C"}]},
-                ],
-            }
-        ],
-        "resourceType": "ConceptMap",
-        "title": "mapidentifier",
-    }
+    return cm_identifier
 
 
 @fixture(scope="session")
 def fhir_concept_map_gender():
-    return {
-        "group": [
-            {
-                "element": [
-                    {"code": "M", "target": [{"code": "male"}]},
-                    {"code": "F", "target": [{"code": "female"}]},
-                ],
-            }
-        ],
-        "resourceType": "ConceptMap",
-        "title": "mapgender",
-    }
+    return cm_gender
+
+
+def mock_api_get_maps(*args, **kwargs):
+    class MockResponse:
+        def __init__(self, json_data, status_code, text):
+            self.json_data = json_data
+            self.status_code = status_code
+            self.text = text
+
+        def json(self):
+            return self.json_data
+
+    if args[0] == "https://url/api/ConceptMap/cm_code":
+        return MockResponse(cm_code, 200, "")
+    elif args[0] == "https://url/api/ConceptMap/cm_gender":
+        return MockResponse(cm_gender, 200, "")
+    elif args[0] == "https://url/api/ConceptMap/cm_identifier":
+        return MockResponse(cm_identifier, 200, "")
+    return MockResponse(None, 404, "not found")
 
 
 @fixture(scope="session")

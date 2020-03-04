@@ -1,4 +1,4 @@
-from typing import TypeVar, Dict
+from typing import TypeVar
 import requests
 import pandas as pd
 import numpy as np
@@ -28,11 +28,7 @@ class ConceptMap:
                 self.mapping[source_code] = target_code
 
     def __eq__(self, operand: T) -> bool:
-        return (
-            self.title == operand.title
-            and self.mapping == operand.mapping
-            and self.columns == operand.columns
-        )
+        return self.title == operand.title and self.mapping == operand.mapping
 
     @staticmethod
     def fetch(concept_map_id: str) -> T:
@@ -58,17 +54,3 @@ class ConceptMap:
 
         for col in self.columns:
             yield col, np.vectorize(map_and_log)(df[col], id=df[pk_column], col=col)
-
-
-def get_concept_maps(resource_mapping) -> Dict[str, ConceptMap]:
-    concept_maps = {}
-
-    for attribute in resource_mapping["attributes"]:
-        for input in attribute["inputs"]:
-            if input["conceptMapId"]:
-                map_id = input["conceptMapId"]
-                if map_id not in concept_maps:
-                    # fetch map, convert it to a proper form and store it
-                    concept_maps[map_id] = ConceptMap.fetch(map_id)
-
-    return concept_maps

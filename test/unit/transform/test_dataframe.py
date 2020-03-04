@@ -88,8 +88,8 @@ def test_apply_scripts(_, __, fhir_concept_map_code, fhir_concept_map_gender):
             "clean2_NAME": ["alicecleaned", "bobcleaned", "charliecleaned"],
             "clean2_ADDRESS": ["addr1cleaned", "addr2cleaned", "addr3cleaned"],
             "clean2_CODE": ["ABCcleaned", "DEFcleaned", "GHIcleaned"],
-            "mapgender_GENDER": ["male", "female", "female"],
-            "mapcode_clean2_CODE": ["abc", "def", "ghi"],
+            "cm_gender_GENDER": ["male", "female", "female"],
+            "cm_code_clean2_CODE": ["abc", "def", "ghi"],
             "merge_ADDRESS_ID_val": ["id1valmerge", "id2valmerge", "id3valmerge"],
         },
     )

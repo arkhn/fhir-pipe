@@ -19,9 +19,10 @@ def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identi
     row = {
         "map_marital_status_admissions.marital_status": "D",
         "map_gender_PATIENTS.GENDER": "male",
+        "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "male",
         "clean_date_PATIENTS.DOB": "2000-10-10",
         "patients.row_id": "1",
-        "mapidentifier_patients.row_id": "A",  # cleaned "patients.row_id" column
+        "cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
         "binary_to_bool_1_admissions.hospital_expire_flag": "true",
         "clean_date_patients.dod": "2100-01-01",
     }
@@ -58,18 +59,20 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
             {
                 "map_marital_status_admissions.marital_status": "D",
                 "map_gender_PATIENTS.GENDER": "male",
+                "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "male",
                 "clean_date_PATIENTS.DOB": "2000-10-10",
                 "patients.row_id": "1",
-                "mapidentifier_patients.row_id": "A",  # cleaned "patients.row_id" column
+                "cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "true",
                 "clean_date_patients.dod": "2100-01-01",
             },
             {
                 "map_marital_status_admissions.marital_status": "P",
                 "map_gender_PATIENTS.GENDER": "female",
+                "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "female",
                 "clean_date_PATIENTS.DOB": "2001-11-11",
                 "patients.row_id": "2",
-                "mapidentifier_patients.row_id": "B",  # cleaned "patients.row_id" column
+                "cm_identifier_patients.row_id": "B",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "false",
                 "clean_date_patients.dod": "2101-11-11",
             },

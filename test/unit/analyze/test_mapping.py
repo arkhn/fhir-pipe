@@ -4,6 +4,9 @@ from unittest import mock, TestCase
 import fhirpipe.analyze.mapping as mapping
 from fhirpipe.analyze.concept_map import ConceptMap
 from fhirpipe.analyze.cleaning_script import CleaningScript
+from fhirpipe.analyze.merging_script import MergingScript
+
+from test.unit.conftest import mock_config, mock_api_get_maps
 
 
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
@@ -177,19 +180,16 @@ def test_get_primary_key():
         main_table, column = mapping.get_primary_key(resource_mapping)
 
 
+@mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
+@mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
 def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifier):
-    concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
-    cleaning_scripts = {
-        "map_gender": CleaningScript("map_gender"),
-        "clean_date": CleaningScript("clean_date"),
-        "map_marital_status": CleaningScript("map_marital_status"),
-        "binary_to_bool_1": CleaningScript("binary_to_bool_1"),
-    }
-    merging_scripts = {}
-
-    cols, joins = mapping.find_cols_joins_maps_scripts(
-        patient_mapping, concept_maps, cleaning_scripts, merging_scripts
-    )
+    (
+        cols,
+        joins,
+        concept_maps,
+        cleaning_scripts,
+        merging_scripts,
+    ) = mapping.find_cols_joins_maps_scripts(patient_mapping)
 
     assert cols == {
         "PATIENTS.GENDER",
@@ -201,13 +201,23 @@ def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifi
     }
     assert joins == {("patients.subject_id", "admissions.subject_id")}
 
+    assert cleaning_scripts == {
+        "map_gender": CleaningScript("map_gender"),
+        "clean_date": CleaningScript("clean_date"),
+        "map_marital_status": CleaningScript("map_marital_status"),
+        "binary_to_bool_1": CleaningScript("binary_to_bool_1"),
+    }
     assert cleaning_scripts["map_gender"].columns == ["PATIENTS.GENDER"]
     assert cleaning_scripts["clean_date"].columns == ["PATIENTS.DOB", "patients.dod"]
     assert cleaning_scripts["map_marital_status"].columns == ["admissions.marital_status"]
     assert cleaning_scripts["binary_to_bool_1"].columns == ["admissions.hospital_expire_flag"]
 
+    assert concept_maps == {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
     assert concept_maps["cm_identifier"].columns == ["patients.row_id"]
-    assert merging_scripts == {}
+
+    assert merging_scripts == {"select_first_not_empty": MergingScript("select_first_not_empty")}
+    assert merging_scripts["select_first_not_empty"].columns == [["map_gender_PATIENTS.GENDER"]]
+    assert merging_scripts["select_first_not_empty"].static_values == [["unknown"]]
 
 
 def test_build_squash_rules():
