@@ -36,6 +36,14 @@ def build_sql_query(columns, joins, table_name, sql_filters=None):
     return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}{sql_filters or ''}"
 
 
+def get_sql_url(db_handler: str, sql_config) -> str:
+    return (
+        f'{db_handler}://{sql_config["login"]}:{sql_config["password"]}'
+        f'@{sql_config["host"]}:{sql_config["port"]}'
+        f'/{sql_config["database"]}'
+    )
+
+
 @contextmanager
 def get_connection(credentials=None, connection_type: str = None):
     """
@@ -56,7 +64,7 @@ def get_connection(credentials=None, connection_type: str = None):
         connection_type = sql_config["default"]
     elif connection_type not in ["postgres", "oracle"]:
         raise ValueError(
-            'Config specifies a wrong database type. '
+            "Config specifies a wrong database type. "
             'The only types supported are "postgres" and "oracle".'
         )
 
@@ -64,14 +72,19 @@ def get_connection(credentials=None, connection_type: str = None):
         args = sql_config[connection_type]["args"]
         kwargs = sql_config[connection_type]["kwargs"]
     else:
-        assert connection_type == "postgres", "credentials for non postgres DB not supported"
+        assert connection_type in [
+            "postgres",
+            "oracle",
+        ], "credentials are only supported for oracle and postgres"
         args = []
         kwargs = credentials
 
     if connection_type == "postgres":
         connection = psycopg2.connect(*args, **kwargs)
     elif connection_type == "oracle":
-        connection = cx_Oracle.connect(*args, **kwargs)
+        dsn = get_sql_url("oracle+cx_oracle", kwargs)
+        print("DEBUG ORACLE: ", dsn)
+        connection = cx_Oracle.connect(dsn)
 
     try:
         yield connection
