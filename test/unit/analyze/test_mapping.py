@@ -216,8 +216,8 @@ def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifi
     assert concept_maps["cm_identifier"].columns == ["patients.row_id"]
 
     assert merging_scripts == {"select_first_not_empty": MergingScript("select_first_not_empty")}
-    assert merging_scripts["select_first_not_empty"].columns == [["map_gender_PATIENTS.GENDER"]]
-    assert merging_scripts["select_first_not_empty"].static_values == [["unknown"]]
+    assert merging_scripts["select_first_not_empty"].columns == ["map_gender_PATIENTS.GENDER"]
+    assert merging_scripts["select_first_not_empty"].static_values == ["unknown"]
 
 
 def test_build_squash_rules():

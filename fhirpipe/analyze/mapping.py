@@ -159,8 +159,8 @@ def find_cols_joins_maps_scripts(resource_mapping):
                 merging_scripts[attribute["mergingScript"]] = MergingScript(
                     attribute["mergingScript"]
                 )
-            merging_scripts[attribute["mergingScript"]].columns.append(cols_merging)
-            merging_scripts[attribute["mergingScript"]].static_values.append(static_values)
+            merging_scripts[attribute["mergingScript"]].columns = cols_merging
+            merging_scripts[attribute["mergingScript"]].static_values = static_values
 
     return cols, joins, concept_maps, cleaning_scripts, merging_scripts
 
