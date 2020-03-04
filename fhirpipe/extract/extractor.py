@@ -8,8 +8,8 @@ from fhirpipe.extract.sql import (
 
 
 class Extractor:
-    def __init__(self, connection, chunksize=None):
-        self.connection = connection
+    def __init__(self, engine, chunksize=None):
+        self.engine = engine
         self.chunksize = chunksize
 
     def extract(self, resource_mapping, analysis, primary_key_values=None):
@@ -28,4 +28,4 @@ class Extractor:
 
         # Run the sql query
         logging.info("Launching query...")
-        return run_sql_query(self.connection, sql_query, chunksize=self.chunksize)
+        return run_sql_query(self.engine, sql_query, chunksize=self.chunksize)

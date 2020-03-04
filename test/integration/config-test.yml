@@ -1,14 +1,11 @@
-sql:
-  default: "postgres"
-  postgres:
-    lib: "psycopg2"
-    args: []
-    kwargs:
-      host: "localhost"
-      port: 5431
-      database: "mockdb"
-      user: "mockdb"
-      password: "mockdb"
+source:
+  model: "POSTGRES"
+  host: "localhost"
+  port: 5431
+  database: "mockdb"
+  login: "mockdb"
+  password: "mockdb"
+
 fhirstore:
   host: "localhost"
   port: 27017

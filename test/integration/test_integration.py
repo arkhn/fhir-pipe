@@ -6,11 +6,11 @@ from fhirstore import ARKHN_CODE_SYSTEMS
 import fhirpipe
 import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
-from fhirpipe.extract.sql import get_connection
+from fhirpipe.extract.sql import get_engine
 
 
 fhirpipe.set_global_config("test/integration/config-test.yml")
-
+engine = get_engine()
 
 lastUpdated = "2017-01-01T00:00:00Z"
 
@@ -24,36 +24,34 @@ class mockdatetime:
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_run_from_file(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
-    with get_connection() as c:
-        run.run(
-            connection=c,
-            mapping="test/fixtures/mimic_mapping.json",
-            source=None,
-            resources=None,
-            labels=None,
-            override=False,
-            chunksize=None,
-            bypass_validation=False,
-            multiprocessing=False,
-        )
+    run.run(
+        engine=engine,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        override=False,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 
 
 """
 # Run with graphQL queries #
 def test_run_from_gql():
-    with get_connection() as c:
-        run.run(
-            connection=c,
-            mapping=None,
-            source="mimic",
-            resources=None,
-            labels=None,
-            override=False,
-            chunksize=None,
-            bypass_validation=False,
-            multiprocessing=False,
-        )
+    run.run(
+        engine=engine,
+        mapping=None,
+        source="mimic",
+        resources=None,
+        labels=None,
+        override=False,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 """
 
@@ -62,18 +60,17 @@ def test_run_from_gql():
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_run_resource(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
-    with get_connection() as c:
-        run.run(
-            connection=c,
-            mapping="test/fixtures/mimic_mapping.json",
-            source=None,
-            resources=["Patient", "not_existing_resource"],
-            labels=["pat_label"],
-            override=False,
-            chunksize=None,
-            bypass_validation=False,
-            multiprocessing=False,
-        )
+    run.run(
+        engine=engine,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=["Patient", "not_existing_resource"],
+        labels=["pat_label"],
+        override=False,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
 
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
@@ -90,18 +87,17 @@ def test_run_resource(mock_datetime, with_concept_maps):
 # be squashed can be in different chunks
 """
 def test_run_batch():
-    with get_connection() as c:
-        run.run(
-            connection=c,
-            mapping="test/fixtures/mimic_mapping.json",
-            source=None,
-            resources=None,
-            labels=None,
-            override=False,
-            chunksize=10,
-            bypass_validation=False,
-            multiprocessing=False,
-        )
+    run.run(
+        engine=engine,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        override=False,
+        chunksize=10,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     assert_result_as_expected()
 """
 
@@ -109,18 +105,17 @@ def test_run_batch():
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_run_multiprocessing(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
-    with get_connection() as c:
-        run.run(
-            connection=c,
-            mapping="test/fixtures/mimic_mapping.json",
-            source=None,
-            resources=None,
-            labels=None,
-            override=False,
-            chunksize=None,
-            bypass_validation=False,
-            multiprocessing=True,
-        )
+    run.run(
+        engine=engine,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=None,
+        labels=None,
+        override=False,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=True,
+    )
     assert_result_as_expected()
 
 
@@ -129,55 +124,51 @@ def test_run_multiprocessing(mock_datetime, with_concept_maps):
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_run_override(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
-    with get_connection() as c:
-        run.run(
-            connection=c,
-            mapping="test/fixtures/mimic_mapping.json",
-            source=None,
-            resources=["Patient"],
-            labels=None,
-            override=False,
-            chunksize=None,
-            bypass_validation=False,
-            multiprocessing=False,
-        )
-        run.run(
-            connection=c,
-            mapping="test/fixtures/mimic_mapping.json",
-            source=None,
-            resources=["Patient"],
-            labels=None,
-            override=True,
-            chunksize=None,
-            bypass_validation=False,
-            multiprocessing=False,
-        )
+    run.run(
+        engine=engine,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=["Patient"],
+        labels=None,
+        override=False,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
+    run.run(
+        engine=engine,
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=["Patient"],
+        labels=None,
+        override=True,
+        chunksize=None,
+        bypass_validation=False,
+        multiprocessing=False,
+    )
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
 
 # Helper functions and variables for assertions #
-with get_connection() as c:
-    expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", c).at[0, "count"]
-    expected_episode_of_care_count = (
-        pd.read_sql_query(
-            # include a filter in the count to reflect the filter contained in the mimic_mapping
-            "SELECT COUNT(*) FROM admissions WHERE admissions.admittime >= '2150-08-29 18:20:00'",
-            c,
-        ).at[0, "count"]
-        + pd.read_sql_query("SELECT COUNT(*) FROM icustays", c).at[0, "count"]
-    )
-    expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions", c).at[
-        0, "count"
-    ]
-    expected_diagnostic_report_count = pd.read_sql_query(
-        "SELECT COUNT(*) FROM diagnoses_icd", c
-    ).at[0, "count"]
-    expected_practitioner_count = pd.read_sql_query("SELECT COUNT(*) FROM caregivers", c).at[
-        0, "count"
-    ]
-    id_sample_patient = "30831"
-    id_sample_med_req = "32600"
+expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", con=engine).at[
+    0, "count"
+]
+expected_episode_of_care_count = (
+    pd.read_sql_query("SELECT COUNT(*) FROM admissions", con=engine).at[0, "count"]
+    + pd.read_sql_query("SELECT COUNT(*) FROM icustays", con=engine).at[0, "count"]
+)
+expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions", con=engine).at[
+    0, "count"
+]
+expected_diagnostic_report_count = pd.read_sql_query(
+    "SELECT COUNT(*) FROM diagnoses_icd", con=engine
+).at[0, "count"]
+expected_practitioner_count = pd.read_sql_query("SELECT COUNT(*) FROM caregivers", con=engine).at[
+    0, "count"
+]
+id_sample_patient = "30831"
+id_sample_med_req = "32600"
 
 
 def assert_result_as_expected(

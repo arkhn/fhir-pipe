@@ -1,9 +1,32 @@
-from unittest import mock
 from pytest import raises
 
 import fhirpipe.extract.sql as sql
 
 from test.unit.conftest import mock_config
+
+
+def test_build_db_string():
+    # With postgres DB
+    credentials = {
+        "model": "postgres",
+        "login": "login",
+        "password": "password",
+        "host": "host",
+        "port": "port",
+        "database": "database",
+    }
+    db_string = sql.build_db_string(credentials)
+    assert db_string == "postgresql://login:password@host:port/database"
+
+    # With oracle DB
+    credentials["model"] = "oracle"
+    db_string = sql.build_db_string(credentials)
+    assert db_string == "oracle+cx_oracle://login:password@host:port/database"
+
+    # With wrong model
+    credentials["model"] = "model"
+    with raises(ValueError, match="credentials specifies the wrong database model."):
+        sql.build_db_string(credentials)
 
 
 def test_build_sql_filters():
@@ -136,37 +159,3 @@ def test_build_sql_query():
         "LEFT JOIN ADMISSIONS ON PATIENTS.SUBJECT_ID=ADMISSIONS.SUBJECT_ID"
         "WHERE PATIENTS.SUBJECT_ID IN (123, 456)\n"
     )
-
-
-@mock.patch("fhirpipe.extract.graphql.fhirpipe.global_config", mock_config)
-@mock.patch("fhirpipe.extract.sql.psycopg2.connect")
-@mock.patch("fhirpipe.extract.sql.cx_Oracle.connect")
-def test_get_connection(mock_oracle_connect, mock_postgres_connect):
-    # With provided credenials
-    creds = {"creds": "creds"}
-    # c = sql.get_connection(credentials=creds, connection_type="postgres")
-    # print(c)
-    with sql.get_connection(credentials=creds, connection_type="postgres"):
-        mock_postgres_connect.assert_called_once_with(creds="creds")
-        mock_postgres_connect.reset_mock()
-
-    with raises(AssertionError, match="credentials for non postgres DB not supported"):
-        with sql.get_connection(credentials=creds, connection_type="oracle"):
-            pass
-
-    # With config file
-    with sql.get_connection(connection_type="postgres"):
-        mock_postgres_connect.assert_called_once_with(
-            "postgres_arg1", "postgres_arg2", kwarg1="postgres_kwarg1", kwarg2="postgres_kwarg2"
-        )
-        mock_postgres_connect.reset_mock()
-
-    with sql.get_connection(connection_type="oracle"):
-        mock_oracle_connect.assert_called_once_with(
-            "oracle_arg1", "oracle_arg2", kwarg1="oracle_kwarg1", kwarg2="oracle_kwarg2"
-        )
-        mock_oracle_connect.reset_mock()
-
-    with raises(ValueError, match="Config specifies a wrong database type."):
-        with sql.get_connection(connection_type="wrong_db_type"):
-            pass
