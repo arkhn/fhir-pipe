@@ -126,16 +126,16 @@ def find_cols_joins_maps_scripts(resource_mapping):
                 cols.add(column_name)
 
                 if input["script"]:
-                    if input["script"] not in cleaning_scripts:
-                        cleaning_scripts[input["script"]] = CleaningScript(input["script"])
+                    cleaning_scripts[input["script"]] = cleaning_scripts.get(
+                        input["script"], CleaningScript(input["script"])
+                    )
                     cleaning_scripts[input["script"]].columns.append(column_name)
                     column_name = new_col_name(input["script"], column_name)
 
                 if input["conceptMapId"]:
-                    if input["conceptMapId"] not in concept_maps:
-                        concept_maps[input["conceptMapId"]] = ConceptMap.fetch(
-                            input["conceptMapId"]
-                        )
+                    concept_maps[input["conceptMapId"]] = concept_maps.get(
+                        input["conceptMapId"], ConceptMap.fetch(input["conceptMapId"])
+                    )
                     concept_maps[input["conceptMapId"]].columns.append(column_name)
                     column_name = new_col_name(input["conceptMapId"], column_name)
 
