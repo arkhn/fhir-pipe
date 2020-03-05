@@ -2,8 +2,9 @@ from unittest import mock
 import pandas as pd
 from pytest import raises
 
-import fhirpipe.transform.fhir as transform
 from fhirstore import ARKHN_CODE_SYSTEMS
+
+import fhirpipe.transform.fhir as transform
 
 
 class mockdatetime:
@@ -12,16 +13,19 @@ class mockdatetime:
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_create_instance(mock_datetime, patient_mapping):
+def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
     row = {
         "map_marital_status_admissions.marital_status": "D",
         "map_gender_PATIENTS.GENDER": "male",
+        "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "male",
         "clean_date_PATIENTS.DOB": "2000-10-10",
-        "patients.row_id": "123",
+        "patients.row_id": "1",
+        "id_cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
         "binary_to_bool_1_admissions.hospital_expire_flag": "true",
         "clean_date_patients.dod": "2100-01-01",
     }
+
     resource_mapping = patient_mapping
     actual = transform.create_instance(row, resource_mapping)
 
@@ -34,7 +38,7 @@ def test_create_instance(mock_datetime, patient_mapping):
             ],
         },
         "id": actual["id"],
-        "identifier": [{"value": "123"}],
+        "identifier": [{"value": "A"}],
         "resourceType": "Patient",
         "gender": "male",
         "birthDate": "2000-10-10",
@@ -46,23 +50,27 @@ def test_create_instance(mock_datetime, patient_mapping):
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_create_resource(mock_datetime, patient_mapping):
+def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
     rows = pd.DataFrame(
         [
             {
                 "map_marital_status_admissions.marital_status": "D",
                 "map_gender_PATIENTS.GENDER": "male",
+                "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "male",
                 "clean_date_PATIENTS.DOB": "2000-10-10",
-                "patients.row_id": "123",
+                "patients.row_id": "1",
+                "id_cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "true",
                 "clean_date_patients.dod": "2100-01-01",
             },
             {
                 "map_marital_status_admissions.marital_status": "P",
                 "map_gender_PATIENTS.GENDER": "female",
+                "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "female",
                 "clean_date_PATIENTS.DOB": "2001-11-11",
-                "patients.row_id": "124",
+                "patients.row_id": "2",
+                "id_cm_identifier_patients.row_id": "B",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "false",
                 "clean_date_patients.dod": "2101-11-11",
             },
@@ -81,7 +89,7 @@ def test_create_resource(mock_datetime, patient_mapping):
                 ],
             },
             "id": actual[0]["id"],
-            "identifier": [{"value": "123"}],
+            "identifier": [{"value": "A"}],
             "resourceType": "Patient",
             "gender": "male",
             "birthDate": "2000-10-10",
@@ -99,7 +107,7 @@ def test_create_resource(mock_datetime, patient_mapping):
                 ],
             },
             "id": actual[1]["id"],
-            "identifier": [{"value": "124"}],
+            "identifier": [{"value": "B"}],
             "resourceType": "Patient",
             "gender": "female",
             "birthDate": "2001-11-11",
@@ -155,6 +163,7 @@ def test_fetch_values_from_dataframe():
         {
             "script": "clean_date",
             "staticValue": None,
+            "conceptMapId": None,
             "sqlValue": {"owner": "", "table": "PATIENTS", "column": "DOB"},
         }
     ]
@@ -174,6 +183,7 @@ def test_fetch_values_from_dataframe():
         {
             "script": "clean_phone",
             "staticValue": None,
+            "conceptMapId": None,
             "sqlValue": {"owner": "", "table": "PATIENTS", "column": "ROW_ID", "joins": []},
         },
         {"script": None, "staticValue": "dummy", "sqlValue": None},
@@ -194,13 +204,21 @@ def test_handle_array_attributes():
         "path1": {
             "mergingScript": "",
             "inputs": [
-                {"sqlValue": {"owner": "", "table": "PATIENTS", "column": "A"}, "script": ""}
+                {
+                    "conceptMapId": None,
+                    "sqlValue": {"owner": "", "table": "PATIENTS", "column": "A"},
+                    "script": "",
+                }
             ],
         },
         "path2": {
             "mergingScript": "",
             "inputs": [
-                {"sqlValue": {"owner": "", "table": "PATIENTS", "column": "B"}, "script": ""}
+                {
+                    "conceptMapId": None,
+                    "sqlValue": {"owner": "", "table": "PATIENTS", "column": "B"},
+                    "script": "",
+                }
             ],
         },
     }

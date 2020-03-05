@@ -23,6 +23,7 @@ fragment entireInput on Input {
         ...entireColumn
     }
     script
+    conceptMapId
     staticValue
 }
 

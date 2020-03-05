@@ -84,7 +84,7 @@ def build_fhir_object(row, path_attributes_map, index=None):
 
             if position_ind is None:
                 # If we didn't find an index in the path, then we don't worry about arrays
-                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"],)
                 if isinstance(val, tuple) and len(val) == 1:
                     # If we have a tuple of length 1, we simply extract the value and put it in
                     # the fhir object
@@ -129,6 +129,8 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
             column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
             if input["script"]:
                 column_name = new_col_name(input["script"], column_name)
+            if input["conceptMapId"]:
+                column_name = new_col_name(input["conceptMapId"], column_name)
             return row[column_name]
         else:
             return input["staticValue"]

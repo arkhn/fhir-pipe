@@ -1,9 +1,9 @@
-import numpy as np
-import logging
-
-import scripts
+from typing import List
 
 from fhirpipe.utils import new_col_name
+from fhirpipe.analyze.concept_map import ConceptMap
+from fhirpipe.analyze.cleaning_script import CleaningScript
+from fhirpipe.analyze.merging_script import MergingScript
 
 
 def squash_rows(df, squash_rules, parent_cols=[]):
@@ -68,37 +68,26 @@ def flat_tuple_agg(values):
         if isinstance(val, tuple):
             res += val
         else:
-            res += (val, )
+            res += (val,)
     return res
 
 
-def apply_scripts(df, cleaning_scripts, merging_scripts, primary_key_column):
+def apply_scripts(
+    df,
+    cleaning_scripts: List[CleaningScript],
+    concept_maps: List[ConceptMap],
+    merging_scripts: List[MergingScript],
+    primary_key_column,
+):
 
-    for cleaning_script, columns in cleaning_scripts.items():
-        script = scripts.get_script(cleaning_script)
-        for col in columns:
-            df[new_col_name(cleaning_script, col)] = np.vectorize(clean_and_log)(
-                df[col], script=script, id=df[primary_key_column], col=col
-            )
+    for cleaning_script in cleaning_scripts:
+        for col, cleaned_values in cleaning_script.apply(df, primary_key_column):
+            df[new_col_name(cleaning_script.name, col)] = cleaned_values
 
-    for merging_script, cols_and_values in merging_scripts:
-        script = scripts.get_script(merging_script)
-        cols, statics = cols_and_values
-        args = [df[k] for k in cols] + statics
-        df[new_col_name(merging_script, (cols, statics))] = np.vectorize(merge_and_log)(
-            *args, script=script, id=df[primary_key_column], cols=" ".join(cols)
-        )
+    for concept_map in concept_maps:
+        for col, mapped_values in concept_map.apply(df, primary_key_column):
+            df[new_col_name(concept_map.id, col)] = mapped_values
 
-
-def clean_and_log(val, script=None, id=None, col=None):
-    try:
-        return script(val)
-    except Exception as e:
-        logging.error(f"{script.__name__}: Error cleaning {col} (at id = {id}): {e}")
-
-
-def merge_and_log(*val, script=None, id=None, cols=None):
-    try:
-        return script(*val)
-    except Exception as e:
-        logging.error(f"{script.__name__}: Error merging columns {cols} (at id = {id}): {e}")
+    for merging_script in merging_scripts:
+        col, merged_values = merging_script.apply(df, primary_key_column)
+        df[new_col_name(merging_script.name, col)] = merged_values

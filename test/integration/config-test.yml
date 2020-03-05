@@ -1,21 +1,24 @@
 sql:
-  default: 'postgres'
+  default: "postgres"
   postgres:
-    lib: 'psycopg2'
+    lib: "psycopg2"
     args: []
     kwargs:
-      host: 'localhost'
+      host: "localhost"
       port: 5431
-      database: 'mockdb'
-      user: 'mockdb'
-      password: 'mockdb'
+      database: "mockdb"
+      user: "mockdb"
+      password: "mockdb"
 fhirstore:
-  host: 'localhost'
+  host: "localhost"
   port: 27017
-  database: 'fhirstore'
+  database: "fhirstore"
   user: null
   password: null
 
 graphql:
-  server: 'http://localhost:4000'
-  token: '<token>'
+  server: "http://localhost:4000"
+  token: "<token>"
+
+fhir-api:
+  url: "http://localhost:2000"

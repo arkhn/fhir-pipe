@@ -1,28 +1,68 @@
 from unittest import mock
 from pytest import raises
 
-from test.unit.conftest import mock_config
-
 import fhirpipe.extract.sql as sql
+
+from test.unit.conftest import mock_config
 
 
 def test_build_sql_filters():
+    # Without filters
+    resource_mapping = {"filters": []}
     primary_key_column = "owner.table.col"
     primary_key_values = [1, 2, 3]
 
-    filters = sql.build_sql_filters(primary_key_column, primary_key_values)
+    filters = sql.build_sql_filters(resource_mapping, primary_key_column, primary_key_values)
 
     assert filters == "\nWHERE owner.table.col IN (1, 2, 3)"
 
     primary_key_values = [123]
 
-    filters = sql.build_sql_filters(primary_key_column, primary_key_values)
+    filters = sql.build_sql_filters(resource_mapping, primary_key_column, primary_key_values)
 
     assert filters == "\nWHERE owner.table.col=123"
 
-    filters = sql.build_sql_filters(primary_key_column, None)
+    filters = sql.build_sql_filters(resource_mapping, primary_key_column, None)
 
-    assert filters is None
+    assert filters == ""
+
+    # With filters
+    resource_mapping = {
+        "filters": [
+            {
+                "sqlColumn": {"owner": "own", "table": "tab", "column": "col"},
+                "relation": "<=",
+                "value": "10",
+            }
+        ]
+    }
+
+    filters = sql.build_sql_filters(resource_mapping, primary_key_column)
+
+    assert filters == "\nWHERE own.tab.col<=10"
+
+    # With both
+    resource_mapping = {
+        "filters": [
+            {
+                "sqlColumn": {"owner": "own", "table": "tab", "column": "col"},
+                "relation": "<=",
+                "value": "10",
+            }
+        ]
+    }
+    primary_key_column = "owner.table.col"
+    primary_key_values = [1, 2, 3]
+
+    filters = sql.build_sql_filters(resource_mapping, primary_key_column, primary_key_values)
+
+    assert filters == ("\nWHERE owner.table.col IN (1, 2, 3)" "\nWHERE own.tab.col<=10")
+
+    primary_key_values = [123]
+
+    filters = sql.build_sql_filters(resource_mapping, primary_key_column, primary_key_values)
+
+    assert filters == ("\nWHERE owner.table.col=123" "\nWHERE own.tab.col<=10")
 
 
 def test_build_sql_query():

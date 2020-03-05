@@ -4,25 +4,33 @@ import pandas as pd
 from contextlib import contextmanager
 
 import fhirpipe
-from fhirpipe.utils import get_table_name
+from fhirpipe.utils import build_col_name, get_table_name
 
 
-def build_sql_filters(primary_key_column, primary_key_values):
+def build_sql_filters(resource_mapping, primary_key_column, primary_key_values=None):
     """
     Build sql WHERE clauses.
-    Currently, it's only used for running the ETL on a few selected rows
-    but it will also be used to conditionally process a row.
+    It's used for:
+        - running the ETL on a few selected rows.
+        - conditionally processing a row.
     """
-    if primary_key_values is None:
-        return None
+    filters = ""
+    if primary_key_values is not None:
+        if len(primary_key_values) == 1:
+            filters += f"\nWHERE {primary_key_column}={primary_key_values[0]}"
+        else:
+            filters += f"\nWHERE {primary_key_column} IN {tuple(primary_key_values)}"
 
-    if len(primary_key_values) == 1:
-        return f"\nWHERE {primary_key_column}={primary_key_values[0]}"
+    if resource_mapping["filters"]:
+        for filter in resource_mapping["filters"]:
+            sql_col = filter["sqlColumn"]
+            col_name = build_col_name(sql_col["table"], sql_col["column"], sql_col["owner"])
+            filters += f"\nWHERE {col_name}{filter['relation']}{filter['value']}"
 
-    return f"\nWHERE {primary_key_column} IN {tuple(primary_key_values)}"
+    return filters
 
 
-def build_sql_query(columns, joins, table_name, sql_filters=None):
+def build_sql_query(columns, joins, table_name, sql_filters=""):
     """
     Writes the sql query from the information gathered by the Analyzer.
     """
@@ -33,7 +41,7 @@ def build_sql_query(columns, joins, table_name, sql_filters=None):
             for join_source, join_target in joins
         ]
     )
-    return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}{sql_filters or ''}"
+    return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}{sql_filters}"
 
 
 @contextmanager
@@ -56,7 +64,7 @@ def get_connection(credentials=None, connection_type: str = None):
         connection_type = sql_config["default"]
     elif connection_type not in ["postgres", "oracle"]:
         raise ValueError(
-            'Config specifies a wrong database type. '
+            "Config specifies a wrong database type. "
             'The only types supported are "postgres" and "oracle".'
         )
 

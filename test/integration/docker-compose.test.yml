@@ -1,9 +1,21 @@
-version: '3.7'
+version: "3.7"
 services:
+  fhir-api:
+    image: arkhn/fhir-api:latest
+    environment:
+      DB_NAME: fhirstore
+      DB_HOST: mongo
+      DB_PORT: 27017
+      ES_HOST: none
+      ES_USER: none
+      ES_PASSWORD: none
+    ports:
+      - 2000:2000
+
   postgres:
     image: postgres
     ports:
-      - '5431:5432'
+      - "5431:5432"
     environment:
       POSTGRES_USER: mockdb
       POSTGRES_PASSWORD: mockdb
@@ -11,7 +23,6 @@ services:
     volumes:
       - ./docker-test-config/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./docker-test-config/mockdata:/var/lib/postgresql/mockdata
-
 
   mongo:
     image: mongo
