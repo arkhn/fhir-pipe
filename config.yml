@@ -23,5 +23,3 @@ fhir-api:
 logging:
   filename: fhirpipe.log
 
-fhir-api:
-  url: http://fhir.staging.arkhn.org/

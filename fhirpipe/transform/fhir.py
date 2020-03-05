@@ -175,11 +175,17 @@ def handle_array_attributes(attributes_in_array, row):
         assert length == 1 or len(val) == length, "mismatch in array lengths"
         length = len(val)
 
+    # Check if we have an array of literals
+    is_literal_array = len(attributes_in_array) == 1 and list(attributes_in_array.keys())[0] == ""
+
     # Now we can build the array
     array = []
     for index in range(length):
         element = build_fhir_object(row, attributes_in_array, index=index)
         if element:
+            if is_literal_array:
+                # extract the value from the dict {"": value}
+                element = element[""]
             array.append(element)
 
     return array
