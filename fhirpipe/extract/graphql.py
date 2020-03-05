@@ -82,10 +82,10 @@ query resource($resourceId: ID!) {
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
-        definitionId
         filters {
             ...entireFilter
         }
+        definitionId
         definition {
             type
             kind
@@ -144,6 +144,9 @@ query {
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
+        filters {
+            ...entireFilter
+        }
         definitionId
         definition {
             type
