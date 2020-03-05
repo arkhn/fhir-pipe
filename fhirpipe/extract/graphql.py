@@ -5,6 +5,18 @@ from fhirpipe.errors import OperationOutcome
 
 
 attr_fragment = """
+fragment entireFilter on Filter {
+  id
+  sqlColumn {
+    id
+    owner
+    table
+    column
+  }
+  relation
+  value
+}
+
 fragment entireColumn on Column {
     owner
     table
@@ -70,6 +82,9 @@ query resource($resourceId: ID!) {
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
+        filters {
+            ...entireFilter
+        }
         definitionId
         definition {
             type
@@ -129,6 +144,9 @@ query {
         primaryKeyOwner
         primaryKeyTable
         primaryKeyColumn
+        filters {
+            ...entireFilter
+        }
         definitionId
         definition {
             type

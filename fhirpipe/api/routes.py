@@ -4,7 +4,6 @@ from fhirpipe.errors import OperationOutcome
 from fhirpipe.run import run as fp_run
 from fhirpipe.run import preview as fp_preview
 from fhirpipe.extract.graphql import get_credentials, get_resource_from_id
-from fhirpipe.extract.sql import get_engine
 from flask_cors import CORS
 
 
@@ -64,8 +63,7 @@ def preview(resource_id, primary_key_value):
 
     try:
         # Connect to DB and run
-        engine = get_engine(credentials)
-        fhir_object = fp_preview(engine, resource_id, [primary_key_value])
+        fhir_object = fp_preview(resource_id, [primary_key_value], credentials)
     except Exception as e:
         # If something went wrong
         raise OperationOutcome(e)
