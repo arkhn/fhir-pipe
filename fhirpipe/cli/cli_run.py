@@ -1,6 +1,5 @@
 from fhirpipe import set_global_config, setup_logging
 from fhirpipe.cli import parse_args, WELCOME_MSG
-from fhirpipe.extract.sql import get_connection
 from fhirpipe.run import run
 
 
@@ -16,16 +15,13 @@ def cli_run():
     # Setup logging configuration
     setup_logging()
 
-    # Setup DB connection and run
-    with get_connection() as connection:
-        run(
-            connection=connection,
-            mapping=args.mapping,
-            source=args.source,
-            resources=args.resources,
-            labels=args.labels,
-            override=args.override,
-            chunksize=args.chunksize,
-            bypass_validation=args.bypass_validation,
-            multiprocessing=args.multiprocessing,
-        )
+    run(
+        mapping=args.mapping,
+        source=args.source,
+        resources=args.resources,
+        labels=args.labels,
+        override=args.override,
+        chunksize=args.chunksize,
+        bypass_validation=args.bypass_validation,
+        multiprocessing=args.multiprocessing,
+    )

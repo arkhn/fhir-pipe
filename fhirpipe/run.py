@@ -13,13 +13,11 @@ from fhirpipe.transform import Transformer
 from fhirpipe.load import Loader
 
 from fhirpipe.analyze.mapping import get_mapping
-from fhirpipe.extract.sql import get_connection
 from fhirpipe.extract.graphql import get_resource_from_id
 from fhirpipe.load.fhirstore import get_fhirstore
 
 
 def run(
-    connection,
     mapping,
     source,
     resources,
@@ -28,6 +26,7 @@ def run(
     chunksize,
     bypass_validation,
     multiprocessing,
+    credentials=None,
 ):
     """
     """
@@ -49,7 +48,7 @@ def run(
         pool = mp.Pool()
 
     analyzer = Analyzer()
-    extractor = Extractor(connection, chunksize)
+    extractor = Extractor(credentials, chunksize)
     transformer = Transformer(pool)
     loader = Loader(fhirstore, bypass_validation, pool)
 
@@ -86,14 +85,14 @@ def run(
     logging.info(f"Done in {time.time() - start_time}.")
 
 
-def preview(connection, resource_id, primary_key_values):
+def preview(resource_id, primary_key_values, credentials):
     """ Run the ETL only for values where the primary key
     """
     # Get the resources we want to process from the pyrog mapping for a given source
     resource_mapping = get_resource_from_id(resource_id=resource_id)
 
     analyzer = Analyzer()
-    extractor = Extractor(connection)
+    extractor = Extractor(credentials)
     transformer = Transformer()
 
     analysis = analyzer.analyze(resource_mapping)
@@ -115,16 +114,13 @@ if __name__ == "__main__":
     # Setup logging configuration
     setup_logging()
 
-    # Setup DB connection and run
-    with get_connection() as connection:
-        run(
-            connection=connection,
-            mapping=args.mapping,
-            source=args.source,
-            resources=args.resources,
-            labels=args.labels,
-            override=args.override,
-            chunksize=args.chunksize,
-            bypass_validation=args.bypass_validation,
-            multiprocessing=args.multiprocessing,
-        )
+    run(
+        mapping=args.mapping,
+        source=args.source,
+        resources=args.resources,
+        labels=args.labels,
+        override=args.override,
+        chunksize=args.chunksize,
+        bypass_validation=args.bypass_validation,
+        multiprocessing=args.multiprocessing,
+    )

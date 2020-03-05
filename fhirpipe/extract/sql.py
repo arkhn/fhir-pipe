@@ -1,10 +1,27 @@
-import psycopg2  # noqa
-import cx_Oracle  # noqa
 import pandas as pd
-from contextlib import contextmanager
 
-import fhirpipe
 from fhirpipe.utils import build_col_name, get_table_name
+
+
+db_driver = {"POSTGRES": "postgresql", "ORACLE": "oracle+cx_oracle"}
+
+
+def build_db_url(credentials):
+    login = credentials["login"]
+    password = credentials["password"]
+    host = credentials["host"]
+    port = credentials["port"]
+    database = credentials["database"]
+
+    try:
+        db_handler = db_driver[credentials["model"]]
+    except KeyError:
+        raise ValueError(
+            "credentials specifies the wrong database model. "
+            "Only 'POSTGRES' and 'ORACLE' are currently supported."
+        )
+
+    return f"{db_handler}://{login}:{password}@{host}:{port}/{database}"
 
 
 def build_sql_filters(resource_mapping, primary_key_column, primary_key_values=None):
@@ -44,50 +61,7 @@ def build_sql_query(columns, joins, table_name, sql_filters=""):
     return f"SELECT {sql_cols}\nFROM {table_name}\n{sql_joins}{sql_filters}"
 
 
-@contextmanager
-def get_connection(credentials=None, connection_type: str = None):
-    """
-    Return a sql connexion depending on the configuration provided in
-    config.yml (see root of the project)
-    It should be used in a context environment (with get_connection(c) as ...)
-
-    args:
-        connection_type (str): a string like "postgres", "oracle". See your
-            config file for available values
-
-    return:
-        a sql connexion
-    """
-    sql_config = fhirpipe.global_config["sql"]
-
-    if connection_type is None:
-        connection_type = sql_config["default"]
-    elif connection_type not in ["postgres", "oracle"]:
-        raise ValueError(
-            "Config specifies a wrong database type. "
-            'The only types supported are "postgres" and "oracle".'
-        )
-
-    if credentials is None:
-        args = sql_config[connection_type]["args"]
-        kwargs = sql_config[connection_type]["kwargs"]
-    else:
-        assert connection_type == "postgres", "credentials for non postgres DB not supported"
-        args = []
-        kwargs = credentials
-
-    if connection_type == "postgres":
-        connection = psycopg2.connect(*args, **kwargs)
-    elif connection_type == "oracle":
-        connection = cx_Oracle.connect(*args, **kwargs)
-
-    try:
-        yield connection
-    finally:
-        connection.close()
-
-
-def run_sql_query(connection, query, chunksize: int = None):
+def run_sql_query(engine, query, chunksize: int = None):
     """
     Run a sql query after opening a sql connection
 
@@ -101,7 +75,7 @@ def run_sql_query(connection, query, chunksize: int = None):
         the result of the sql query run on the specified connection type
             or an iterator if chunksize is specified
     """
-    pd_query = pd.read_sql_query(query, connection, chunksize=chunksize)
+    pd_query = pd.read_sql_query(query, con=engine, chunksize=chunksize)
 
     # If chunksize is None, we return the dataframe for the whole DB
     # Note that we still use yield to use the for ... in ... syntax in any case

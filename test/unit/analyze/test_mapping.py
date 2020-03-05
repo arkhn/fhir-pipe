@@ -67,8 +67,8 @@ def test_get_mapping_from_file(exported_source):
             "definitionId",
             "definition",
             "source",
-            "attributes",
             "filters",
+            "attributes",
         ],
     )
 
@@ -102,8 +102,8 @@ def test_get_mapping_from_file(exported_source):
             "definitionId",
             "definition",
             "source",
-            "attributes",
             "filters",
+            "attributes",
         ],
     )
 

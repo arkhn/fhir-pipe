@@ -4,7 +4,7 @@ from fhirpipe.errors import OperationOutcome
 from fhirpipe.run import run as fp_run
 from fhirpipe.run import preview as fp_preview
 from fhirpipe.extract.graphql import get_credentials, get_resource_from_id
-from fhirpipe.extract.sql import get_connection
+from fhirpipe.extract.sql import get_engine
 from flask_cors import CORS
 
 
@@ -32,23 +32,17 @@ def run():
     params = {k: body[k] if k in body else default_params[k] for k in default_params}
 
     # Get credentials if given in request
-    credentials = None
-    connection_type = None
-
-    if "credentialId" in body:
-        try:
-            credentials, connection_type = transform_credentials(
-                get_credentials(body["credentialId"])
-            )
-        except OperationOutcome as e:
-            raise OperationOutcome(f"Error while fetching credientials for DB: {e}.")
-    else:
+    if "credentialId" not in body:
         raise OperationOutcome("credentialId is required to run fhirpipe.")
 
     try:
+        credentials = get_credentials(body["credentialId"])
+    except OperationOutcome as e:
+        raise OperationOutcome(f"Error while fetching credientials for DB: {e}.")
+
+    try:
         # Connect to DB and run
-        with get_connection(credentials, connection_type=connection_type) as connection:
-            fp_run(connection, **params)
+        fp_run(**params, credentials=credentials)
     except Exception as e:
         # If something went wrong
         raise OperationOutcome(e)
@@ -62,17 +56,16 @@ def preview(resource_id, primary_key_value):
 
     # Get credentials if given in request
     credentials = None
-    connection_type = None
 
     if not resource_mapping["source"]["credential"]:
         raise OperationOutcome("credentialId is required to run fhirpipe.")
 
-    credentials, connection_type = transform_credentials(resource_mapping["source"]["credential"])
+    credentials = resource_mapping["source"]["credential"]
 
     try:
         # Connect to DB and run
-        with get_connection(credentials, connection_type=connection_type) as connection:
-            fhir_object = fp_preview(connection, resource_id, [primary_key_value])
+        engine = get_engine(credentials)
+        fhir_object = fp_preview(engine, resource_id, [primary_key_value])
     except Exception as e:
         # If something went wrong
         raise OperationOutcome(e)
@@ -83,19 +76,3 @@ def preview(resource_id, primary_key_value):
 @api.errorhandler(OperationOutcome)
 def handle_bad_request(e):
     return str(e), 400
-
-
-def transform_credentials(credentials):
-    """ The structure expected is not exactly the same as the one
-    provided by the graphql query. """
-    connection_type = credentials["model"].lower()
-    # The structure expected is not exactly the same as the one
-    # provided by the graphql query
-    credentials = {
-        "host": credentials["host"],
-        "port": credentials["port"],
-        "database": credentials["database"],
-        "user": credentials["login"],
-        "password": credentials["password"],
-    }
-    return credentials, connection_type
