@@ -201,23 +201,30 @@ def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifi
     }
     assert joins == {("patients.subject_id", "admissions.subject_id")}
 
-    assert cleaning_scripts == {
-        "map_gender": CleaningScript("map_gender"),
-        "clean_date": CleaningScript("clean_date"),
-        "map_marital_status": CleaningScript("map_marital_status"),
-        "binary_to_bool_1": CleaningScript("binary_to_bool_1"),
-    }
-    assert cleaning_scripts["map_gender"].columns == ["PATIENTS.GENDER"]
-    assert cleaning_scripts["clean_date"].columns == ["PATIENTS.DOB", "patients.dod"]
-    assert cleaning_scripts["map_marital_status"].columns == ["admissions.marital_status"]
-    assert cleaning_scripts["binary_to_bool_1"].columns == ["admissions.hospital_expire_flag"]
+    assert list(cleaning_scripts) == [
+        CleaningScript("map_gender"),
+        CleaningScript("clean_date"),
+        CleaningScript("map_marital_status"),
+        CleaningScript("binary_to_bool_1"),
+    ]
+    for script, columns in zip(
+        cleaning_scripts,
+        [
+            ["PATIENTS.GENDER"],
+            ["PATIENTS.DOB", "patients.dod"],
+            ["admissions.marital_status"],
+            ["admissions.hospital_expire_flag"],
+        ],
+    ):
+        assert script.columns == columns
 
-    assert concept_maps == {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
-    assert concept_maps["cm_identifier"].columns == ["patients.row_id"]
+    assert list(concept_maps) == [ConceptMap(fhir_concept_map_identifier)]
+    for cm, columns in zip(concept_maps, [["patients.row_id"]]):
+        assert cm.columns == columns
 
-    assert merging_scripts == {"select_first_not_empty": MergingScript("select_first_not_empty")}
-    assert merging_scripts["select_first_not_empty"].columns == ["map_gender_PATIENTS.GENDER"]
-    assert merging_scripts["select_first_not_empty"].static_values == ["unknown"]
+    assert merging_scripts == [MergingScript("select_first_not_empty")]
+    assert merging_scripts[0].columns == ["map_gender_PATIENTS.GENDER"]
+    assert merging_scripts[0].static_values == ["unknown"]
 
 
 def test_build_squash_rules():

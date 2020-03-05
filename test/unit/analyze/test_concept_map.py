@@ -9,6 +9,7 @@ from test.unit.conftest import mock_config, mock_api_get_maps
 
 def test_concept_map_init():
     fhir_concept_map = {
+        "id": "test_123",
         "title": "test_concept_map",
         "sourceUri": "sourceUri",
         "targetUri": "targetUri",
@@ -49,7 +50,7 @@ def test_concept_map_init():
 @mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
 @mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
 def test_fetch_concept_map(fhir_concept_map_gender):
-    concept_map = ConceptMap.fetch(fhir_concept_map_gender["title"])
+    concept_map = ConceptMap.fetch(fhir_concept_map_gender["id"])
 
     assert concept_map == ConceptMap(fhir_concept_map_gender)
 
@@ -61,7 +62,7 @@ def test_fetch_concept_map(fhir_concept_map_gender):
 @mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
 @mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
 def test_concept_map_apply(fhir_concept_map_gender):
-    concept_map = ConceptMap.fetch(fhir_concept_map_gender["title"])
+    concept_map = ConceptMap.fetch(fhir_concept_map_gender["id"])
     concept_map.columns.append("PATIENTS.GENDER")
     df = pd.DataFrame({"pk": [1, 2, 3, 4], "PATIENTS.GENDER": ["M", "F", "M", "F"]})
 

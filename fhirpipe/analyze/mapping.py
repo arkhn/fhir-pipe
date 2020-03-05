@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Dict
+from typing import Dict, List
 from collections import defaultdict
 
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
@@ -114,7 +114,7 @@ def find_cols_joins_maps_scripts(resource_mapping):
     joins = set()
     concept_maps: Dict[str, ConceptMap] = {}
     cleaning_scripts: Dict[str, CleaningScript] = {}
-    merging_scripts: Dict[str, MergingScript] = {}
+    merging_scripts: List[MergingScript] = []
 
     for attribute in resource_mapping["attributes"]:
         cols_merging = []
@@ -126,6 +126,8 @@ def find_cols_joins_maps_scripts(resource_mapping):
                 cols.add(column_name)
 
                 if input["script"]:
+                    # This is a hack to avoid a linting error about complexity too high (>10)
+                    # It initializes the cleaning script if it does not exist
                     cleaning_scripts[input["script"]] = cleaning_scripts.get(
                         input["script"], CleaningScript(input["script"])
                     )
@@ -133,6 +135,8 @@ def find_cols_joins_maps_scripts(resource_mapping):
                     column_name = new_col_name(input["script"], column_name)
 
                 if input["conceptMapId"]:
+                    # This is a hack to avoid a linting error about complexity too high (>10)
+                    # It initializes the concept map if it does not exist
                     concept_maps[input["conceptMapId"]] = concept_maps.get(
                         input["conceptMapId"], ConceptMap.fetch(input["conceptMapId"])
                     )
@@ -155,14 +159,12 @@ def find_cols_joins_maps_scripts(resource_mapping):
                 static_values.append(input["staticValue"])
 
         if attribute["mergingScript"]:
-            if attribute["mergingScript"] not in merging_scripts:
-                merging_scripts[attribute["mergingScript"]] = MergingScript(
-                    attribute["mergingScript"]
-                )
-            merging_scripts[attribute["mergingScript"]].columns = cols_merging
-            merging_scripts[attribute["mergingScript"]].static_values = static_values
+            merging_script = MergingScript(attribute["mergingScript"])
+            merging_script.columns = cols_merging
+            merging_script.static_values = static_values
+            merging_scripts.append(merging_script)
 
-    return cols, joins, concept_maps, cleaning_scripts, merging_scripts
+    return cols, joins, concept_maps.values(), cleaning_scripts.values(), merging_scripts
 
 
 def build_squash_rules(columns, joins, main_table):

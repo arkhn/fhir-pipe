@@ -1,4 +1,3 @@
-from typing import Dict
 from datetime import datetime
 import logging
 import re
@@ -9,18 +8,17 @@ import numpy as np
 from fhirstore import ARKHN_CODE_SYSTEMS
 
 from fhirpipe.utils import build_col_name, new_col_name
-from fhirpipe.analyze.concept_map import ConceptMap
 
 
 def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
 
-def create_resource(chunk, resource_mapping, concept_maps: Dict[str, ConceptMap]):
+def create_resource(chunk, resource_mapping):
     res = []
     for _, row in chunk.iterrows():
         try:
-            res.append(create_instance(row, resource_mapping, concept_maps))
+            res.append(create_instance(row, resource_mapping))
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
@@ -30,14 +28,14 @@ def create_resource(chunk, resource_mapping, concept_maps: Dict[str, ConceptMap]
     return res
 
 
-def create_instance(row, resource_mapping, concept_maps: Dict[str, ConceptMap]):
+def create_instance(row, resource_mapping):
     """ Function used to create a single FHIR instance.
     """
     # Modify the data structure so that it is easier to use
     path_attributes_map = {attr["path"]: attr for attr in resource_mapping["attributes"]}
 
     # Build path value map
-    fhir_object = build_fhir_object(row, path_attributes_map, concept_maps)
+    fhir_object = build_fhir_object(row, path_attributes_map)
 
     # Identify the fhir object
     fhir_object["id"] = str(uuid4())
@@ -70,7 +68,7 @@ def build_metadata(resource_mapping):
     return metadata
 
 
-def build_fhir_object(row, path_attributes_map, concept_maps: Dict[str, ConceptMap], index=None):
+def build_fhir_object(row, path_attributes_map, index=None):
     """ Function that actually builds a nested object from the dataframe row and the mapping.
     Note that it can be used to build only a subpart of a fhir instance.
     """
@@ -86,9 +84,7 @@ def build_fhir_object(row, path_attributes_map, concept_maps: Dict[str, ConceptM
 
             if position_ind is None:
                 # If we didn't find an index in the path, then we don't worry about arrays
-                val = fetch_values_from_dataframe(
-                    row, attr["inputs"], attr["mergingScript"], concept_maps
-                )
+                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"],)
                 if isinstance(val, tuple) and len(val) == 1:
                     # If we have a tuple of length 1, we simply extract the value and put it in
                     # the fhir object
@@ -116,7 +112,7 @@ def build_fhir_object(row, path_attributes_map, concept_maps: Dict[str, ConceptM
                     if path.startswith(array_path)
                 }
                 # Build the array of sub fhir object
-                array = handle_array_attributes(attributes_in_array, row, concept_maps)
+                array = handle_array_attributes(attributes_in_array, row)
                 # Insert them a the right position
                 if array:
                     insert_in_fhir_object(fhir_object, remove_index(array_path), array)
@@ -125,9 +121,7 @@ def build_fhir_object(row, path_attributes_map, concept_maps: Dict[str, ConceptM
     return fhir_object
 
 
-def fetch_values_from_dataframe(
-    row, mapping_inputs, merging_script, concept_maps: Dict[str, ConceptMap]
-):
+def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
     if len(mapping_inputs) == 1:
         input = mapping_inputs[0]
         if input["sqlValue"]:
@@ -136,8 +130,7 @@ def fetch_values_from_dataframe(
             if input["script"]:
                 column_name = new_col_name(input["script"], column_name)
             if input["conceptMapId"]:
-                concept_map = concept_maps[input["conceptMapId"]]
-                column_name = new_col_name(concept_map.title, column_name)
+                column_name = new_col_name(input["conceptMapId"], column_name)
             return row[column_name]
         else:
             return input["staticValue"]
@@ -166,7 +159,7 @@ def fetch_values_from_dataframe(
         return row[df_col]
 
 
-def handle_array_attributes(attributes_in_array, row, concept_maps: Dict[str, ConceptMap]):
+def handle_array_attributes(attributes_in_array, row):
     # Check lengths
     # We check that all the values with more than one element that we will put in the array
     # have the same length. We could not, for instance, build an object from
@@ -176,7 +169,7 @@ def handle_array_attributes(attributes_in_array, row, concept_maps: Dict[str, Co
     # {"adress": [{"city": "Paris", "country": "France"}, {"city": "Lyon", "country": "France"}]}
     length = 1
     for attr in attributes_in_array.values():
-        val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"], concept_maps)
+        val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
         if not isinstance(val, tuple) or len(val) == 1:
             continue
         assert length == 1 or len(val) == length, "mismatch in array lengths"
@@ -185,7 +178,7 @@ def handle_array_attributes(attributes_in_array, row, concept_maps: Dict[str, Co
     # Now we can build the array
     array = []
     for index in range(length):
-        element = build_fhir_object(row, attributes_in_array, concept_maps, index=index)
+        element = build_fhir_object(row, attributes_in_array, index=index)
         if element:
             array.append(element)
 

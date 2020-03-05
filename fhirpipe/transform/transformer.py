@@ -34,14 +34,10 @@ class Transformer:
 
         if self.pool:
             fhir_instances = self.pool.map(
-                partial(
-                    create_resource,
-                    resource_mapping=resource_mapping,
-                    concept_maps=analysis.concept_maps,
-                ),
+                partial(create_resource, resource_mapping=resource_mapping),
                 np.array_split(chunk, self.pool._processes),
             )
         else:
-            fhir_instances = create_resource(chunk, resource_mapping, analysis.concept_maps)
+            fhir_instances = create_resource(chunk, resource_mapping)
 
         return fhir_instances

@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import List
 
 from fhirpipe.utils import new_col_name
 from fhirpipe.analyze.concept_map import ConceptMap
@@ -74,20 +74,20 @@ def flat_tuple_agg(values):
 
 def apply_scripts(
     df,
-    cleaning_scripts: Dict[str, CleaningScript],
-    concept_maps: Dict[str, ConceptMap],
-    merging_scripts: Dict[str, MergingScript],
+    cleaning_scripts: List[CleaningScript],
+    concept_maps: List[ConceptMap],
+    merging_scripts: List[MergingScript],
     primary_key_column,
 ):
 
-    for _, cleaning_script in cleaning_scripts.items():
+    for cleaning_script in cleaning_scripts:
         for col, cleaned_values in cleaning_script.apply(df, primary_key_column):
             df[new_col_name(cleaning_script.name, col)] = cleaned_values
 
-    for concept_map_id, concept_map in concept_maps.items():
+    for concept_map in concept_maps:
         for col, mapped_values in concept_map.apply(df, primary_key_column):
-            df[new_col_name(concept_map.title, col)] = mapped_values
+            df[new_col_name(concept_map.id, col)] = mapped_values
 
-    for _, merging_script in merging_scripts.items():
+    for merging_script in merging_scripts:
         col, merged_values = merging_script.apply(df, primary_key_column)
         df[new_col_name(merging_script.name, col)] = merged_values

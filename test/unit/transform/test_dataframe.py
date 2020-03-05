@@ -58,22 +58,25 @@ def test_apply_scripts(_, __, fhir_concept_map_code, fhir_concept_map_gender):
     primary_key_column = "ID"
 
     # mock cleaning scripts
-    cleaning_scripts = {"clean1": CleaningScript("clean1"), "clean2": CleaningScript("clean2")}
-    cleaning_scripts["clean1"].columns.append("NAME")
-    cleaning_scripts["clean2"].columns.extend(["NAME", "ADDRESS", "CODE"])
+    clean1 = CleaningScript("clean1")
+    clean1.columns.append("NAME")
+    clean2 = CleaningScript("clean2")
+    clean2.columns.extend(["NAME", "ADDRESS", "CODE"])
+    cleaning_scripts = [clean1, clean2]
 
     # mock concept maps
-    concept_maps = {
-        "cm_gender": ConceptMap(fhir_concept_map_gender),
-        "cm_code": ConceptMap(fhir_concept_map_code),
-    }
-    concept_maps["cm_gender"].columns.append("GENDER")
-    concept_maps["cm_code"].columns.append("clean2_CODE")
+
+    cm_gender = ConceptMap(fhir_concept_map_gender)
+    cm_code = ConceptMap(fhir_concept_map_code)
+    cm_gender.columns.append("GENDER")
+    cm_code.columns.append("clean2_CODE")
+    concept_maps = [cm_gender, cm_code]
 
     # mock merging scripts
-    merging_scripts = {"merge": MergingScript("merge")}
-    merging_scripts["merge"].static_values.append("val")
-    merging_scripts["merge"].columns.extend(["ADDRESS", "ID"])
+    merge1 = MergingScript("merge")
+    merge1.static_values.append("val")
+    merge1.columns.extend(["ADDRESS", "ID"])
+    merging_scripts = [merge1]
 
     transform.apply_scripts(df, cleaning_scripts, concept_maps, merging_scripts, primary_key_column)
 
@@ -88,8 +91,8 @@ def test_apply_scripts(_, __, fhir_concept_map_code, fhir_concept_map_gender):
             "clean2_NAME": ["alicecleaned", "bobcleaned", "charliecleaned"],
             "clean2_ADDRESS": ["addr1cleaned", "addr2cleaned", "addr3cleaned"],
             "clean2_CODE": ["ABCcleaned", "DEFcleaned", "GHIcleaned"],
-            "cm_gender_GENDER": ["male", "female", "female"],
-            "cm_code_clean2_CODE": ["abc", "def", "ghi"],
+            "id_cm_gender_GENDER": ["male", "female", "female"],
+            "id_cm_code_clean2_CODE": ["abc", "def", "ghi"],
             "merge_ADDRESS_ID_val": ["id1valmerge", "id2valmerge", "id3valmerge"],
         },
     )

@@ -13,6 +13,7 @@ cm_code = {
     ],
     "resourceType": "ConceptMap",
     "title": "cm_code",
+    "id": "id_cm_code",
 }
 
 cm_gender = {
@@ -26,6 +27,7 @@ cm_gender = {
     ],
     "resourceType": "ConceptMap",
     "title": "cm_gender",
+    "id": "id_cm_gender",
 }
 
 cm_identifier = {
@@ -40,6 +42,7 @@ cm_identifier = {
     ],
     "resourceType": "ConceptMap",
     "title": "cm_identifier",
+    "id": "id_cm_identifier",
 }
 
 
@@ -68,11 +71,11 @@ def mock_api_get_maps(*args, **kwargs):
         def json(self):
             return self.json_data
 
-    if args[0] == "https://url/api/ConceptMap/cm_code":
+    if args[0] == "https://url/api/ConceptMap/id_cm_code":
         return MockResponse(cm_code, 200, "")
-    elif args[0] == "https://url/api/ConceptMap/cm_gender":
+    elif args[0] == "https://url/api/ConceptMap/id_cm_gender":
         return MockResponse(cm_gender, 200, "")
-    elif args[0] == "https://url/api/ConceptMap/cm_identifier":
+    elif args[0] == "https://url/api/ConceptMap/id_cm_identifier":
         return MockResponse(cm_identifier, 200, "")
     return MockResponse(None, 404, "not found")
 

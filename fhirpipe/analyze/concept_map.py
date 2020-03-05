@@ -17,6 +17,7 @@ class ConceptMap:
         """
         Converts a FHIR concept map to an object which is easier to use.
         """
+        self.id = fhir_concept_map["id"]
         self.title = fhir_concept_map["title"]
         self.columns = []
         self.mapping = {}
@@ -42,13 +43,13 @@ class ConceptMap:
             raise Exception(f"Error while fetching concept map {concept_map_id}: {response.text}.")
         return ConceptMap(response.json())
 
-    def get(self, source_code: str) -> str:
+    def translate(self, source_code: str) -> str:
         return self.mapping[source_code]
 
     def apply(self, df: pd.DataFrame, pk_column: str):
         def map_and_log(val, id=None, col=None):
             try:
-                return self.get(val)
+                return self.translate(val)
             except Exception as e:
                 logging.error(f"{self.title}: Error mapping {col} (at id = {id}): {e}")
 

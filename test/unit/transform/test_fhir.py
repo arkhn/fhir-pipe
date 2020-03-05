@@ -5,7 +5,6 @@ from pytest import raises
 from fhirstore import ARKHN_CODE_SYSTEMS
 
 import fhirpipe.transform.fhir as transform
-from fhirpipe.analyze.concept_map import ConceptMap
 
 
 class mockdatetime:
@@ -22,14 +21,13 @@ def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identi
         "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "male",
         "clean_date_PATIENTS.DOB": "2000-10-10",
         "patients.row_id": "1",
-        "cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
+        "id_cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
         "binary_to_bool_1_admissions.hospital_expire_flag": "true",
         "clean_date_patients.dod": "2100-01-01",
     }
-    concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
-    resource_mapping = patient_mapping
 
-    actual = transform.create_instance(row, resource_mapping, concept_maps)
+    resource_mapping = patient_mapping
+    actual = transform.create_instance(row, resource_mapping)
 
     assert actual == {
         "meta": {
@@ -62,7 +60,7 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
                 "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "male",
                 "clean_date_PATIENTS.DOB": "2000-10-10",
                 "patients.row_id": "1",
-                "cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
+                "id_cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "true",
                 "clean_date_patients.dod": "2100-01-01",
             },
@@ -72,15 +70,14 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
                 "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "female",
                 "clean_date_PATIENTS.DOB": "2001-11-11",
                 "patients.row_id": "2",
-                "cm_identifier_patients.row_id": "B",  # cleaned "patients.row_id" column
+                "id_cm_identifier_patients.row_id": "B",  # cleaned "patients.row_id" column
                 "binary_to_bool_1_admissions.hospital_expire_flag": "false",
                 "clean_date_patients.dod": "2101-11-11",
             },
         ]
     )
-    concept_maps = {"cm_identifier": ConceptMap(fhir_concept_map_identifier)}
     resource_mapping = patient_mapping
-    actual = transform.create_resource(rows, resource_mapping, concept_maps)
+    actual = transform.create_resource(rows, resource_mapping)
 
     assert actual == [
         {
@@ -172,7 +169,7 @@ def test_fetch_values_from_dataframe():
     ]
     merging_script = ""
 
-    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script, {})
+    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
 
     assert value == "2000-01-01"
 
@@ -193,7 +190,7 @@ def test_fetch_values_from_dataframe():
     ]
     merging_script = "merge"
 
-    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script, {})
+    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
 
     assert value == "value"
 
@@ -226,7 +223,7 @@ def test_handle_array_attributes():
         },
     }
 
-    value = transform.handle_array_attributes(attributes_in_array, row, {})
+    value = transform.handle_array_attributes(attributes_in_array, row)
 
     assert value == [
         {"path1": "A1", "path2": "B"},
@@ -240,7 +237,7 @@ def test_handle_array_attributes():
         "PATIENTS.B": ("B1", "B2"),
     }
     with raises(AssertionError, match="mismatch in array lengths"):
-        transform.handle_array_attributes(attributes_in_array, row, {})
+        transform.handle_array_attributes(attributes_in_array, row)
 
 
 def test_clean_fhir_object():

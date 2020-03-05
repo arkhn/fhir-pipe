@@ -146,7 +146,7 @@
           "staticValue": null,
           "updatedAt": "2020-02-12T10:35:49.296Z",
           "createdAt": "2020-02-12T10:35:49.296Z",
-          "conceptMapId": "cm_identifier",
+          "conceptMapId": "id_cm_identifier",
           "sqlValue": {
             "id": "ck6j6hyuo00114unx7fg4e9cf",
             "owner": "",
