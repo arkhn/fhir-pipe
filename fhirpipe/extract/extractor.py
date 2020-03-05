@@ -1,6 +1,10 @@
+from sqlalchemy import create_engine
+
 import logging
 
+import fhirpipe
 from fhirpipe.extract.sql import (
+    build_db_string,
     build_sql_filters,
     build_sql_query,
     run_sql_query,
@@ -8,8 +12,12 @@ from fhirpipe.extract.sql import (
 
 
 class Extractor:
-    def __init__(self, engine, chunksize=None):
-        self.engine = engine
+    def __init__(self, credentials, chunksize=None):
+        if credentials is None:
+            credentials = fhirpipe.global_config["default-source-creds"]
+        db_string = build_db_string(credentials)
+
+        self.engine = create_engine(db_string)
         self.chunksize = chunksize
 
     def extract(self, resource_mapping, analysis, primary_key_values=None):

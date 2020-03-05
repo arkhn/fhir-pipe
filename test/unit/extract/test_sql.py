@@ -8,7 +8,7 @@ from test.unit.conftest import mock_config
 def test_build_db_string():
     # With postgres DB
     credentials = {
-        "model": "postgres",
+        "model": "POSTGRES",
         "login": "login",
         "password": "password",
         "host": "host",
@@ -19,7 +19,7 @@ def test_build_db_string():
     assert db_string == "postgresql://login:password@host:port/database"
 
     # With oracle DB
-    credentials["model"] = "oracle"
+    credentials["model"] = "ORACLE"
     db_string = sql.build_db_string(credentials)
     assert db_string == "oracle+cx_oracle://login:password@host:port/database"
 

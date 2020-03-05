@@ -1,36 +1,9 @@
-from sqlalchemy import create_engine
 import pandas as pd
 
-import fhirpipe
 from fhirpipe.utils import build_col_name, get_table_name
 
 
-db_driver = {"postgres": "postgresql", "oracle": "oracle+cx_oracle"}
-
-
-def get_engine(credentials=None):
-    """
-    Return a sql connexion depending on the configuration provided in
-    config.yml (see root of the project)
-
-    args:
-        credentials (str): an object with the following fields:
-            - model
-            - host
-            - port
-            - database
-            - login
-            - password
-
-    return:
-        an sqlalchemy engine
-    """
-    if credentials is None:
-        credentials = fhirpipe.global_config["default-source-creds"]
-
-    db_string = build_db_string(credentials)
-
-    return create_engine(db_string)
+db_driver = {"POSTGRES": "postgresql", "ORACLE": "oracle+cx_oracle"}
 
 
 def build_db_string(credentials):
@@ -45,7 +18,7 @@ def build_db_string(credentials):
     except KeyError:
         raise ValueError(
             "credentials specifies the wrong database model. "
-            "Only 'postgres' and 'oracle' are currently supported."
+            "Only 'POSTGRES' and 'ORACLE' are currently supported."
         )
 
     return f"{db_handler}://{login}:{password}@{host}:{port}/{database}"

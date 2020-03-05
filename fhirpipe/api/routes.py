@@ -42,8 +42,7 @@ def run():
 
     try:
         # Connect to DB and run
-        engine = get_engine(credentials)
-        fp_run(engine, **params)
+        fp_run(**params, credentials=credentials)
     except Exception as e:
         # If something went wrong
         raise OperationOutcome(e)

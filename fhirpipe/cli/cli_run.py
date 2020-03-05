@@ -1,6 +1,5 @@
 from fhirpipe import set_global_config, setup_logging
 from fhirpipe.cli import parse_args, WELCOME_MSG
-from fhirpipe.extract.sql import get_engine
 from fhirpipe.run import run
 
 
@@ -16,11 +15,7 @@ def cli_run():
     # Setup logging configuration
     setup_logging()
 
-    # Setup DB connection and run
-    engine = get_engine()
-
     run(
-        engine=engine,
         mapping=args.mapping,
         source=args.source,
         resources=args.resources,

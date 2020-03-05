@@ -6,11 +6,11 @@ from fhirstore import ARKHN_CODE_SYSTEMS
 import fhirpipe
 import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
-from fhirpipe.extract.sql import get_engine
+from fhirpipe.extract.sql import build_db_string
+from sqlalchemy import create_engine
 
 
 fhirpipe.set_global_config("test/integration/config-test.yml")
-engine = get_engine()
 
 lastUpdated = "2017-01-01T00:00:00Z"
 
@@ -25,7 +25,6 @@ class mockdatetime:
 def test_run_from_file(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
-        engine=engine,
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
         resources=None,
@@ -42,7 +41,6 @@ def test_run_from_file(mock_datetime, with_concept_maps):
 # Run with graphQL queries #
 def test_run_from_gql():
     run.run(
-        engine=engine,
         mapping=None,
         source="mimic",
         resources=None,
@@ -61,7 +59,6 @@ def test_run_from_gql():
 def test_run_resource(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
-        engine=engine,
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
         resources=["Patient", "not_existing_resource"],
@@ -88,7 +85,6 @@ def test_run_resource(mock_datetime, with_concept_maps):
 """
 def test_run_batch():
     run.run(
-        engine=engine,
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
         resources=None,
@@ -106,7 +102,6 @@ def test_run_batch():
 def test_run_multiprocessing(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
-        engine=engine,
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
         resources=None,
@@ -125,7 +120,6 @@ def test_run_multiprocessing(mock_datetime, with_concept_maps):
 def test_run_override(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
-        engine=engine,
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
         resources=["Patient"],
@@ -136,7 +130,6 @@ def test_run_override(mock_datetime, with_concept_maps):
         multiprocessing=False,
     )
     run.run(
-        engine=engine,
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
         resources=["Patient"],
@@ -151,6 +144,8 @@ def test_run_override(mock_datetime, with_concept_maps):
 
 
 # Helper functions and variables for assertions #
+engine = create_engine(build_db_string(fhirpipe.global_config["default-source-creds"]))
+
 expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", con=engine).at[
     0, "count"
 ]
