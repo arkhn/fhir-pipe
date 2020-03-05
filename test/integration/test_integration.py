@@ -77,7 +77,9 @@ def test_run_resource(mock_datetime, with_concept_maps):
 
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
-    assert "Patient" in mongo_client.list_collection_names()
+    db_collections = mongo_client.list_collection_names()
+    assert len(db_collections) == 2
+    assert "Patient" in db_collections
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
     assert_sample_patient_comparison(mongo_client)
