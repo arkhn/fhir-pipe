@@ -69,7 +69,6 @@ def test_get_mapping_from_file(exported_source):
             "source",
             "filters",
             "attributes",
-            "filters",
         ],
     )
 
@@ -105,7 +104,6 @@ def test_get_mapping_from_file(exported_source):
             "source",
             "filters",
             "attributes",
-            "filters",
         ],
     )
 

@@ -4,7 +4,7 @@ import logging
 
 import fhirpipe
 from fhirpipe.extract.sql import (
-    build_db_string,
+    build_db_url,
     build_sql_filters,
     build_sql_query,
     run_sql_query,
@@ -15,7 +15,7 @@ class Extractor:
     def __init__(self, credentials, chunksize=None):
         if credentials is None:
             credentials = fhirpipe.global_config["source"]
-        db_string = build_db_string(credentials)
+        db_string = build_db_url(credentials)
 
         self.engine = create_engine(db_string)
         self.chunksize = chunksize

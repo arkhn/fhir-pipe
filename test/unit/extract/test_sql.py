@@ -15,18 +15,18 @@ def test_build_db_string():
         "port": "port",
         "database": "database",
     }
-    db_string = sql.build_db_string(credentials)
+    db_string = sql.build_db_url(credentials)
     assert db_string == "postgresql://login:password@host:port/database"
 
     # With oracle DB
     credentials["model"] = "ORACLE"
-    db_string = sql.build_db_string(credentials)
+    db_string = sql.build_db_url(credentials)
     assert db_string == "oracle+cx_oracle://login:password@host:port/database"
 
     # With wrong model
     credentials["model"] = "model"
     with raises(ValueError, match="credentials specifies the wrong database model."):
-        sql.build_db_string(credentials)
+        sql.build_db_url(credentials)
 
 
 def test_build_sql_filters():

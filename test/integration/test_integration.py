@@ -6,7 +6,7 @@ from fhirstore import ARKHN_CODE_SYSTEMS
 import fhirpipe
 import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
-from fhirpipe.extract.sql import build_db_string
+from fhirpipe.extract.sql import build_db_url
 from sqlalchemy import create_engine
 
 
@@ -144,13 +144,17 @@ def test_run_override(mock_datetime, with_concept_maps):
 
 
 # Helper functions and variables for assertions #
-engine = create_engine(build_db_string(fhirpipe.global_config["default-source-creds"]))
+engine = create_engine(build_db_url(fhirpipe.global_config["source"]))
 
 expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", con=engine).at[
     0, "count"
 ]
 expected_episode_of_care_count = (
-    pd.read_sql_query("SELECT COUNT(*) FROM admissions", con=engine).at[0, "count"]
+    pd.read_sql_query(
+        # include a filter in the count to reflect the filter contained in the mimic_mapping
+        "SELECT COUNT(*) FROM admissions WHERE admissions.admittime >= '2150-08-29 18:20:00'",
+        con=engine
+    ).at[0, "count"]
     + pd.read_sql_query("SELECT COUNT(*) FROM icustays", con=engine).at[0, "count"]
 )
 expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions", con=engine).at[
