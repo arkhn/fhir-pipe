@@ -1,14 +1,6 @@
 import fhirpipe.utils as utils
 
 
-def test_build_col_name():
-    result = utils.build_col_name("table", "col", "owner")
-    assert result == "owner.table.col"
-
-    result = utils.build_col_name("table", "col")
-    assert result == "table.col"
-
-
 def test_new_col_name():
     result = utils.new_col_name("clean", "col")
     assert result == "clean_col"

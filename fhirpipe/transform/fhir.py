@@ -7,7 +7,8 @@ from uuid import uuid4
 import numpy as np
 from fhirstore import ARKHN_CODE_SYSTEMS
 
-from fhirpipe.utils import build_col_name, new_col_name
+from fhirpipe.utils import new_col_name
+from fhirpipe.analyze.sql_column import SqlColumn
 
 
 def recursive_defaultdict():
@@ -126,7 +127,8 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
         input = mapping_inputs[0]
         if input["sqlValue"]:
             sql = input["sqlValue"]
-            column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
+            cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
+            column_name = str(cur_col)
             if input["script"]:
                 column_name = new_col_name(input["script"], column_name)
             if input["conceptMapId"]:
@@ -146,7 +148,8 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
             # If there is some sql input, use it
             if input["sqlValue"]:
                 sql = input["sqlValue"]
-                column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
+                cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
+                column_name = str(cur_col)
                 if input["script"]:
                     column_name = new_col_name(input["script"], column_name)
                 sql_columns.append(column_name)

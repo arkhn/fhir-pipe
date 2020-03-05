@@ -1,13 +1,3 @@
-def build_col_name(table, column, owner=None):
-    table = table.strip()
-    column = column.strip()
-    owner = owner.strip() if owner is not None else owner
-    if owner:
-        return f"{owner}.{table}.{column}"
-    else:
-        return f"{table}.{column}"
-
-
 def new_col_name(script_name, init_col):
     if isinstance(init_col, tuple):
         if init_col[1]:
