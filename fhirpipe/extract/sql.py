@@ -6,7 +6,7 @@ from fhirpipe.utils import build_col_name, get_table_name
 db_driver = {"POSTGRES": "postgresql", "ORACLE": "oracle+cx_oracle"}
 
 
-def build_db_string(credentials):
+def build_db_url(credentials):
     login = credentials["login"]
     password = credentials["password"]
     host = credentials["host"]

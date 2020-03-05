@@ -14,7 +14,7 @@ from fhirpipe.extract.sql import (
 class Extractor:
     def __init__(self, credentials, chunksize=None):
         if credentials is None:
-            credentials = fhirpipe.global_config["default-source-creds"]
+            credentials = fhirpipe.global_config["source"]
         db_string = build_db_string(credentials)
 
         self.engine = create_engine(db_string)

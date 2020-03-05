@@ -1,18 +1,10 @@
-sql:
-  default: "postgres"
-  postgres:
-    lib: "psycopg2"
-    args: []
-    kwargs:
-      host: "localhost"
-      port: 5431
-      database: "mimic"
-      user: "mimicuser"
-      password: "mimicuser"
-  oracle:
-    lib: "cx_Oracle"
-    args: ["user/password@database"]
-    kwargs: {}
+source:
+  model: "POSTGRES"
+  host: "localhost"
+  port: 5431
+  database: "mimic"
+  login: "mimicuser"
+  password: "mimicuser"
 
 fhirstore:
   host: "localhost"
@@ -24,6 +16,9 @@ fhirstore:
 graphql:
   server: "https://graphql.pyrog.staging.arkhn.org/"
   token: "<token>"
+
+fhir-api:
+  url: "https://fhir.staging.arkhn.org/api"
 
 logging:
   filename: fhirpipe.log
