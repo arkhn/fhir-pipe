@@ -153,9 +153,8 @@ def test_get_primary_key():
         "primaryKeyTable": "table",
         "primaryKeyColumn": "col",
     }
-    main_table, column = mapping.get_primary_key(resource_mapping)
+    column = mapping.get_primary_key(resource_mapping)
 
-    assert main_table == "owner.table"
     assert column == SqlColumn("table", "col", "owner")
 
     # Without owner
@@ -164,9 +163,8 @@ def test_get_primary_key():
         "primaryKeyTable": "table",
         "primaryKeyColumn": "col",
     }
-    main_table, column = mapping.get_primary_key(resource_mapping)
+    column = mapping.get_primary_key(resource_mapping)
 
-    assert main_table == "table"
     assert column == SqlColumn("table", "col")
 
     # Raising error
@@ -203,8 +201,6 @@ def test_find_cols_joins_maps_scripts(
         SqlColumn("admissions", "marital_status"),
         SqlColumn("patients", "expire_flag"),
     }
-    for j in joins:
-        print(j.column1, j.column2)
     assert joins == {
         SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id"))
     }

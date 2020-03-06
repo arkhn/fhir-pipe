@@ -2,15 +2,15 @@ from .sql_column import SqlColumn
 
 
 class SqlJoin:
-    def __init__(self, column1: "SqlColumn", column2: "SqlColumn"):
-        self.column1 = column1
-        self.column2 = column2
+    def __init__(self, left: "SqlColumn", right: "SqlColumn"):
+        self.left = left
+        self.right = right
 
     def __eq__(self, other) -> bool:
-        return self.column1 == other.column1 and self.column2 == other.column2
+        return self.left == other.left and self.right == other.right
 
     def __str__(self) -> str:
-        return f"({self.column2}, {self.column2})"
+        return f"({self.left}, {self.right})"
 
     def __hash__(self):
         return hash(str(self))

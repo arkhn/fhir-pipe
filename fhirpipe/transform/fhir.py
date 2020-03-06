@@ -127,8 +127,7 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
         input = mapping_inputs[0]
         if input["sqlValue"]:
             sql = input["sqlValue"]
-            cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
-            column_name = str(cur_col)
+            column_name = str(SqlColumn(sql["table"], sql["column"], sql["owner"]))
             if input["script"]:
                 column_name = new_col_name(input["script"], column_name)
             if input["conceptMapId"]:
@@ -148,8 +147,7 @@ def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
             # If there is some sql input, use it
             if input["sqlValue"]:
                 sql = input["sqlValue"]
-                cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
-                column_name = str(cur_col)
+                column_name = str(SqlColumn(sql["table"], sql["column"], sql["owner"]))
                 if input["script"]:
                     column_name = new_col_name(input["script"], column_name)
                 sql_columns.append(column_name)

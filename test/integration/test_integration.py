@@ -6,7 +6,7 @@ from fhirstore import ARKHN_CODE_SYSTEMS
 import fhirpipe
 import fhirpipe.run as run
 from fhirpipe.load.fhirstore import get_mongo_client
-from fhirpipe.extract.sql import build_db_url
+from fhirpipe.extract.extractor import Extractor
 from sqlalchemy import create_engine
 
 
@@ -144,7 +144,7 @@ def test_run_override(mock_datetime, with_concept_maps):
 
 
 # Helper functions and variables for assertions #
-engine = create_engine(build_db_url(fhirpipe.global_config["source"]))
+engine = create_engine(Extractor.build_db_url(fhirpipe.global_config["source"]))
 
 expected_patients_count = pd.read_sql_query("SELECT COUNT(*) FROM patients", con=engine).at[
     0, "count"

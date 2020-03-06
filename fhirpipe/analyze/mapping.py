@@ -78,13 +78,11 @@ def get_primary_key(resource_mapping):
             f"resource {resource_mapping['definitionId']}."
         )
 
-    sql_column = SqlColumn(
+    return SqlColumn(
         resource_mapping["primaryKeyTable"],
         resource_mapping["primaryKeyColumn"],
         resource_mapping["primaryKeyOwner"],
     )
-
-    return sql_column.table_name(), sql_column
 
 
 def find_cols_joins_maps_scripts(resource_mapping):
@@ -220,8 +218,8 @@ def build_join_graph(joins):
     """
     graph = defaultdict(list)
     for join in joins:
-        join_source = join.column1
-        join_target = join.column2
+        join_source = join.left
+        join_target = join.right
 
         # Get table names
         source_table = join_source.table_name()
@@ -231,8 +229,3 @@ def build_join_graph(joins):
         graph[source_table].append(target_table)
 
     return graph
-
-
-def dict_concat(dict_1, dict_2):
-    for key, val in dict_2.items():
-        dict_1[key] += val

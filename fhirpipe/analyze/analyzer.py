@@ -11,7 +11,7 @@ class Analyzer:
         analysis = Analysis()
 
         # Get primary key table
-        analysis.primary_key_table, analysis.primary_key_column = get_primary_key(
+        analysis.primary_key_column = get_primary_key(
             resource_mapping
         )
 
@@ -29,7 +29,7 @@ class Analyzer:
 
         # Build squash rules
         analysis.squash_rules = build_squash_rules(
-            analysis.cols, analysis.joins, analysis.primary_key_table
+            analysis.cols, analysis.joins, analysis.primary_key_column.table_name()
         )
 
         return analysis
