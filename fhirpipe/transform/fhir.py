@@ -77,6 +77,12 @@ def build_fhir_object(row, path_attributes_map, index=None):
 
     for path, attr in path_attributes_map.items():
         if attr["inputs"]:
+            # Handle the list of literals case.
+            # If we had a list of literals in the mapping, then handle_array_attributes
+            # will try to create fhir objects with an empty path (remove_root_path removes
+            # what's before the [...] included).
+            if path == "":
+                return fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
 
             # Find if there is an index in the path
             split_path = path.split(".")
@@ -84,7 +90,7 @@ def build_fhir_object(row, path_attributes_map, index=None):
 
             if position_ind is None:
                 # If we didn't find an index in the path, then we don't worry about arrays
-                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"],)
+                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
                 if isinstance(val, tuple) and len(val) == 1:
                     # If we have a tuple of length 1, we simply extract the value and put it in
                     # the fhir object
@@ -175,17 +181,11 @@ def handle_array_attributes(attributes_in_array, row):
         assert length == 1 or len(val) == length, "mismatch in array lengths"
         length = len(val)
 
-    # Check if we have an array of literals
-    is_literal_array = len(attributes_in_array) == 1 and list(attributes_in_array.keys())[0] == ""
-
     # Now we can build the array
     array = []
     for index in range(length):
         element = build_fhir_object(row, attributes_in_array, index=index)
-        if element:
-            if is_literal_array:
-                # extract the value from the dict {"": value}
-                element = element[""]
+        if element is not None:
             array.append(element)
 
     return array
