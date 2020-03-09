@@ -57,6 +57,19 @@ class Extractor:
         return f"{db_handler}://{login}:{password}@{host}:{port}/{database}"
 
     def extract(self, resource_mapping, analysis, pk_values=None):
+        """ Main method of the Extractor class.
+        It builds the sql alchemy query that will fetch the columns needed from the
+        source DB, run it and return the result as a pandas dataframe.
+
+        Args:
+            resource_mapping: the mapping.
+            analysis: an Analyis instance built by the Analyzer.
+            pk_values: it not None, the Extractor will fetch only the rows for which
+                the primary key values are in pk_values.
+
+        Returns:
+            a pandas dataframe where there all the columns asked for in the mapping
+        """
         logging.info(f"Extracting resource: {resource_mapping['definitionId']}")
 
         # Build sqlalchemy query
@@ -88,7 +101,7 @@ class Extractor:
         """ Augment the sql alchemy query with joins from the analysis.
         """
         for join in joins:
-            foreign_table = self.get_table(join.right.table, join.right.owner)
+            foreign_table = self.get_table(join.right)
             query = query.join(
                 foreign_table,
                 self.get_column(join.right) == self.get_column(join.left),
@@ -101,6 +114,9 @@ class Extractor:
     ) -> Query:
         """ Augment the sql alchemy query with filters from the analysis.
         """
+        if pk_values is not None:
+            query = query.filter(self.get_column(pk_column).in_(pk_values))
+
         if resource_mapping["filters"]:
             for filter in resource_mapping["filters"]:
                 col = self.get_column(
@@ -111,10 +127,7 @@ class Extractor:
                     )
                 )
                 rel_method = SQL_RELATIONS_TO_METHOD[filter["relation"]]
-                query = query.filter(col.__getattr__(rel_method)(filter["value"]))
-
-        if pk_values is not None:
-            query = query.filter(self.get_column(pk_column).in_(pk_values))
+                query = query.filter(getattr(col, rel_method)(filter["value"]))
 
         return query
 
@@ -153,11 +166,13 @@ class Extractor:
         """ Get the sql alchemy column corresponding to the SqlColumn (custom type)
         from the analysis.
         """
-        table = self.get_table(column.table, column.owner)
+        table = self.get_table(column)
         return table.c[column.column]
 
-    def get_table(self, table: str, owner: str) -> Table:
+    def get_table(self, column: SqlColumn) -> Table:
         """ Get the sql alchemy table corresponding to the SqlColumn (custom type)
         from the analysis.
         """
-        return Table(table, self.metadata, schema=owner, keep_existing=True, autoload=True)
+        return Table(
+            column.table, self.metadata, schema=column.owner, keep_existing=True, autoload=True
+        )
