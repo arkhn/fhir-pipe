@@ -1,9 +1,43 @@
 from typing import List
 
-from fhirpipe.utils import new_col_name
-from fhirpipe.analyze.concept_map import ConceptMap
-from fhirpipe.analyze.cleaning_script import CleaningScript
-from fhirpipe.analyze.merging_script import MergingScript
+import pandas as pd
+
+from fhirpipe.analyze.attribute import Attribute
+
+
+def clean_data(
+    df, attributes: List[Attribute], primary_key_column,
+):
+    """ Apply scripts and concept maps.
+    """
+    cleaned_df = pd.DataFrame()
+    df_pk_col = df[primary_key_column.dataframe_column_name()]
+    for attribute in attributes:
+        cols_for_attr = []
+        df_col = None
+        for col in attribute.columns:
+            df_col_name = col.dataframe_column_name()
+            df_col = df[df_col_name]
+            cols_for_attr.append(df_col_name)
+
+            # Apply cleaning script
+            if col.cleaning_script:
+                df_col = col.cleaning_script.apply(df_col, df_pk_col)
+
+            # Apply concept map
+            if col.concept_map:
+                df_col = col.concept_map.apply(df_col, df_pk_col)
+
+        # Apply merging script
+        if attribute.merging_script:
+            df_col = attribute.merging_script.apply(
+                [df[col] for col in cols_for_attr], attribute.static_inputs, df_pk_col
+            )
+
+        if df_col is not None:
+            cleaned_df[attribute] = df_col
+
+    return cleaned_df
 
 
 def squash_rows(df, squash_rules, parent_cols=[]):
@@ -36,11 +70,14 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     """
     table, child_rules = squash_rules
 
-    new_cols = [col for col in df.columns if col.startswith(f"{table}.")]
+    # TODO what if we merge several columns from different tbales?
+    new_cols = [col for col in df.columns if col.columns and col.columns[0].table == table]
     pivot_cols = parent_cols + new_cols
 
     to_squash = [
-        col for col in df.columns if any([col.startswith(f"{rule[0]}.") for rule in child_rules])
+        col
+        for col in df.columns
+        if any([col.columns and col.columns[0].table == rule[0] for rule in child_rules])
     ]
 
     if not to_squash:
@@ -70,24 +107,3 @@ def flat_tuple_agg(values):
         else:
             res += (val,)
     return res
-
-
-def apply_scripts(
-    df,
-    cleaning_scripts: List[CleaningScript],
-    concept_maps: List[ConceptMap],
-    merging_scripts: List[MergingScript],
-    primary_key_column,
-):
-
-    for cleaning_script in cleaning_scripts:
-        for col, cleaned_values in cleaning_script.apply(df, str(primary_key_column)):
-            df[new_col_name(cleaning_script.name, col)] = cleaned_values
-
-    for concept_map in concept_maps:
-        for col, mapped_values in concept_map.apply(df, str(primary_key_column)):
-            df[new_col_name(concept_map.id, col)] = mapped_values
-
-    for merging_script in merging_scripts:
-        col, merged_values = merging_script.apply(df, str(primary_key_column))
-        df[new_col_name(merging_script.name, col)] = merged_values

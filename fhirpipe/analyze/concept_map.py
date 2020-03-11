@@ -12,14 +12,14 @@ T = TypeVar("T", bound="ConceptMap")
 
 class ConceptMap:
     def __init__(
-        self, fhir_concept_map: dict,
+        self, concept_map_id: str,
     ):
         """
         Converts a FHIR concept map to an object which is easier to use.
         """
+        fhir_concept_map = ConceptMap.fetch(concept_map_id)
         self.id = fhir_concept_map["id"]
         self.title = fhir_concept_map["title"]
-        self.columns = []
         self.mapping = {}
         for group in fhir_concept_map["group"]:
             for element in group["element"]:
