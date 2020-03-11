@@ -113,9 +113,9 @@ def test_apply_filters():
     extractor.apply_filters(base_query, resource_mapping, pk_column, pk_values)
 
     binary_expressions = [
-        mock_get_column("", SqlColumn("patients", "subject_id")).in_(pk_values),
-        mock_get_column("", SqlColumn("admissions", "admittime")).like("'2150-08-29'"),
-        mock_get_column("", SqlColumn("patients", "row_id")) <= "1000",
+        extractor.get_column(SqlColumn("patients", "subject_id")).in_(pk_values),
+        extractor.get_column(SqlColumn("admissions", "admittime")).like("'2150-08-29'"),
+        extractor.get_column(SqlColumn("patients", "row_id")) <= "1000",
     ]
 
     for call, binary_expression in zip(base_query.filter.call_args_list, binary_expressions):
