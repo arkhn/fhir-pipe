@@ -5,6 +5,8 @@ from pytest import raises
 from fhirstore import ARKHN_CODE_SYSTEMS
 
 import fhirpipe.transform.fhir as transform
+from fhirpipe.analyze.attribute import Attribute
+from fhirpipe.analyze.sql_column import SqlColumn
 
 
 class mockdatetime:
@@ -15,18 +17,25 @@ class mockdatetime:
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
-    row = {
-        "map_marital_status_admissions.marital_status": "D",
-        "select_first_not_empty_patients.gender_unknown": "male",
-        "clean_date_patients.dob": "2000-10-10",
-        "patients.row_id": "1",
-        "id_cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
-        "binary_to_bool_1_patients.expire_flag": "true",
-        "clean_date_patients.dod": "2100-01-01",
-    }
 
     resource_mapping = patient_mapping
-    actual = transform.create_instance(row, resource_mapping)
+
+    attr_identifier = Attribute("identifier[0].value", columns=SqlColumn("a", "b"))
+    attr_birthDate = Attribute("birthDate", columns=SqlColumn("a", "c"))
+    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=SqlColumn("a", "d"))
+    attr_generalPractitioner = Attribute(
+        "generalPractitioner[0].type", static_inputs=["Practitioner"]
+    )
+
+    attributes = [attr_identifier, attr_birthDate, attr_maritalStatus, attr_generalPractitioner]
+
+    row = {
+        attr_maritalStatus: "D",
+        attr_birthDate: "2000-10-10",
+        attr_identifier: "A",
+    }
+
+    actual = transform.create_instance(row, resource_mapping, attributes)
 
     assert actual == {
         "meta": {
@@ -39,43 +48,36 @@ def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identi
         "id": actual["id"],
         "identifier": [{"value": "A"}],
         "resourceType": "Patient",
-        "gender": "male",
         "birthDate": "2000-10-10",
-        "deceasedBoolean": "true",
-        "deceasedDateTime": "2100-01-01",
         "maritalStatus": {"coding": [{"code": "D"}]},
-        "generalPractitioner": [{"type": "/Practitioner/"}],
+        "generalPractitioner": [{"type": "Practitioner"}],
     }
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
+
+    resource_mapping = patient_mapping
+
+    attr_identifier = Attribute("identifier[0].value", columns=SqlColumn("a", "b"))
+    attr_birthDate = Attribute("birthDate", columns=SqlColumn("a", "c"))
+    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=SqlColumn("a", "d"))
+    attr_generalPractitioner = Attribute(
+        "generalPractitioner[0].type", static_inputs=["Practitioner"]
+    )
+
+    attributes = [attr_identifier, attr_birthDate, attr_maritalStatus, attr_generalPractitioner]
+
     rows = pd.DataFrame(
         [
-            {
-                "map_marital_status_admissions.marital_status": "D",
-                "select_first_not_empty_patients.gender_unknown": "male",
-                "clean_date_patients.dob": "2000-10-10",
-                "patients.row_id": "1",
-                "id_cm_identifier_patients.row_id": "A",  # cleaned "patients.row_id" column
-                "binary_to_bool_1_patients.expire_flag": "true",
-                "clean_date_patients.dod": "2100-01-01",
-            },
-            {
-                "map_marital_status_admissions.marital_status": "P",
-                "select_first_not_empty_patients.gender_unknown": "female",
-                "select_first_not_empty_map_gender_PATIENTS.GENDER_unknown": "female",
-                "clean_date_patients.dob": "2001-11-11",
-                "patients.row_id": "2",
-                "id_cm_identifier_patients.row_id": "B",  # cleaned "patients.row_id" column
-                "binary_to_bool_1_patients.expire_flag": "false",
-                "clean_date_patients.dod": "2101-11-11",
-            },
+            {attr_maritalStatus: "D", attr_birthDate: "2000-10-10", attr_identifier: "A"},
+            {attr_maritalStatus: "P", attr_birthDate: "2001-11-11", attr_identifier: "B"},
         ]
     )
     resource_mapping = patient_mapping
-    actual = transform.create_resource(rows, resource_mapping)
+
+    actual = transform.create_resource(rows, resource_mapping, attributes)
 
     assert actual == [
         {
@@ -89,12 +91,9 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
             "id": actual[0]["id"],
             "identifier": [{"value": "A"}],
             "resourceType": "Patient",
-            "gender": "male",
             "birthDate": "2000-10-10",
-            "deceasedBoolean": "true",
-            "deceasedDateTime": "2100-01-01",
             "maritalStatus": {"coding": [{"code": "D"}]},
-            "generalPractitioner": [{"type": "/Practitioner/"}],
+            "generalPractitioner": [{"type": "Practitioner"}],
         },
         {
             "meta": {
@@ -107,12 +106,9 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
             "id": actual[1]["id"],
             "identifier": [{"value": "B"}],
             "resourceType": "Patient",
-            "gender": "female",
             "birthDate": "2001-11-11",
-            "deceasedBoolean": "false",
-            "deceasedDateTime": "2101-11-11",
             "maritalStatus": {"coding": [{"code": "P"}]},
-            "generalPractitioner": [{"type": "/Practitioner/"}],
+            "generalPractitioner": [{"type": "Practitioner"}],
         },
     ]
 
@@ -151,74 +147,33 @@ def test_build_metadata(mock_datetime, patient_mapping):
 
 
 def test_fetch_values_from_dataframe():
-    # Without merging script
+    attr_identifier = Attribute("identifier[0].value", columns=SqlColumn("a", "b"))
+    attr_birthDate = Attribute("birthDate", columns=SqlColumn("a", "c"))
+    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=SqlColumn("a", "d"))
+
+    attribute = attr_birthDate
+
     row = {
-        "PATIENTS.SUBJECT_ID": "123456",
-        "PATIENTS.DOB": "20000101",
-        "clean_date_PATIENTS.DOB": "2000-01-01",
+        attr_maritalStatus: "D",
+        attr_birthDate: "2000-10-10",
+        attr_identifier: "A",
     }
-    mapping_inputs = [
-        {
-            "script": "clean_date",
-            "staticValue": None,
-            "conceptMapId": None,
-            "sqlValue": {"owner": "", "table": "PATIENTS", "column": "DOB"},
-        }
-    ]
-    merging_script = ""
 
-    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
+    value = transform.fetch_values_from_dataframe(row, attribute)
 
-    assert value == "2000-01-01"
-
-    # With a merging script
-    row = {
-        "PATIENTS.SUBJECT_ID": "123456",
-        "clean_phone_PATIENTS.ROW_ID": "0987654321",
-        "merge_clean_phone_PATIENTS.ROW_ID_dummy": "value",
-    }
-    mapping_inputs = [
-        {
-            "script": "clean_phone",
-            "staticValue": None,
-            "conceptMapId": None,
-            "sqlValue": {"owner": "", "table": "PATIENTS", "column": "ROW_ID", "joins": []},
-        },
-        {"script": None, "staticValue": "dummy", "sqlValue": None},
-    ]
-    merging_script = "merge"
-
-    value = transform.fetch_values_from_dataframe(row, mapping_inputs, merging_script)
-
-    assert value == "value"
+    assert value == "2000-10-10"
 
 
 def test_handle_array_attributes():
+    attr1 = Attribute("attr1", columns=SqlColumn("a", "b"))
+    attr2 = Attribute("attr2", columns=SqlColumn("a", "c"))
     row = {
-        "PATIENTS.A": ("A1", "A2", "A3"),
-        "PATIENTS.B": "B",
+        attr1: ("A1", "A2", "A3"),
+        attr2: "B",
     }
     attributes_in_array = {
-        "path1": {
-            "mergingScript": "",
-            "inputs": [
-                {
-                    "conceptMapId": None,
-                    "sqlValue": {"owner": "", "table": "PATIENTS", "column": "A"},
-                    "script": "",
-                }
-            ],
-        },
-        "path2": {
-            "mergingScript": "",
-            "inputs": [
-                {
-                    "conceptMapId": None,
-                    "sqlValue": {"owner": "", "table": "PATIENTS", "column": "B"},
-                    "script": "",
-                }
-            ],
-        },
+        "path1": attr1,
+        "path2": attr2,
     }
 
     value = transform.handle_array_attributes(attributes_in_array, row)
@@ -231,8 +186,8 @@ def test_handle_array_attributes():
 
     # With mismatch in lengths
     row = {
-        "PATIENTS.A": ("A1", "A2", "A3"),
-        "PATIENTS.B": ("B1", "B2"),
+        attr1: ("A1", "A2", "A3"),
+        attr2: ("B1", "B2"),
     }
     with raises(AssertionError, match="mismatch in array lengths"):
         transform.handle_array_attributes(attributes_in_array, row)

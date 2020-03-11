@@ -86,16 +86,16 @@ def get_primary_key(resource_mapping):
 
 
 def analyze_mapping(resource_mapping):
-    attribute_analyses = []
+    analysis_attributes = []
     columns = set()
     joins = set()
     for attribute_mapping in resource_mapping["attributes"]:
         attribute, attr_columns, attr_joins = analyze_attribute(attribute_mapping)
-        attribute_analyses.append(attribute)
+        analysis_attributes.append(attribute)
         columns = columns.union(attr_columns)
         joins = joins.union(attr_joins)
 
-    return attribute_analyses, columns, joins
+    return analysis_attributes, columns, joins
 
 
 def analyze_attribute(attribute_mapping):
@@ -113,7 +113,7 @@ def analyze_attribute(attribute_mapping):
                 cur_col.cleaning_script = CleaningScript(input["script"])
 
             if input["conceptMapId"]:
-                cur_col.concept_map = ConceptMap(ConceptMap(input["conceptMapId"]))
+                cur_col.concept_map = ConceptMap(input["conceptMapId"])
 
             for join in sql["joins"]:
                 tables = join["tables"]

@@ -7,7 +7,6 @@ from fhirpipe.analyze.cleaning_script import CleaningScript
 def test_cleaning_script_init():
     cleaning_script = CleaningScript("map_gender")
 
-    assert cleaning_script.columns == []
     assert cleaning_script.name == "map_gender"
     assert cleaning_script.script.__name__ == "map_gender"
 
@@ -19,17 +18,9 @@ def capitalize(text):
 @mock.patch("fhirpipe.analyze.cleaning_script.scripts.get_script", return_value=capitalize)
 def test_cleaning_script_apply(_):
     cleaning_script = CleaningScript("capitalize")
-    cleaning_script.columns.append("PATIENTS.NAME")
-    cleaning_script.columns.append("PATIENTS.SURNAME")
 
-    df = pd.DataFrame(
-        {
-            "pk": [1, 2, 3, 4],
-            "PATIENTS.NAME": ["alice", "bob", "carol", "denis"],
-            "PATIENTS.SURNAME": ["a", "b", "c", "d"],
-        }
-    )
+    dataframe = pd.DataFrame({"pk_col": [1, 2, 3, 4], "df_col": ["alice", "bob", "carol", "denis"]})
 
-    for col, values in cleaning_script.apply(df, "pk"):
-        assert col in cleaning_script.columns
-        assert all([x.isupper() for x in values])
+    cleaned_col = cleaning_script.apply(dataframe["df_col"], dataframe["pk_col"])
+
+    assert all(cleaned_col == ["ALICE", "BOB", "CAROL", "DENIS"])
