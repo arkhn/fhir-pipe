@@ -74,9 +74,12 @@ class Extractor:
 
         # Build sqlalchemy query
         query = self.sqlalchemy_query(
-            analysis.cols, analysis.joins, analysis.primary_key_column, resource_mapping, pk_values,
+            analysis.columns,
+            analysis.joins,
+            analysis.primary_key_column,
+            resource_mapping,
+            pk_values,
         )
-        logging.info(f"sql query: {query}")
 
         return self.run_sql_query(query)
 
@@ -95,7 +98,7 @@ class Extractor:
         query_w_joins = self.apply_joins(base_query, joins)
         query_w_filters = self.apply_filters(query_w_joins, resource_mapping, pk_column, pk_values)
 
-        return query_w_filters.statement
+        return query_w_filters
 
     def apply_joins(self, query: Query, joins: List[SqlJoin]) -> Query:
         """ Augment the sql alchemy query with joins from the analysis.
@@ -145,6 +148,9 @@ class Extractor:
             the result of the sql query run on the specified connection type
                 or an iterator if chunksize is specified
         """
+        query = query.with_labels().statement
+        logging.info(f"sql query: {query}")
+
         pd_query = pd.read_sql_query(query, con=self.engine, chunksize=chunksize)
 
         # If chunksize is None, we return the dataframe for the whole DB

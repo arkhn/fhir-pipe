@@ -7,33 +7,31 @@ from uuid import uuid4
 import numpy as np
 from fhirstore import ARKHN_CODE_SYSTEMS
 
-from fhirpipe.utils import new_col_name
-from fhirpipe.analyze.sql_column import SqlColumn
-
 
 def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
 
-def create_resource(chunk, resource_mapping):
+def create_resource(chunk, resource_mapping, attributes):
     res = []
     for _, row in chunk.iterrows():
         try:
-            res.append(create_instance(row, resource_mapping))
+            res.append(create_instance(row, resource_mapping, attributes))
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
+            assert False
             logging.error(f"create_instance failed with: {e}")
             continue
 
     return res
 
 
-def create_instance(row, resource_mapping):
+def create_instance(row, resource_mapping, attributes):
     """ Function used to create a single FHIR instance.
     """
     # Modify the data structure so that it is easier to use
-    path_attributes_map = {attr["path"]: attr for attr in resource_mapping["attributes"]}
+    path_attributes_map = {attr.path: attr for attr in attributes}
 
     # Build path value map
     fhir_object = build_fhir_object(row, path_attributes_map)
@@ -77,93 +75,72 @@ def build_fhir_object(row, path_attributes_map, index=None):
     arrays_done = set()
 
     for path, attr in path_attributes_map.items():
-        if attr["inputs"]:
-            # Handle the list of literals case.
-            # If we had a list of literals in the mapping, then handle_array_attributes
-            # will try to create fhir objects with an empty path (remove_root_path removes
-            # what's before the [...] included).
-            if path == "":
-                return fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+        if not attr.columns and not attr.static_inputs:
+            # If columns and static_inputs are empty, it means that this attribute
+            # is not a leaf and we don't need to do anything.
+            continue
 
-            # Find if there is an index in the path
-            split_path = path.split(".")
-            position_ind = get_position_first_index(split_path)
+        # Find if there is an index in the path
+        split_path = path.split(".")
+        position_ind = get_position_first_index(split_path)
 
-            if position_ind is None:
-                # If we didn't find an index in the path, then we don't worry about arrays
-                val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
-                if isinstance(val, tuple) and len(val) == 1:
-                    # If we have a tuple of length 1, we simply extract the value and put it in
-                    # the fhir object
-                    insert_in_fhir_object(fhir_object, path, val[0])
-                elif isinstance(val, tuple) and index is not None:
-                    # If index is not None, we met an array before. Here, val will have
-                    # several elements but we know which one we need
-                    insert_in_fhir_object(fhir_object, path, val[index])
-                else:
-                    # Otherwise, we try to send it all to insert_in_fhir_object.
-                    # We could have a literal value or a tuple but in this case, this function
-                    # will check that all the values in the tuple are equal.
-                    insert_in_fhir_object(fhir_object, path, val)
-
+        if position_ind is None:
+            # If we didn't find an index in the path, then we don't worry about arrays
+            val = fetch_values_from_dataframe(row, attr)
+            if attr in row:
+                val = row[attr]
             else:
-                # Handle array case
-                array_path = ".".join(split_path[: position_ind + 1])
-                # If this path was already processed before, skip it
-                if array_path in arrays_done:
-                    continue
-                # We retrieve all the attributes that start with the array path (with index)
-                attributes_in_array = {
-                    remove_root_path(path, position_ind + 1): attr
-                    for path, attr in path_attributes_map.items()
-                    if path.startswith(array_path)
-                }
-                # Build the array of sub fhir object
-                array = handle_array_attributes(attributes_in_array, row)
-                # Insert them a the right position
-                if array:
-                    insert_in_fhir_object(fhir_object, remove_index(array_path), array)
-                arrays_done.add(array_path)
+                assert len(attr.static_inputs) == 1, (
+                    "The mapping contains an attribute with several static inputs "
+                    "(and no sql input nor merging script)"
+                )
+                val = attr.static_inputs[0]
+
+            if isinstance(val, tuple) and len(val) == 1:
+                # If we have a tuple of length 1, we simply extract the value and put it in
+                # the fhir object
+                insert_in_fhir_object(fhir_object, path, val[0])
+            elif isinstance(val, tuple) and index is not None:
+                # If index is not None, we met an array before. Here, val will have
+                # several elements but we know which one we need
+                insert_in_fhir_object(fhir_object, path, val[index])
+            else:
+                # Otherwise, we try to send it all to insert_in_fhir_object.
+                # We could have a literal value or a tuple but in this case, this function
+                # will check that all the values in the tuple are equal.
+                insert_in_fhir_object(fhir_object, path, val)
+
+        else:
+            # Handle array case
+            array_path = ".".join(split_path[: position_ind + 1])
+            # If this path was already processed before, skip it
+            if array_path in arrays_done:
+                continue
+            # We retrieve all the attributes that start with the array path (with index)
+            attributes_in_array = {
+                remove_root_path(path, position_ind + 1): attr
+                for path, attr in path_attributes_map.items()
+                if path.startswith(array_path)
+            }
+            # Build the array of sub fhir object
+            array = handle_array_attributes(attributes_in_array, row)
+            # Insert them a the right position
+            if array:
+                insert_in_fhir_object(fhir_object, remove_index(array_path), array)
+            arrays_done.add(array_path)
 
     return fhir_object
 
 
-def fetch_values_from_dataframe(row, mapping_inputs, merging_script):
-    if len(mapping_inputs) == 1:
-        input = mapping_inputs[0]
-        if input["sqlValue"]:
-            sql = input["sqlValue"]
-            column_name = str(SqlColumn(sql["table"], sql["column"], sql["owner"]))
-            if input["script"]:
-                column_name = new_col_name(input["script"], column_name)
-            if input["conceptMapId"]:
-                column_name = new_col_name(input["conceptMapId"], column_name)
-            return row[column_name]
-        else:
-            return input["staticValue"]
-
+def fetch_values_from_dataframe(row, attribute):
+    if attribute in row:
+        return row[attribute]
     else:
-        if not merging_script:
-            raise ValueError(
-                "You need to provide a merging script for attributes with several inputs."
-            )
-
-        sql_columns, static_columns = [], []
-        for input in mapping_inputs:
-            # If there is some sql input, use it
-            if input["sqlValue"]:
-                sql = input["sqlValue"]
-                column_name = str(SqlColumn(sql["table"], sql["column"], sql["owner"]))
-                if input["script"]:
-                    column_name = new_col_name(input["script"], column_name)
-                sql_columns.append(column_name)
-
-            # Else retrieve the static value
-            else:
-                static_columns.append(input["staticValue"])
-
-        df_col = new_col_name(merging_script, (sql_columns, static_columns))
-        return row[df_col]
+        assert len(attribute.static_inputs) == 1, (
+            "The mapping contains an attribute with several static inputs "
+            "(and no sql input nor merging script)"
+        )
+        return attribute.static_inputs[0]
 
 
 def handle_array_attributes(attributes_in_array, row):
@@ -176,7 +153,7 @@ def handle_array_attributes(attributes_in_array, row):
     # {"adress": [{"city": "Paris", "country": "France"}, {"city": "Lyon", "country": "France"}]}
     length = 1
     for attr in attributes_in_array.values():
-        val = fetch_values_from_dataframe(row, attr["inputs"], attr["mergingScript"])
+        val = fetch_values_from_dataframe(row, attr)
         if not isinstance(val, tuple) or len(val) == 1:
             continue
         assert length == 1 or len(val) == length, "mismatch in array lengths"
