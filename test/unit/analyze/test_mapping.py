@@ -2,6 +2,7 @@ import pytest
 from unittest import mock, TestCase
 
 import fhirpipe.analyze.mapping as mapping
+from fhirpipe.analyze.attribute import Attribute
 from fhirpipe.analyze.concept_map import ConceptMap
 from fhirpipe.analyze.cleaning_script import CleaningScript
 from fhirpipe.analyze.merging_script import MergingScript
@@ -182,18 +183,55 @@ def test_get_primary_key():
 
 @mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
 @mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
-def test_find_cols_joins_maps_scripts(
-    patient_mapping, fhir_concept_map_gender, fhir_concept_map_identifier
-):
-    (
-        cols,
-        joins,
-        concept_maps,
-        cleaning_scripts,
-        merging_scripts,
-    ) = mapping.find_cols_joins_maps_scripts(patient_mapping)
+def test_analyze_mapping(patient_mapping, fhir_concept_map_gender, fhir_concept_map_identifier):
+    analysis_attributes, columns, joins = mapping.analyze_mapping(patient_mapping)
 
-    assert cols == {
+    assert analysis_attributes == [
+        Attribute(
+            "gender",
+            columns=[SqlColumn("patients", "gender")],
+            static_inputs=["unknown"],
+            merging_script=MergingScript("select_first_not_empty"),
+        ),
+        Attribute(
+            "birthDate",
+            columns=[SqlColumn("patients", "dob")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
+            "maritalStatus.coding[0].code",
+            columns=[SqlColumn("admissions", "marital_status")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
+            "identifier[0].value",
+            columns=[SqlColumn("patients", "row_id")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
+            "deceasedBoolean",
+            columns=[SqlColumn("patients", "expire_flag")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
+            "deceasedDateTime",
+            columns=[SqlColumn("patients", "dod")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
+            "generalPractitioner[0].type",
+            columns=[],
+            static_inputs=["/Practitioner/"],
+            merging_script=None,
+        ),
+    ]
+
+    assert columns == {
         SqlColumn("patients", "row_id"),
         SqlColumn("patients", "gender"),
         SqlColumn("patients", "dob"),
@@ -204,32 +242,6 @@ def test_find_cols_joins_maps_scripts(
     assert joins == {
         SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id"))
     }
-
-    assert list(cleaning_scripts) == [
-        CleaningScript("clean_date"),
-        CleaningScript("map_marital_status"),
-        CleaningScript("binary_to_bool_1"),
-    ]
-    for script, columns in zip(
-        cleaning_scripts,
-        [
-            ["patients.dob", "patients.dod"],
-            ["admissions.marital_status"],
-            ["patients.expire_flag"],
-        ],
-    ):
-        assert script.columns == columns
-
-    assert list(concept_maps) == [
-        ConceptMap(fhir_concept_map_gender),
-        ConceptMap(fhir_concept_map_identifier),
-    ]
-    for cm, columns in zip(concept_maps, [["patients.gender"], ["patients.row_id"]]):
-        assert cm.columns == columns
-
-    assert merging_scripts == [MergingScript("select_first_not_empty")]
-    assert merging_scripts[0].columns == ["id_cm_gender_patients.gender"]
-    assert merging_scripts[0].static_values == ["unknown"]
 
 
 def test_build_squash_rules():

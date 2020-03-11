@@ -14,28 +14,27 @@ def clean_data(
     df_pk_col = df[primary_key_column.dataframe_column_name()]
     for attribute in attributes:
         cols_for_attr = []
-        df_col = None
         for col in attribute.columns:
             df_col_name = col.dataframe_column_name()
-            df_col = df[df_col_name]
+            df["tmp"] = df[df_col_name]
             cols_for_attr.append(df_col_name)
 
             # Apply cleaning script
             if col.cleaning_script:
-                df_col = col.cleaning_script.apply(df_col, df_pk_col)
+                df["tmp"] = col.cleaning_script.apply(df["tmp"], df_pk_col)
 
             # Apply concept map
             if col.concept_map:
-                df_col = col.concept_map.apply(df_col, df_pk_col)
+                df["tmp"] = col.concept_map.apply(df["tmp"], df_pk_col)
 
         # Apply merging script
         if attribute.merging_script:
-            df_col = attribute.merging_script.apply(
+            df["tmp"] = attribute.merging_script.apply(
                 [df[col] for col in cols_for_attr], attribute.static_inputs, df_pk_col
             )
 
-        if df_col is not None:
-            cleaned_df[attribute] = df_col
+        if attribute.columns or attribute.merging_script:
+            cleaned_df[attribute] = df["tmp"]
 
     return cleaned_df
 

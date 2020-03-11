@@ -16,6 +16,19 @@ class Attribute:
         self.static_inputs = static_inputs
         self.merging_script = merging_script
 
+    def __eq__(self, other):
+        if not isinstance(other, Attribute):
+            return False
+        return (
+            self.path == other.path
+            and self.columns == other.columns
+            and self.static_inputs == other.static_inputs
+            and self.merging_script == other.merging_script
+        )
+
+    def __hash__(self):
+        return hash("{self.path}{self.columns}{self.static_inputs}{self.merging_script}")
+
     def add_column(self, col):
         self.columns.append(col)
 

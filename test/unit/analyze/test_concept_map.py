@@ -7,7 +7,19 @@ from fhirpipe.analyze.concept_map import ConceptMap
 from test.unit.conftest import mock_config, mock_api_get_maps
 
 
-def test_concept_map_init():
+@mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
+@mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
+def test_fetch_concept_map(fhir_concept_map_gender):
+    concept_map = ConceptMap.fetch(fhir_concept_map_gender["id"])
+
+    assert concept_map == fhir_concept_map_gender
+
+    # should raise if not found
+    with pytest.raises(Exception, match="Error while fetching concept map nope: not found."):
+        ConceptMap.fetch("nope")
+
+
+def test_convert_to_dict():
     fhir_concept_map = {
         "id": "test_123",
         "title": "test_concept_map",
@@ -34,11 +46,9 @@ def test_concept_map_init():
         ],
     }
 
-    concept_map = ConceptMap(fhir_concept_map)
+    mapping = ConceptMap.convert_to_dict(fhir_concept_map)
 
-    assert concept_map.columns == []
-    assert concept_map.title == "test_concept_map"
-    assert concept_map.mapping == {
+    assert mapping == {
         "src_code": "trgt_code",
         "code1": "code2",
         "11": "12",
@@ -49,23 +59,11 @@ def test_concept_map_init():
 
 @mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
 @mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
-def test_fetch_concept_map(fhir_concept_map_gender):
-    concept_map = ConceptMap.fetch(fhir_concept_map_gender["id"])
-
-    assert concept_map == ConceptMap(fhir_concept_map_gender)
-
-    # should raise if not found
-    with pytest.raises(Exception, match="Error while fetching concept map nope: not found."):
-        ConceptMap.fetch("nope")
-
-
-@mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
-@mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
 def test_concept_map_apply(fhir_concept_map_gender):
-    concept_map = ConceptMap.fetch(fhir_concept_map_gender["id"])
-    concept_map.columns.append("PATIENTS.GENDER")
+    concept_map = ConceptMap(fhir_concept_map_gender["id"])
+
     df = pd.DataFrame({"pk": [1, 2, 3, 4], "PATIENTS.GENDER": ["M", "F", "M", "F"]})
 
-    for col, values in concept_map.apply(df, "pk"):
-        assert col in concept_map.columns
-        assert all([x in ["male", "female"] for x in values])
+    mapped_col = concept_map.apply(df["PATIENTS.GENDER"], "pk")
+
+    assert all(mapped_col == ["male", "female", "male", "female"])
