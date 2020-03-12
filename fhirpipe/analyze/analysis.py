@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Set
 
 from fhirpipe.analyze.sql_column import SqlColumn
 from fhirpipe.analyze.sql_join import SqlJoin
@@ -7,8 +7,21 @@ from fhirpipe.analyze.attribute import Attribute
 
 class Analysis:
     def __init__(self):
-        self.attributes: List[Attribute] = None
-        self.columns: List[SqlColumn] = None
-        self.joins: List[SqlJoin] = None
+        self.attributes: List[Attribute] = []
+        self.columns: Set[SqlColumn] = set()
+        self.joins: Set[SqlJoin] = set()
         self.primary_key_column: SqlColumn = None
         self.squash_rules = None
+
+    def reset(self):
+        self.attributes = []
+        self.columns = set()
+        self.joins = set()
+        self.primary_key_column = None
+        self.squash_rules = None
+
+    def add_column(self, column):
+        self.columns.add(column)
+
+    def add_join(self, join):
+        self.joins.add(join)
