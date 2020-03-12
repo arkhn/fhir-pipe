@@ -3,13 +3,8 @@ import json
 from collections import defaultdict
 
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
-from fhirpipe.analyze.concept_map import ConceptMap
-from fhirpipe.analyze.cleaning_script import CleaningScript
-from fhirpipe.analyze.merging_script import MergingScript
-from fhirpipe.analyze.sql_column import SqlColumn
-from fhirpipe.analyze.sql_join import SqlJoin
 
-from .attribute import Attribute
+from .sql_column import SqlColumn
 
 
 def get_mapping(
@@ -60,77 +55,6 @@ def get_mapping_from_graphql(selected_source, selected_resources, selected_label
 
     for resource in resources["data"]["resources"]:
         yield resource
-
-
-def get_primary_key(resource_mapping):
-    """
-    Return primary key table and column of the provided resource.
-
-    args:
-        resource_mapping: the object containing all the mapping rules
-
-    Return:
-        A tuple with the table containing the primary key and the primary key column.
-    """
-    if not resource_mapping["primaryKeyTable"] or not resource_mapping["primaryKeyColumn"]:
-        raise ValueError(
-            "You need to provide a primary key table and column in the mapping for "
-            f"resource {resource_mapping['definitionId']}."
-        )
-
-    return SqlColumn(
-        resource_mapping["primaryKeyTable"],
-        resource_mapping["primaryKeyColumn"],
-        resource_mapping["primaryKeyOwner"],
-    )
-
-
-def analyze_mapping(resource_mapping):
-    analysis_attributes = []
-    columns = set()
-    joins = set()
-    for attribute_mapping in resource_mapping["attributes"]:
-        attribute, attr_columns, attr_joins = analyze_attribute(attribute_mapping)
-        analysis_attributes.append(attribute)
-        columns = columns.union(attr_columns)
-        joins = joins.union(attr_joins)
-
-    return analysis_attributes, columns, joins
-
-
-def analyze_attribute(attribute_mapping):
-    attribute = Attribute(
-        path=attribute_mapping["path"], columns=[], static_inputs=[], merging_script=None
-    )
-    columns = set()
-    joins = set()
-    for input in attribute_mapping["inputs"]:
-        if input["sqlValue"]:
-            sql = input["sqlValue"]
-            cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
-
-            if input["script"]:
-                cur_col.cleaning_script = CleaningScript(input["script"])
-
-            if input["conceptMapId"]:
-                cur_col.concept_map = ConceptMap(input["conceptMapId"])
-
-            for join in sql["joins"]:
-                tables = join["tables"]
-                col1 = SqlColumn(tables[0]["table"], tables[0]["column"], tables[0]["owner"])
-                col2 = SqlColumn(tables[1]["table"], tables[1]["column"], tables[1]["owner"])
-                joins.add(SqlJoin(col1, col2))
-
-            columns.add(cur_col)
-            attribute.add_column(cur_col)
-
-        elif input["staticValue"]:
-            attribute.add_static_input(input["staticValue"])
-
-    if attribute_mapping["mergingScript"]:
-        attribute.merging_script = MergingScript(attribute_mapping["mergingScript"])
-
-    return attribute, columns, joins
 
 
 def build_squash_rules(columns, joins, main_table):
