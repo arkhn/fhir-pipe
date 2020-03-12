@@ -57,3 +57,17 @@ def save_many(instances, bypass_validation=False, multi_processing=False):
                 f"{'.'.join(e.schema_path)}: {e.message}"
             )
         instances.refresh()
+
+
+def get_resource_instances(resource_id, resource_type):
+    global _client
+    return _client[resource_type].find(
+        {
+            "meta.tag": {
+                "$elemMatch": {
+                    "code": {"$eq": resource_id},
+                    "system": {"$eq": fhirstore.ARKHN_CODE_SYSTEMS.resource},
+                }
+            }
+        }
+    )

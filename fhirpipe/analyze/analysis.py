@@ -12,6 +12,7 @@ class Analysis:
         self.joins: Set[SqlJoin] = set()
         self.primary_key_column: SqlColumn = None
         self.squash_rules = None
+        self.reference_paths: List[str] = []
 
     def reset(self):
         self.attributes = []
@@ -19,6 +20,7 @@ class Analysis:
         self.joins = set()
         self.primary_key_column = None
         self.squash_rules = None
+        self.reference_paths = []
 
     def add_column(self, column):
         self.columns.add(column)

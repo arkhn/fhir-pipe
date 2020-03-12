@@ -41,6 +41,7 @@ fragment entireInput on Input {
 
 fragment a on Attribute {
     path
+    definitionId
     mergingScript
     inputs {
         ...entireInput

@@ -11,6 +11,7 @@ from fhirpipe.analyze import Analyzer
 from fhirpipe.extract import Extractor
 from fhirpipe.transform import Transformer
 from fhirpipe.load import Loader
+from fhirpipe.references import ReferenceBinder
 
 from fhirpipe.analyze.mapping import get_mapping
 from fhirpipe.extract.graphql import get_resource_from_id
@@ -51,9 +52,17 @@ def run(
     extractor = Extractor(credentials, chunksize)
     transformer = Transformer(pool)
     loader = Loader(fhirstore, bypass_validation, pool)
+    binder = ReferenceBinder(fhirstore)
 
     for resource_mapping in resources:
+        # Analyze
         analysis = analyzer.analyze(resource_mapping)
+
+        # Add references to map if any
+        for reference_path in analysis.reference_paths:
+            binder.add_reference(resource_mapping, reference_path)
+
+        # Extract
         df = extractor.extract(resource_mapping, analysis)
 
         # If the override option is enabled, delete all previous
@@ -67,16 +76,12 @@ def run(
                 logging.warning(f"error while trying to delete previous documents: {e}")
 
         for chunk in df:
+            # Transform
             fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
+            # Load
             loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
-    # TODO we cannot bind references for the moment because we don't have any information about
-    # the type of the attributes in the mapping. When this is fixed, we can uncomment what's below
-    # (and add something to find the references in the mapping).
-    # Now, we can bind the references
-    # TODO I think we could find a more efficient way to bind references
-    # using more advanced mongo features
-    # bind_references(extractor.reference_attributes, identifier_dict, pool)
+    binder.bind_references()
 
     if multiprocessing:
         pool.close()
