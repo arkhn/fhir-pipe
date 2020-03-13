@@ -61,7 +61,8 @@ def save_many(instances, bypass_validation=False, multi_processing=False):
 
 def get_resource_instances(resource_id, resource_type):
     global _client
-    return _client[resource_type].find(
+    store = _client[fhirpipe.global_config["fhirstore"]["database"]]
+    return store[resource_type].find(
         {
             "meta.tag": {
                 "$elemMatch": {
