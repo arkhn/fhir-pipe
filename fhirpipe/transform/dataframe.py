@@ -81,13 +81,13 @@ def apply_scripts(
 ):
 
     for cleaning_script in cleaning_scripts:
-        for col, cleaned_values in cleaning_script.apply(df, primary_key_column):
+        for col, cleaned_values in cleaning_script.apply(df, str(primary_key_column)):
             df[new_col_name(cleaning_script.name, col)] = cleaned_values
 
     for concept_map in concept_maps:
-        for col, mapped_values in concept_map.apply(df, primary_key_column):
+        for col, mapped_values in concept_map.apply(df, str(primary_key_column)):
             df[new_col_name(concept_map.id, col)] = mapped_values
 
     for merging_script in merging_scripts:
-        col, merged_values = merging_script.apply(df, primary_key_column)
+        col, merged_values = merging_script.apply(df, str(primary_key_column))
         df[new_col_name(merging_script.name, col)] = merged_values

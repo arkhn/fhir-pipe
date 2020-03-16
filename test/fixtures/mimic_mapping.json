@@ -10,7 +10,7 @@
     {
       "id": "DiagnosticReport_resourceId",
       "label": "",
-      "primaryKeyOwner": "",
+      "primaryKeyOwner": null,
       "primaryKeyTable": "diagnoses_icd",
       "primaryKeyColumn": "row_id",
       "definitionId": "DiagnosticReport",
@@ -43,7 +43,7 @@
               "createdAt": "2020-03-02T18:14:40.515Z",
               "sqlValue": {
                 "id": "ck7as98rn00089kf8b9occw3t",
-                "owner": "",
+                "owner": null,
                 "table": "diagnoses_icd",
                 "column": "row_id",
                 "updatedAt": "2020-03-02T18:14:40.515Z",
@@ -70,7 +70,7 @@
               "createdAt": "2020-03-02T18:14:40.515Z",
               "sqlValue": {
                 "id": "ck7as98ug00309kf8dz1obdy2",
-                "owner": "",
+                "owner": null,
                 "table": "diagnoses_icd",
                 "column": "subject_id",
                 "updatedAt": "2020-03-02T18:14:40.515Z",
@@ -135,7 +135,7 @@
               "createdAt": "2020-03-02T18:14:40.515Z",
               "sqlValue": {
                 "id": "ck7as98xm00689kf8viidik1f",
-                "owner": "",
+                "owner": null,
                 "table": "diagnoses_icd",
                 "column": "icd9_code",
                 "updatedAt": "2020-03-02T18:14:40.515Z",
@@ -215,7 +215,7 @@
     {
       "id": "Practitioner_resourceId",
       "label": "",
-      "primaryKeyOwner": "",
+      "primaryKeyOwner": null,
       "primaryKeyTable": "caregivers",
       "primaryKeyColumn": "row_id",
       "definitionId": "Practitioner",
@@ -248,7 +248,7 @@
               "createdAt": "2020-03-02T18:14:40.514Z",
               "sqlValue": {
                 "id": "ck7as98rt00109kf8mzf2hncp",
-                "owner": "",
+                "owner": null,
                 "table": "caregivers",
                 "column": "cgid",
                 "updatedAt": "2020-03-02T18:14:40.514Z",
@@ -328,7 +328,7 @@
     {
       "id": "EpisodeOfCare_resourceId",
       "label": "icu stay",
-      "primaryKeyOwner": "",
+      "primaryKeyOwner": null,
       "primaryKeyTable": "icustays",
       "primaryKeyColumn": "row_id",
       "definitionId": "EpisodeOfCare",
@@ -380,7 +380,7 @@
               "createdAt": "2020-03-02T18:14:40.526Z",
               "sqlValue": {
                 "id": "ck7as98tv00229kf8rjlukwgl",
-                "owner": "",
+                "owner": null,
                 "table": "icustays",
                 "column": "icustay_id",
                 "updatedAt": "2020-03-02T18:14:40.526Z",
@@ -407,7 +407,7 @@
               "createdAt": "2020-03-02T18:14:40.526Z",
               "sqlValue": {
                 "id": "ck7as98uw00369kf8m3tkv2u7",
-                "owner": "",
+                "owner": null,
                 "table": "icustays",
                 "column": "row_id",
                 "updatedAt": "2020-03-02T18:14:40.526Z",
@@ -453,7 +453,7 @@
               "createdAt": "2020-03-02T18:14:40.526Z",
               "sqlValue": {
                 "id": "ck7as98wt00599kf8c2nwn2ls",
-                "owner": "",
+                "owner": null,
                 "table": "icustays",
                 "column": "intime",
                 "updatedAt": "2020-03-02T18:14:40.526Z",
@@ -480,7 +480,7 @@
               "createdAt": "2020-03-02T18:14:40.526Z",
               "sqlValue": {
                 "id": "ck7as98xw00729kf8ebphq5qx",
-                "owner": "",
+                "owner": null,
                 "table": "icustays",
                 "column": "outtime",
                 "updatedAt": "2020-03-02T18:14:40.526Z",
@@ -507,7 +507,7 @@
               "createdAt": "2020-03-02T18:14:40.526Z",
               "sqlValue": {
                 "id": "ck7as991w00889kf8cpofog74",
-                "owner": "",
+                "owner": null,
                 "table": "icustays",
                 "column": "subject_id",
                 "updatedAt": "2020-03-02T18:14:40.526Z",
@@ -587,7 +587,7 @@
     {
       "id": "Patient_resourceId",
       "label": "pat_label",
-      "primaryKeyOwner": "",
+      "primaryKeyOwner": null,
       "primaryKeyTable": "patients",
       "primaryKeyColumn": "subject_id",
       "definitionId": "Patient",
@@ -620,9 +620,9 @@
               "createdAt": "2020-03-02T18:14:40.533Z",
               "sqlValue": {
                 "id": "ck7as98t800179kf8ep7nv7h2",
-                "owner": "",
-                "table": "PATIENTS",
-                "column": "GENDER",
+                "owner": null,
+                "table": "patients",
+                "column": "gender",
                 "updatedAt": "2020-03-02T18:14:40.533Z",
                 "createdAt": "2020-03-02T18:14:40.533Z",
                 "joins": []
@@ -647,9 +647,9 @@
               "createdAt": "2020-03-02T18:14:40.533Z",
               "sqlValue": {
                 "id": "ck7as98u100249kf8ryk1f10i",
-                "owner": "",
-                "table": "PATIENTS",
-                "column": "DOB",
+                "owner": null,
+                "table": "patients",
+                "column": "dob",
                 "updatedAt": "2020-03-02T18:14:40.533Z",
                 "createdAt": "2020-03-02T18:14:40.533Z",
                 "joins": []
@@ -674,7 +674,7 @@
               "createdAt": "2020-03-02T18:14:40.533Z",
               "sqlValue": {
                 "id": "ck7as98v100399kf8tapi04jz",
-                "owner": "",
+                "owner": null,
                 "table": "admissions",
                 "column": "marital_status",
                 "updatedAt": "2020-03-02T18:14:40.533Z",
@@ -687,7 +687,7 @@
                     "tables": [
                       {
                         "id": "ck7as98vq00489kf8pwupi9p2",
-                        "owner": "",
+                        "owner": null,
                         "table": "patients",
                         "column": "subject_id",
                         "updatedAt": "2020-03-02T18:14:40.533Z",
@@ -695,7 +695,7 @@
                       },
                       {
                         "id": "ck7as98vz00519kf8x029ohlh",
-                        "owner": "",
+                        "owner": null,
                         "table": "admissions",
                         "column": "subject_id",
                         "updatedAt": "2020-03-02T18:14:40.533Z",
@@ -725,7 +725,7 @@
               "createdAt": "2020-03-02T18:14:40.533Z",
               "sqlValue": {
                 "id": "ck7as98x500639kf8apyoqya5",
-                "owner": "",
+                "owner": null,
                 "table": "patients",
                 "column": "row_id",
                 "updatedAt": "2020-03-02T18:14:40.533Z",
@@ -752,7 +752,7 @@
               "createdAt": "2020-03-02T18:14:40.533Z",
               "sqlValue": {
                 "id": "ck7as98ye00779kf80afowdov",
-                "owner": "",
+                "owner": null,
                 "table": "patients",
                 "column": "expire_flag",
                 "updatedAt": "2020-03-02T18:14:40.533Z",
@@ -779,7 +779,7 @@
               "createdAt": "2020-03-02T18:14:40.533Z",
               "sqlValue": {
                 "id": "ck7as992i00919kf8pkxzhk0w",
-                "owner": "",
+                "owner": null,
                 "table": "patients",
                 "column": "dod",
                 "updatedAt": "2020-03-02T18:14:40.533Z",
@@ -878,7 +878,7 @@
     {
       "id": "MedicationRequest_resourceId",
       "label": "",
-      "primaryKeyOwner": "",
+      "primaryKeyOwner": null,
       "primaryKeyTable": "prescriptions",
       "primaryKeyColumn": "row_id",
       "definitionId": "MedicationRequest",
@@ -911,7 +911,7 @@
               "createdAt": "2020-03-02T18:14:40.622Z",
               "sqlValue": {
                 "id": "ck7as98ur00339kf8uve03v0n",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "row_id",
                 "updatedAt": "2020-03-02T18:14:40.622Z",
@@ -938,7 +938,7 @@
               "createdAt": "2020-03-02T18:14:40.622Z",
               "sqlValue": {
                 "id": "ck7as98w300539kf8cv9myp7e",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "subject_id",
                 "updatedAt": "2020-03-02T18:14:40.622Z",
@@ -965,7 +965,7 @@
               "createdAt": "2020-03-02T18:14:40.622Z",
               "sqlValue": {
                 "id": "ck7as98xo00709kf8u9nif68j",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "drug",
                 "updatedAt": "2020-03-02T18:14:40.622Z",
@@ -1049,7 +1049,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as994p00999kf8cnw65d2s",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "ndc",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1095,7 +1095,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as996k01049kf8tx0b4ov0",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "drug",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1122,7 +1122,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as997b01079kf8cjrv9duf",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "route",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1149,7 +1149,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as997u01109kf8vqtuqf6q",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "startdate",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1176,7 +1176,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as998e01139kf8u9hb2njq",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "enddate",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1203,7 +1203,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as999001169kf81orh1bmb",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "dose_val_rx",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1230,7 +1230,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as999i01199kf8t226iso8",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "dose_unit_rx",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1257,7 +1257,7 @@
               "createdAt": "2020-03-02T18:14:40.623Z",
               "sqlValue": {
                 "id": "ck7as99ae01229kf8zx6g3mf3",
-                "owner": "",
+                "owner": null,
                 "table": "prescriptions",
                 "column": "dose_unit_rx",
                 "updatedAt": "2020-03-02T18:14:40.623Z",
@@ -1356,7 +1356,7 @@
     {
       "id": "EpisodeOfCare_resourceId2",
       "label": "admissions",
-      "primaryKeyOwner": "",
+      "primaryKeyOwner": null,
       "primaryKeyTable": "admissions",
       "primaryKeyColumn": "row_id",
       "definitionId": "EpisodeOfCare",
@@ -1377,9 +1377,9 @@
           "value": "'2150-08-29 18:20:00'",
           "sqlColumn": {
             "id": "ck7bp7i9o0000t2f89pnwnwj5",
-            "owner": "",
-            "table": "ADMISSIONS",
-            "column": "ADMITTIME",
+            "owner": null,
+            "table": "admissions",
+            "column": "admittime",
             "updatedAt": "2020-03-03T09:37:06.871Z",
             "createdAt": "2020-03-03T09:37:06.871Z"
           }
@@ -1403,7 +1403,7 @@
               "createdAt": "2020-03-02T18:14:40.517Z",
               "sqlValue": {
                 "id": "ck7as98rq00099kf8m1yxvk1a",
-                "owner": "",
+                "owner": null,
                 "table": "admissions",
                 "column": "row_id",
                 "updatedAt": "2020-03-02T18:14:40.517Z",
@@ -1430,7 +1430,7 @@
               "createdAt": "2020-03-02T18:14:40.517Z",
               "sqlValue": {
                 "id": "ck7as98ul00329kf8mwoyi29d",
-                "owner": "",
+                "owner": null,
                 "table": "admissions",
                 "column": "subject_id",
                 "updatedAt": "2020-03-02T18:14:40.517Z",
@@ -1457,7 +1457,7 @@
               "createdAt": "2020-03-02T18:14:40.517Z",
               "sqlValue": {
                 "id": "ck7as98vl00469kf8voi6vug1",
-                "owner": "",
+                "owner": null,
                 "table": "admissions",
                 "column": "admittime",
                 "updatedAt": "2020-03-02T18:14:40.517Z",
@@ -1484,7 +1484,7 @@
               "createdAt": "2020-03-02T18:14:40.517Z",
               "sqlValue": {
                 "id": "ck7as98wy00629kf8hsfxxrj4",
-                "owner": "",
+                "owner": null,
                 "table": "admissions",
                 "column": "dischtime",
                 "updatedAt": "2020-03-02T18:14:40.517Z",

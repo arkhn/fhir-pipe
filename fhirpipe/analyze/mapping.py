@@ -4,14 +4,12 @@ from typing import Dict, List
 from collections import defaultdict
 
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
-from fhirpipe.utils import (
-    build_col_name,
-    new_col_name,
-    get_table_name,
-)
+from fhirpipe.utils import new_col_name
 from fhirpipe.analyze.concept_map import ConceptMap
 from fhirpipe.analyze.cleaning_script import CleaningScript
 from fhirpipe.analyze.merging_script import MergingScript
+from fhirpipe.analyze.sql_column import SqlColumn
+from fhirpipe.analyze.sql_join import SqlJoin
 
 
 def get_mapping(
@@ -79,13 +77,12 @@ def get_primary_key(resource_mapping):
             "You need to provide a primary key table and column in the mapping for "
             f"resource {resource_mapping['definitionId']}."
         )
-    main_table = (
-        (f"{resource_mapping['primaryKeyOwner']}.{resource_mapping['primaryKeyTable']}")
-        if resource_mapping["primaryKeyOwner"]
-        else resource_mapping["primaryKeyTable"]
+
+    return SqlColumn(
+        resource_mapping["primaryKeyTable"],
+        resource_mapping["primaryKeyColumn"],
+        resource_mapping["primaryKeyOwner"],
     )
-    column = f"{main_table}.{resource_mapping['primaryKeyColumn']}"
-    return main_table, column
 
 
 def find_cols_joins_maps_scripts(resource_mapping):
@@ -122,8 +119,9 @@ def find_cols_joins_maps_scripts(resource_mapping):
         for input in attribute["inputs"]:
             if input["sqlValue"]:
                 sql = input["sqlValue"]
-                column_name = build_col_name(sql["table"], sql["column"], sql["owner"])
-                cols.add(column_name)
+                cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
+                column_name = str(cur_col)
+                cols.add(cur_col)
 
                 if input["script"]:
                     # This is a hack to avoid a linting error about complexity too high (>10)
@@ -147,13 +145,10 @@ def find_cols_joins_maps_scripts(resource_mapping):
 
                 for join in sql["joins"]:
                     tables = join["tables"]
-                    source_col = build_col_name(
-                        tables[0]["table"], tables[0]["column"], tables[0]["owner"],
-                    )
-                    target_col = build_col_name(
-                        tables[1]["table"], tables[1]["column"], tables[1]["owner"],
-                    )
-                    joins.add((source_col, target_col))
+                    col1 = SqlColumn(tables[0]["table"], tables[0]["column"], tables[0]["owner"])
+                    col2 = SqlColumn(tables[1]["table"], tables[1]["column"], tables[1]["owner"])
+                    cur_join = SqlJoin(col1, col2)
+                    joins.add(cur_join)
 
             elif input["staticValue"]:
                 static_values.append(input["staticValue"])
@@ -223,18 +218,14 @@ def build_join_graph(joins):
     """
     graph = defaultdict(list)
     for join in joins:
-        join_source, join_target = join
+        join_source = join.left
+        join_target = join.right
 
         # Get table names
-        target_table = get_table_name(join_target)
-        source_table = get_table_name(join_source)
+        source_table = join_source.table_name()
+        target_table = join_target.table_name()
 
         # Add the join in the join_graph
         graph[source_table].append(target_table)
 
     return graph
-
-
-def dict_concat(dict_1, dict_2):
-    for key, val in dict_2.items():
-        dict_1[key] += val

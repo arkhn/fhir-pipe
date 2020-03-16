@@ -5,6 +5,8 @@ import fhirpipe.analyze.mapping as mapping
 from fhirpipe.analyze.concept_map import ConceptMap
 from fhirpipe.analyze.cleaning_script import CleaningScript
 from fhirpipe.analyze.merging_script import MergingScript
+from fhirpipe.analyze.sql_column import SqlColumn
+from fhirpipe.analyze.sql_join import SqlJoin
 
 from test.unit.conftest import mock_config, mock_api_get_maps
 
@@ -151,10 +153,9 @@ def test_get_primary_key():
         "primaryKeyTable": "table",
         "primaryKeyColumn": "col",
     }
-    main_table, column = mapping.get_primary_key(resource_mapping)
+    column = mapping.get_primary_key(resource_mapping)
 
-    assert main_table == "owner.table"
-    assert column == "owner.table.col"
+    assert column == SqlColumn("table", "col", "owner")
 
     # Without owner
     resource_mapping = {
@@ -162,10 +163,9 @@ def test_get_primary_key():
         "primaryKeyTable": "table",
         "primaryKeyColumn": "col",
     }
-    main_table, column = mapping.get_primary_key(resource_mapping)
+    column = mapping.get_primary_key(resource_mapping)
 
-    assert main_table == "table"
-    assert column == "table.col"
+    assert column == SqlColumn("table", "col")
 
     # Raising error
     resource_mapping = {
@@ -182,7 +182,9 @@ def test_get_primary_key():
 
 @mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
 @mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
-def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifier):
+def test_find_cols_joins_maps_scripts(
+    patient_mapping, fhir_concept_map_gender, fhir_concept_map_identifier
+):
     (
         cols,
         joins,
@@ -192,17 +194,18 @@ def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifi
     ) = mapping.find_cols_joins_maps_scripts(patient_mapping)
 
     assert cols == {
-        "PATIENTS.GENDER",
-        "PATIENTS.DOB",
-        "admissions.marital_status",
-        "patients.row_id",
-        "admissions.hospital_expire_flag",
-        "patients.dod",
+        SqlColumn("patients", "row_id"),
+        SqlColumn("patients", "gender"),
+        SqlColumn("patients", "dob"),
+        SqlColumn("patients", "dod"),
+        SqlColumn("admissions", "marital_status"),
+        SqlColumn("patients", "expire_flag"),
     }
-    assert joins == {("patients.subject_id", "admissions.subject_id")}
+    assert joins == {
+        SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id"))
+    }
 
     assert list(cleaning_scripts) == [
-        CleaningScript("map_gender"),
         CleaningScript("clean_date"),
         CleaningScript("map_marital_status"),
         CleaningScript("binary_to_bool_1"),
@@ -210,20 +213,22 @@ def test_find_cols_joins_maps_scripts(patient_mapping, fhir_concept_map_identifi
     for script, columns in zip(
         cleaning_scripts,
         [
-            ["PATIENTS.GENDER"],
-            ["PATIENTS.DOB", "patients.dod"],
+            ["patients.dob", "patients.dod"],
             ["admissions.marital_status"],
-            ["admissions.hospital_expire_flag"],
+            ["patients.expire_flag"],
         ],
     ):
         assert script.columns == columns
 
-    assert list(concept_maps) == [ConceptMap(fhir_concept_map_identifier)]
-    for cm, columns in zip(concept_maps, [["patients.row_id"]]):
+    assert list(concept_maps) == [
+        ConceptMap(fhir_concept_map_gender),
+        ConceptMap(fhir_concept_map_identifier),
+    ]
+    for cm, columns in zip(concept_maps, [["patients.gender"], ["patients.row_id"]]):
         assert cm.columns == columns
 
     assert merging_scripts == [MergingScript("select_first_not_empty")]
-    assert merging_scripts[0].columns == ["map_gender_PATIENTS.GENDER"]
+    assert merging_scripts[0].columns == ["id_cm_gender_patients.gender"]
     assert merging_scripts[0].static_values == ["unknown"]
 
 
@@ -233,7 +238,7 @@ def test_build_squash_rules():
         "PATIENTS.DOD",
         "PATIENTS.SUBJECT_ID",
     ]  # NOTE: I use a list instead of a set to keep the order of elements
-    joins = {("PATIENTS.SUBJECT_ID", "ADMISSIONS.SUBJECT_ID")}
+    joins = {SqlJoin(SqlColumn("PATIENTS", "SUBJECT_ID"), SqlColumn("ADMISSIONS", "SUBJECT_ID"))}
     table = "PATIENTS"
 
     actual = mapping.build_squash_rules(cols, joins, table)

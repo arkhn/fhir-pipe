@@ -11,7 +11,9 @@ class Analyzer:
         analysis = Analysis()
 
         # Get primary key table
-        analysis.primary_key_table, analysis.primary_key_column = get_primary_key(resource_mapping)
+        analysis.primary_key_column = get_primary_key(
+            resource_mapping
+        )
 
         # Extract cols, joins, concept_maps, cleaning_scripts, and merging_scripts
         (
@@ -27,7 +29,7 @@ class Analyzer:
 
         # Build squash rules
         analysis.squash_rules = build_squash_rules(
-            analysis.cols, analysis.joins, analysis.primary_key_table
+            analysis.cols, analysis.joins, analysis.primary_key_column.table_name()
         )
 
         return analysis

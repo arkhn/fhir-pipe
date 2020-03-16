@@ -17,7 +17,7 @@ class Transformer:
         chunk = chunk.applymap(lambda value: str(value) if value is not None else None)
 
         # Force names of dataframe cols to be the same as in SQL query
-        chunk.columns = analysis.cols
+        chunk.columns = [str(col) for col in analysis.cols]
 
         # Apply cleaning and merging scripts on chunk
         apply_scripts(
