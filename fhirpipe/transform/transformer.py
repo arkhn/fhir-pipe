@@ -17,11 +17,7 @@ class Transformer:
         chunk = chunk.applymap(lambda value: str(value) if value is not None else None)
 
         # Apply cleaning and merging scripts on chunk
-        chunk = clean_data(
-            chunk,
-            analysis.attributes,
-            analysis.primary_key_column,
-        )
+        chunk = clean_data(chunk, analysis.attributes, analysis.primary_key_column)
 
         # Apply join rule to merge some lines from the same resource
         logging.info("Squashing rows...")
@@ -29,7 +25,11 @@ class Transformer:
 
         if self.pool:
             fhir_instances = self.pool.map(
-                partial(create_resource, resource_mapping=resource_mapping),
+                partial(
+                    create_resource,
+                    resource_mapping=resource_mapping,
+                    attributes=analysis.attributes,
+                ),
                 np.array_split(chunk, self.pool._processes),
             )
         else:
