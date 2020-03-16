@@ -26,6 +26,7 @@ def run(
     override,
     chunksize,
     bypass_validation,
+    skip_ref_binding,
     multiprocessing,
     credentials=None,
 ):
@@ -52,15 +53,19 @@ def run(
     extractor = Extractor(credentials, chunksize)
     transformer = Transformer(pool)
     loader = Loader(fhirstore, bypass_validation, pool)
-    binder = ReferenceBinder(fhirstore)
+
+    if not skip_ref_binding:
+        # TODO is there a more elegant way to avoid doing this?
+        binder = ReferenceBinder(fhirstore)
 
     for resource_mapping in resources:
         # Analyze
         analysis = analyzer.analyze(resource_mapping)
 
         # Add references to map if any
-        for reference_path in analysis.reference_paths:
-            binder.add_reference(resource_mapping, reference_path)
+        if not skip_ref_binding:
+            for reference_path in analysis.reference_paths:
+                binder.add_reference(resource_mapping, reference_path)
 
         # Extract
         df = extractor.extract(resource_mapping, analysis)
@@ -81,7 +86,8 @@ def run(
             # Load
             loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
-    binder.bind_references()
+    if not skip_ref_binding:
+        binder.bind_references()
 
     if multiprocessing:
         pool.close()
@@ -127,5 +133,6 @@ if __name__ == "__main__":
         override=args.override,
         chunksize=args.chunksize,
         bypass_validation=args.bypass_validation,
+        skip_ref_binding=args.skip_ref_binding,
         multiprocessing=args.multiprocessing,
     )

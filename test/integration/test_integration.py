@@ -32,6 +32,7 @@ def test_run_from_file(mock_datetime, with_concept_maps):
         override=False,
         chunksize=None,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=False,
     )
     assert_result_as_expected()
@@ -48,6 +49,7 @@ def test_run_from_gql():
         override=False,
         chunksize=None,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=False,
     )
     assert_result_as_expected()
@@ -66,6 +68,7 @@ def test_run_resource(mock_datetime, with_concept_maps):
         override=False,
         chunksize=None,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=False,
     )
 
@@ -76,7 +79,7 @@ def test_run_resource(mock_datetime, with_concept_maps):
     assert "Patient" in db_collections
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
 
-    assert_sample_patient_comparison(mongo_client)
+    compare_sample_patient(mongo_client)
 
 
 # Run by batch #
@@ -92,6 +95,7 @@ def test_run_batch():
         override=False,
         chunksize=10,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=False,
     )
     assert_result_as_expected()
@@ -109,6 +113,7 @@ def test_run_multiprocessing(mock_datetime, with_concept_maps):
         override=False,
         chunksize=None,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=True,
     )
     assert_result_as_expected()
@@ -127,6 +132,7 @@ def test_run_override(mock_datetime, with_concept_maps):
         override=False,
         chunksize=None,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=False,
     )
     run.run(
@@ -137,10 +143,37 @@ def test_run_override(mock_datetime, with_concept_maps):
         override=True,
         chunksize=None,
         bypass_validation=False,
+        skip_ref_binding=True,
         multiprocessing=False,
     )
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
+
+
+# Run from mapping file
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_run_ref_binding(mock_datetime, with_concept_maps):
+    mock_datetime.now.return_value = mockdatetime()
+    run.run(
+        mapping="test/fixtures/mimic_mapping.json",
+        source=None,
+        resources=["Patient", "Practitioner"],
+        labels=None,
+        override=False,
+        chunksize=None,
+        bypass_validation=False,
+        skip_ref_binding=False,
+        multiprocessing=False,
+    )
+
+    mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
+
+    db_collections = mongo_client.list_collection_names()
+    assert "Patient" in db_collections
+    assert "Practitioner" in db_collections
+    assert mongo_client["Patient"].count_documents({}) == expected_patients_count
+
+    compare_sample_patient_referencing(mongo_client)
 
 
 # Helper functions and variables for assertions #
@@ -153,7 +186,7 @@ expected_episode_of_care_count = (
     pd.read_sql_query(
         # include a filter in the count to reflect the filter contained in the mimic_mapping
         "SELECT COUNT(*) FROM admissions WHERE admissions.admittime >= '2150-08-29 18:20:00'",
-        con=engine
+        con=engine,
     ).at[0, "count"]
     + pd.read_sql_query("SELECT COUNT(*) FROM icustays", con=engine).at[0, "count"]
 )
@@ -163,7 +196,7 @@ expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions",
 expected_diagnostic_report_count = pd.read_sql_query(
     "SELECT COUNT(*) FROM diagnoses_icd", con=engine
 ).at[0, "count"]
-expected_practitioner_count = pd.read_sql_query("SELECT COUNT(*) FROM caregivers", con=engine).at[
+expected_practitioner_count = pd.read_sql_query("SELECT COUNT(*) FROM admissions", con=engine).at[
     0, "count"
 ]
 id_sample_patient = "30831"
@@ -199,8 +232,8 @@ def assert_result_as_expected(
         practitioner_count,
     )
 
-    assert_sample_patient_comparison(mongo_client)
-    assert_sample_med_req_comparison(mongo_client)
+    compare_sample_patient(mongo_client)
+    compare_sample_med_req(mongo_client)
 
 
 def assert_document_counts(
@@ -218,7 +251,7 @@ def assert_document_counts(
     assert mongo_client["Practitioner"].count_documents({}) == practitioner_count
 
 
-def assert_sample_patient_comparison(mongo_client):
+def compare_sample_patient(mongo_client):
     sample_patient = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
 
     assert sample_patient == {
@@ -238,11 +271,52 @@ def assert_sample_patient_comparison(mongo_client):
         "birthDate": "2063-07-05",
         "deceasedBoolean": True,
         "deceasedDateTime": "2130-11-03",
-        "generalPractitioner": [{"type": "/Practitioner/"}],
+        "generalPractitioner": [
+            {"identifier": {"value": "126179"}, "type": "Practitioner"},
+            {"identifier": {"value": "146893"}, "type": "Practitioner"},
+        ],
     }
 
 
-def assert_sample_med_req_comparison(mongo_client):
+def compare_sample_patient_referencing(mongo_client):
+    sample_patient = mongo_client["Patient"].find_one({"identifier.0.value": id_sample_patient})
+
+    id1 = mongo_client["Practitioner"].find_one({"identifier.0.value": "126179"})["id"]
+    id2 = mongo_client["Practitioner"].find_one({"identifier.0.value": "146893"})["id"]
+
+    assert sample_patient == {
+        "meta": {
+            "lastUpdated": lastUpdated,
+            "tag": [
+                {"system": ARKHN_CODE_SYSTEMS.source, "code": "mimicSourceId"},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "Patient_resourceId"},
+            ],
+        },
+        "_id": sample_patient["_id"],
+        "id": sample_patient["id"],
+        "resourceType": "Patient",
+        "identifier": [{"value": "30831"}],
+        "gender": "female",
+        "maritalStatus": {"coding": [{"code": "U"}]},
+        "birthDate": "2063-07-05",
+        "deceasedBoolean": True,
+        "deceasedDateTime": "2130-11-03",
+        "generalPractitioner": [
+            {
+                "reference": f"Practitioner/{id1}",
+                "identifier": {"value": "126179"},
+                "type": "Practitioner",
+            },
+            {
+                "reference": f"Practitioner/{id2}",
+                "identifier": {"value": "146893"},
+                "type": "Practitioner",
+            },
+        ],
+    }
+
+
+def compare_sample_med_req(mongo_client):
     sample_med_req = mongo_client["MedicationRequest"].find_one(
         {"identifier.0.value": id_sample_med_req}
     )

@@ -35,24 +35,31 @@ class ReferenceBinder:
     def bind_references_for_instance(self, instance, reference_paths):
         for reference_path in reference_paths:
             sub_fhir_object = self.find_sub_fhir_object(instance, reference_path)
-            identifier = sub_fhir_object["identifier"]
-            reference_type = sub_fhir_object["type"]
 
-            # Get the map for the needed type
-            map = self.get_collection_map(reference_type)
-            value = identifier["value"]
-            # TODO system should have been automatically filled if needed
-            system = identifier["system"] if "system" in identifier else ""
+            # If we have a list of references, we want to bind all of them.
+            # Thus, we loop on all the items in sub_fhir_object.
+            if not isinstance(sub_fhir_object, list):
+                sub_fhir_object = [sub_fhir_object]
 
-            # If the identifier is in the map, we can fill the reference
-            if (value, system) in map:
-                fhir_id = map[(value, system)]
-                sub_fhir_object["reference"] = f"{reference_type}/{fhir_id}"
-            else:
-                logging.warning(
-                    f"Could perform reference binding to the resource of type {reference_type} "
-                    f"and identifier {(value, system)}."
-                )
+            for sub in sub_fhir_object:
+                identifier = sub["identifier"]
+                reference_type = sub["type"]
+
+                # Get the map for the needed type
+                map = self.get_collection_map(reference_type)
+                value = identifier["value"]
+                # TODO system should have been automatically filled if needed
+                system = identifier["system"] if "system" in identifier else ""
+
+                # If the identifier is in the map, we can fill the reference
+                if (value, system) in map:
+                    fhir_id = map[(value, system)]
+                    sub["reference"] = f"{reference_type}/{fhir_id}"
+                else:
+                    logging.warning(
+                        f"Could perform reference binding to the resource of type {reference_type} "
+                        f"and identifier {(value, system)}."
+                    )
 
         self.fhirstore.update(instance["resourceType"], instance["id"], instance)
 

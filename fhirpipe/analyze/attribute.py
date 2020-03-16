@@ -17,6 +17,13 @@ class Attribute:
         self.merging_script = merging_script
 
     def __eq__(self, other):
+        print(":")
+        print(self.path)
+        for c in self.columns:
+            print(c)
+        print(self.static_inputs)
+        print(self.merging_script)
+        print("---")
         if not isinstance(other, Attribute):
             return False
         return (

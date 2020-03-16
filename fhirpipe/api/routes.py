@@ -19,6 +19,7 @@ default_params = {
     "override": False,
     "chunksize": None,
     "bypass_validation": False,
+    "skip_ref_binding": False,
     "multiprocessing": False,
 }
 

@@ -19,8 +19,8 @@ database["Patient"].insert_many(
             ],
         },
         {
-            "_id": "5e6b5de381ee0cdbdfa17ceb",
-            "id": "f900bb69-408d-4cf1-af62-3da7def97bcc",
+            "_id": "123456789",
+            "id": "654321",
             "resourceType": "Patient",
             "identifier": [{"system": "system", "value": "0002"}],
             "generalPractitioner": [
