@@ -4,8 +4,6 @@ from collections import defaultdict
 
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
 
-from .sql_column import SqlColumn
-
 
 def get_mapping(
     from_file=None, selected_source=None, selected_resources=None, selected_labels=None
