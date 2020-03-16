@@ -54,18 +54,15 @@ def run(
     transformer = Transformer(pool)
     loader = Loader(fhirstore, bypass_validation, pool)
 
-    if not skip_ref_binding:
-        # TODO is there a more elegant way to avoid doing this?
-        binder = ReferenceBinder(fhirstore)
+    # TODO is there a more elegant way to skip_ref_binding?
+    binder = ReferenceBinder(fhirstore, skip_ref_binding)
 
     for resource_mapping in resources:
         # Analyze
         analysis = analyzer.analyze(resource_mapping)
 
         # Add references to map if any
-        if not skip_ref_binding:
-            for reference_path in analysis.reference_paths:
-                binder.add_reference(resource_mapping, reference_path)
+        binder.add_references(resource_mapping, analysis.reference_paths)
 
         # Extract
         df = extractor.extract(resource_mapping, analysis)
@@ -86,8 +83,7 @@ def run(
             # Load
             loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
-    if not skip_ref_binding:
-        binder.bind_references()
+    binder.bind_references()
 
     if multiprocessing:
         pool.close()

@@ -3,7 +3,6 @@ from unittest import mock
 
 from fhirpipe.analyze import Analyzer
 
-import fhirpipe.analyze.mapping as mapping
 from fhirpipe.analyze.attribute import Attribute
 from fhirpipe.analyze.merging_script import MergingScript
 from fhirpipe.analyze.sql_column import SqlColumn
@@ -54,10 +53,6 @@ def test_analyze_mapping(patient_mapping, fhir_concept_map_gender, fhir_concept_
     analyzer = Analyzer()
 
     analyzer.analyze_mapping(patient_mapping)
-
-    for attr in analyzer.analysis.attributes:
-        if attr.columns:
-            print(attr.path)
 
     assert analyzer.analysis.attributes == [
         Attribute(

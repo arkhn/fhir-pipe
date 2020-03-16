@@ -7,8 +7,9 @@ from fhirpipe.load.fhirstore import get_mongo_client, get_resource_instances
 
 
 class ReferenceBinder:
-    def __init__(self, fhirstore):
+    def __init__(self, fhirstore, skip_ref_binding):
         self.fhirstore = fhirstore
+        self.skip_ref_binding = skip_ref_binding
 
         # store of the form
         # {
@@ -26,6 +27,9 @@ class ReferenceBinder:
         self.map_resource_references = defaultdict(list)
 
     def bind_references(self):
+        if self.skip_ref_binding:
+            return
+
         for resource_id, reference_paths in self.map_resource_references.items():
             resource_type = self.map_resource_type[resource_id]
             instances_with_refs = get_resource_instances(resource_id, resource_type)
@@ -95,6 +99,16 @@ class ReferenceBinder:
         """
         self.map_resource_type[resource_mapping["id"]] = resource_mapping["definitionId"]
         self.map_resource_references[resource_mapping["id"]].append(path)
+
+    def add_references(self, resource_mapping, paths):
+        """ When a reference is found, this method stores the useful information about it
+        to later perform the binding.
+        """
+        if self.skip_ref_binding:
+            return
+
+        for path in paths:
+            self.add_reference(resource_mapping, path)
 
     @staticmethod
     def find_sub_fhir_object(instance, path):
