@@ -30,9 +30,9 @@ class ReferenceBinder:
             resource_type = self.map_resource_type[resource_id]
             instances_with_refs = get_resource_instances(resource_id, resource_type)
             for instance in instances_with_refs:
-                self.bind_references_for_instance(instance, resource_type, reference_paths)
+                self.bind_references_for_instance(instance, reference_paths)
 
-    def bind_references_for_instance(self, instance, resource_type, reference_paths):
+    def bind_references_for_instance(self, instance, reference_paths):
         for reference_path in reference_paths:
             sub_fhir_object = self.find_sub_fhir_object(instance, reference_path)
             identifier = sub_fhir_object["identifier"]
@@ -49,12 +49,12 @@ class ReferenceBinder:
                 fhir_id = map[(value, system)]
                 sub_fhir_object["reference"] = f"{reference_type}/{fhir_id}"
             else:
-                logging.warn(
+                logging.warning(
                     f"Could perform reference binding to the resource of type {reference_type} "
                     f"and identifier {(value, system)}."
                 )
 
-        self.fhirstore.update(resource_type, instance["id"], instance)
+        self.fhirstore.update(instance["resourceType"], instance["id"], instance)
 
     def get_collection_map(self, fhir_type):
         """ Get a dict {(value, system): fhir_id, ...} for the specified resource type.
@@ -67,7 +67,7 @@ class ReferenceBinder:
             db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
             collection = db_client[fhir_type].find(
                 {"identifier": {"$elemMatch": {"value": {"$exists": True}}}},
-                ["id", "identifier.value", "identifier.type"],
+                ["id", "identifier.value", "identifier.system"],
             )
 
             identifier_map = {}
@@ -93,10 +93,10 @@ class ReferenceBinder:
     def find_sub_fhir_object(instance, path):
         cur_sub_object = instance
         for step in path.split("."):
-            index = re.search(r"\[(\d+)\]$", step).group(1)
+            index = re.search(r"\[(\d+)\]$", step)
             step = re.sub(r"\[\d+\]$", "", step)
             cur_sub_object = cur_sub_object[step]
             if index:
-                cur_sub_object = cur_sub_object[int(index)]
+                cur_sub_object = cur_sub_object[int(index.group(1))]
 
         return cur_sub_object
