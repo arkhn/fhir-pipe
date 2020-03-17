@@ -19,4 +19,4 @@ class CleaningScript:
             except Exception as e:
                 logging.error(f"{self.name}: Error cleaning {col} (at id = {id}): {e}")
 
-        return np.vectorize(clean_and_log)(df_column, id=pk_column, col=df_column.name)
+        return np.vectorize(clean_and_log)(df_column, id=pk_column, col=df_column.name[0])

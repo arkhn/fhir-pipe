@@ -20,7 +20,6 @@ def create_resource(chunk, resource_mapping, attributes):
         except Exception as e:
             # If cannot build the fhir object, a warning has been logged
             # and we try to generate the next one
-            assert False
             logging.error(f"create_instance failed with: {e}")
             continue
 
@@ -87,14 +86,6 @@ def build_fhir_object(row, path_attributes_map, index=None):
         if position_ind is None:
             # If we didn't find an index in the path, then we don't worry about arrays
             val = fetch_values_from_dataframe(row, attr)
-            if attr in row:
-                val = row[attr]
-            else:
-                assert len(attr.static_inputs) == 1, (
-                    "The mapping contains an attribute with several static inputs "
-                    "(and no sql input nor merging script)"
-                )
-                val = attr.static_inputs[0]
 
             if isinstance(val, tuple) and len(val) == 1:
                 # If we have a tuple of length 1, we simply extract the value and put it in

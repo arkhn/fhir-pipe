@@ -58,4 +58,4 @@ class ConceptMap:
             except Exception as e:
                 logging.error(f"{self.title}: Error mapping {col} (at id = {id}): {e}")
 
-        return np.vectorize(map_and_log)(df_column, id=pk_column, col=df_column.name)
+        return np.vectorize(map_and_log)(df_column, id=pk_column, col=df_column.name[0])

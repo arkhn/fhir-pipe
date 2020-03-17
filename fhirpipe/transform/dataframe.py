@@ -3,9 +3,10 @@ from typing import List
 import pandas as pd
 
 from fhirpipe.analyze.attribute import Attribute
+from fhirpipe.analyze.sql_column import SqlColumn
 
 
-def clean_data(
+def clean_dataframe(
     df, attributes: List[Attribute], primary_key_column,
 ):
     """ Apply scripts and concept maps.
@@ -13,28 +14,35 @@ def clean_data(
     cleaned_df = pd.DataFrame()
     df_pk_col = df[primary_key_column.dataframe_column_name()]
     for attribute in attributes:
-        cols_for_attr = []
+        attr_df = pd.DataFrame()
         for col in attribute.columns:
             df_col_name = col.dataframe_column_name()
-            df["tmp"] = df[df_col_name]
-            cols_for_attr.append(df_col_name)
+
+            # The column name in the new intermediary dataframe
+            # We put also col.table because it's needed in squash_rows
+            attr_col_name = (df_col_name, col.table)
+
+            # Get the original column
+            attr_df[attr_col_name] = df[df_col_name]
 
             # Apply cleaning script
             if col.cleaning_script:
-                df["tmp"] = col.cleaning_script.apply(df["tmp"], df_pk_col)
+                attr_df[attr_col_name] = col.cleaning_script.apply(
+                    attr_df[attr_col_name], df_pk_col
+                )
 
             # Apply concept map
             if col.concept_map:
-                df["tmp"] = col.concept_map.apply(df["tmp"], df_pk_col)
+                attr_df[attr_col_name] = col.concept_map.apply(attr_df[attr_col_name], df_pk_col)
 
-        # Apply merging script
-        if attribute.merging_script:
-            df["tmp"] = attribute.merging_script.apply(
-                [df[col] for col in cols_for_attr], attribute.static_inputs, df_pk_col
-            )
+        if not attr_df.empty:
+            # Change col names to have hierarchical names in the dataframe with all the attributes
+            attr_df.columns = pd.MultiIndex.from_product(([attribute], attr_df.columns))
 
-        if attribute.columns or attribute.merging_script:
-            cleaned_df[attribute] = df["tmp"]
+            # Build the dataframe containing all the attributes
+            cleaned_df = pd.concat([cleaned_df, attr_df], axis=1)
+
+    cleaned_df[pk_col_name(primary_key_column)] = df_pk_col
 
     return cleaned_df
 
@@ -70,14 +78,10 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     table, child_rules = squash_rules
 
     # TODO what if we merge several columns from different tbales?
-    new_cols = [col for col in df.columns if col.columns and col.columns[0].table == table]
+    new_cols = [col for col in df.columns if col[1][1] == table]
     pivot_cols = parent_cols + new_cols
 
-    to_squash = [
-        col
-        for col in df.columns
-        if any([col.columns and col.columns[0].table == rule[0] for rule in child_rules])
-    ]
+    to_squash = [col for col in df.columns if any([col[1][1] == rule[0] for rule in child_rules])]
 
     if not to_squash:
         return df
@@ -95,6 +99,32 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     return df
 
 
+def merge_dataframe(
+    df, attributes: List[Attribute], primary_key_column,
+):
+    """ Apply scripts and concept maps.
+    """
+    merged_df = pd.DataFrame()
+    df_pk_col = df[pk_col_name(primary_key_column)]
+    for attribute in attributes:
+        if attribute not in df:
+            # If attribute is static or has no input, don't do anything
+            continue
+
+        if attribute.merging_script:
+            merged_df[attribute] = attribute.merging_script.apply(
+                [df[attribute, col] for col in df[attribute]], attribute.static_inputs, df_pk_col
+            )
+        else:
+            attr_cols = df[attribute].columns
+            assert (
+                len(attr_cols) == 1
+            ), f"The mapping contains several unmerged columns for attribute {attribute}"
+            merged_df[attribute] = df[attribute][attr_cols[0]]
+
+    return merged_df
+
+
 def flat_tuple_agg(values):
     """ We don't want tuples of tuples when squashing several times a columns.
     This function does the aggregation so that the resulting tuple isn't nested.
@@ -106,3 +136,7 @@ def flat_tuple_agg(values):
         else:
             res += (val,)
     return res
+
+
+def pk_col_name(primary_key_column: SqlColumn):
+    return ("pk", (primary_key_column.dataframe_column_name(), primary_key_column.table))
