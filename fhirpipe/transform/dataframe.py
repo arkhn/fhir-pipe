@@ -9,7 +9,17 @@ from fhirpipe.analyze.sql_column import SqlColumn
 def clean_dataframe(
     df, attributes: List[Attribute], primary_key_column,
 ):
-    """ Apply scripts and concept maps.
+    """ Apply cleaning scripts and concept maps.
+    This function takes the dataframe produced by the sql query and return another
+    dataframe which looks like:
+            |   Attribute                                           |   Attribute
+            |   ({table_col}, table)    |   ({table_col}, table)    |   ({table_col}, table)
+            |---------------------------|---------------------------|------------------------
+    row 1   |   val                     |   val                     |   val
+    row 2   |   val                     |   val                     |   val
+    ...     |   ...                     |   ...                     |   ...
+
+    and where all values are cleaned (with cleaning scripts and concept maps).
     """
     cleaned_df = pd.DataFrame()
     df_pk_col = df[primary_key_column.dataframe_column_name()]
@@ -102,7 +112,25 @@ def squash_rows(df, squash_rules, parent_cols=[]):
 def merge_dataframe(
     df, attributes: List[Attribute], primary_key_column,
 ):
-    """ Apply scripts and concept maps.
+    """ Apply merging scripts.
+    Takes as input a dataframe of the form
+
+            |   Attribute                                           |   Attribute
+            |   ({table_col}, table)    |   ({table_col}, table)    |   ({table_col}, table)
+            |---------------------------|---------------------------|------------------------
+    row 1   |   val                     |   val                     |   val
+    row 2   |   val                     |   val                     |   val
+    ...     |   ...                     |   ...                     |   ...
+
+    and outputs
+
+            |   Attribute               |   Attribute
+            |---------------------------|------------------------
+    row 1   |   val                     |   val
+    row 2   |   val                     |   val
+    ...     |   ...                     |   ...
+
+    where values are merge thanks to the mergig scripts.
     """
     merged_df = pd.DataFrame()
     df_pk_col = df[pk_col_name(primary_key_column)]

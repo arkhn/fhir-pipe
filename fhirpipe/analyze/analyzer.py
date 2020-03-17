@@ -22,7 +22,7 @@ class Analyzer:
         self.analyze_mapping(resource_mapping)
 
         # Add primary key to columns to fetch if needed
-        self.analysis.columns.add(self.analysis.primary_key_column)
+        self.analysis.add_column(self.analysis.primary_key_column)
 
         # Build squash rules
         self.analysis.squash_rules = build_squash_rules(
@@ -44,15 +44,15 @@ class Analyzer:
         if not attribute_mapping["inputs"]:
             # If there are no inputs for this attribute, it means that it is an intermediary
             # attribute (ie not a leaf). It is here to give us some context information.
-            # For instance, we can if its children attributes represent a Reference.
+            # For instance, we can use it know if its children attributes represent a Reference.
             # if attribute_mapping["defintionId"] == "Reference":
             #     pass
             return
 
         for input in attribute_mapping["inputs"]:
             if input["sqlValue"]:
-                sql = input["sqlValue"]
-                cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
+                sqlValue = input["sqlValue"]
+                cur_col = SqlColumn(sqlValue["table"], sqlValue["column"], sqlValue["owner"])
 
                 if input["script"]:
                     cur_col.cleaning_script = CleaningScript(input["script"])
@@ -60,11 +60,11 @@ class Analyzer:
                 if input["conceptMapId"]:
                     cur_col.concept_map = ConceptMap(input["conceptMapId"])
 
-                for join in sql["joins"]:
+                for join in sqlValue["joins"]:
                     tables = join["tables"]
-                    col1 = SqlColumn(tables[0]["table"], tables[0]["column"], tables[0]["owner"])
-                    col2 = SqlColumn(tables[1]["table"], tables[1]["column"], tables[1]["owner"])
-                    self.analysis.add_join(SqlJoin(col1, col2))
+                    left = SqlColumn(tables[0]["table"], tables[0]["column"], tables[0]["owner"])
+                    right = SqlColumn(tables[1]["table"], tables[1]["column"], tables[1]["owner"])
+                    self.analysis.add_join(SqlJoin(left, right))
 
                 self.analysis.add_column(cur_col)
                 attribute.add_column(cur_col)

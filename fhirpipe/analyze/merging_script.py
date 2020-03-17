@@ -18,9 +18,7 @@ class MergingScript:
 
         def merge_and_log(*val, id=None, cols=None):
             try:
-                res = self.script(*val)
-                return res
-                # return self.script(*val)
+                return self.script(*val)
             except Exception as e:
                 logging.error(
                     f"{self.name}: Error merging columns "
