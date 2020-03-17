@@ -26,6 +26,12 @@ class Attribute:
             and self.merging_script == other.merging_script
         )
 
+    def __str__(self):
+        return (
+            f"path: {self.path}, columns: {self.columns}, "
+            f"static_inputs: {self.static_inputs}, merging_script: {self.merging_script}"
+        )
+
     def __hash__(self):
         return hash("{self.path}{self.columns}{self.static_inputs}{self.merging_script}")
 
