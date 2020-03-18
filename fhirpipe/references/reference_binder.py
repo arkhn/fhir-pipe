@@ -7,7 +7,7 @@ from fhirpipe.load.fhirstore import get_mongo_client, get_resource_instances
 
 
 class ReferenceBinder:
-    def __init__(self, fhirstore, skip_ref_binding):
+    def __init__(self, fhirstore, skip_ref_binding=False):
         self.fhirstore = fhirstore
         self.skip_ref_binding = skip_ref_binding
 
