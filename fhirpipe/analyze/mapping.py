@@ -1,15 +1,8 @@
 import os
 import json
-from typing import Dict, List
 from collections import defaultdict
 
 from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
-from fhirpipe.utils import new_col_name
-from fhirpipe.analyze.concept_map import ConceptMap
-from fhirpipe.analyze.cleaning_script import CleaningScript
-from fhirpipe.analyze.merging_script import MergingScript
-from fhirpipe.analyze.sql_column import SqlColumn
-from fhirpipe.analyze.sql_join import SqlJoin
 
 
 def get_mapping(
@@ -62,106 +55,6 @@ def get_mapping_from_graphql(selected_source, selected_resources, selected_label
         yield resource
 
 
-def get_primary_key(resource_mapping):
-    """
-    Return primary key table and column of the provided resource.
-
-    args:
-        resource_mapping: the object containing all the mapping rules
-
-    Return:
-        A tuple with the table containing the primary key and the primary key column.
-    """
-    if not resource_mapping["primaryKeyTable"] or not resource_mapping["primaryKeyColumn"]:
-        raise ValueError(
-            "You need to provide a primary key table and column in the mapping for "
-            f"resource {resource_mapping['definitionId']}."
-        )
-
-    return SqlColumn(
-        resource_mapping["primaryKeyTable"],
-        resource_mapping["primaryKeyColumn"],
-        resource_mapping["primaryKeyOwner"],
-    )
-
-
-def find_cols_joins_maps_scripts(resource_mapping):
-    """
-    Run through the attributes of a resource mapping to find:
-    - All columns name to select
-    - All joins necessary to collect the data
-    - All the scripts used in the mapping
-    - All the concept maps used in the mapping
-
-    args:
-        resource_mapping: the mapping dict for a single resoure.
-        concept_maps: the concept maps used in the mapping and on which columns they
-            are used.
-        cleaning_scripts: the cleaning scripts used in the mapping and on which columns they
-            are used.
-        merging_scripts: the merging scripts used in the mapping and on which columns they
-            are used.
-
-    return:
-        cols: the columns of the source DB that should be used in the fhir resource.
-        joins: the joins used in the mapping (ie how to use a column which does not
-            come from the primary key table).
-    """
-    cols = set()
-    joins = set()
-    concept_maps: Dict[str, ConceptMap] = {}
-    cleaning_scripts: Dict[str, CleaningScript] = {}
-    merging_scripts: List[MergingScript] = []
-
-    for attribute in resource_mapping["attributes"]:
-        cols_merging = []
-        static_values = []
-        for input in attribute["inputs"]:
-            if input["sqlValue"]:
-                sql = input["sqlValue"]
-                cur_col = SqlColumn(sql["table"], sql["column"], sql["owner"])
-                column_name = str(cur_col)
-                cols.add(cur_col)
-
-                if input["script"]:
-                    # This is a hack to avoid a linting error about complexity too high (>10)
-                    # It initializes the cleaning script if it does not exist
-                    cleaning_scripts[input["script"]] = cleaning_scripts.get(
-                        input["script"], CleaningScript(input["script"])
-                    )
-                    cleaning_scripts[input["script"]].columns.append(column_name)
-                    column_name = new_col_name(input["script"], column_name)
-
-                if input["conceptMapId"]:
-                    # This is a hack to avoid a linting error about complexity too high (>10)
-                    # It initializes the concept map if it does not exist
-                    concept_maps[input["conceptMapId"]] = concept_maps.get(
-                        input["conceptMapId"], ConceptMap.fetch(input["conceptMapId"])
-                    )
-                    concept_maps[input["conceptMapId"]].columns.append(column_name)
-                    column_name = new_col_name(input["conceptMapId"], column_name)
-
-                cols_merging.append(column_name)
-
-                for join in sql["joins"]:
-                    tables = join["tables"]
-                    col1 = SqlColumn(tables[0]["table"], tables[0]["column"], tables[0]["owner"])
-                    col2 = SqlColumn(tables[1]["table"], tables[1]["column"], tables[1]["owner"])
-                    cur_join = SqlJoin(col1, col2)
-                    joins.add(cur_join)
-
-            elif input["staticValue"]:
-                static_values.append(input["staticValue"])
-
-        if attribute["mergingScript"]:
-            merging_script = MergingScript(attribute["mergingScript"])
-            merging_script.columns = cols_merging
-            merging_script.static_values = static_values
-            merging_scripts.append(merging_script)
-
-    return cols, joins, concept_maps.values(), cleaning_scripts.values(), merging_scripts
-
-
 def build_squash_rules(columns, joins, main_table):
     """
     Using the dependency graph of the joins on the tables (accessed through the
@@ -181,14 +74,6 @@ def build_squash_rules(columns, joins, main_table):
             ]
         ]
     """
-    if not isinstance(main_table, str):
-        raise AttributeError(
-            "Please specify the main table for this FHIR Resource, "
-            "usually for example for the resource fhir Patient you would "
-            "provide a sql table OWNER.Patients or something like this. "
-            "Don't forget to provide the owner if it applies."
-        )
-
     # Build a join graph
     join_graph = build_join_graph(joins)
 

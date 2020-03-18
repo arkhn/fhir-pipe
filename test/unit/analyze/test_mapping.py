@@ -2,13 +2,8 @@ import pytest
 from unittest import mock, TestCase
 
 import fhirpipe.analyze.mapping as mapping
-from fhirpipe.analyze.concept_map import ConceptMap
-from fhirpipe.analyze.cleaning_script import CleaningScript
-from fhirpipe.analyze.merging_script import MergingScript
 from fhirpipe.analyze.sql_column import SqlColumn
 from fhirpipe.analyze.sql_join import SqlJoin
-
-from test.unit.conftest import mock_config, mock_api_get_maps
 
 
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
@@ -144,92 +139,6 @@ def test_get_mapping_from_graphql(mock_build_resources_query):
         {"id": 1, "content": "content1"},
         {"id": 2, "content": "content2"},
     ]
-
-
-def test_get_primary_key():
-    # With owner
-    resource_mapping = {
-        "primaryKeyOwner": "owner",
-        "primaryKeyTable": "table",
-        "primaryKeyColumn": "col",
-    }
-    column = mapping.get_primary_key(resource_mapping)
-
-    assert column == SqlColumn("table", "col", "owner")
-
-    # Without owner
-    resource_mapping = {
-        "primaryKeyOwner": "",
-        "primaryKeyTable": "table",
-        "primaryKeyColumn": "col",
-    }
-    column = mapping.get_primary_key(resource_mapping)
-
-    assert column == SqlColumn("table", "col")
-
-    # Raising error
-    resource_mapping = {
-        "primaryKeyOwner": "",
-        "primaryKeyTable": "",
-        "primaryKeyColumn": "col",
-        "definitionId": "fhirtype",
-    }
-    with pytest.raises(
-        ValueError, match="You need to provide a primary key table and column in the mapping"
-    ):
-        main_table, column = mapping.get_primary_key(resource_mapping)
-
-
-@mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
-@mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
-def test_find_cols_joins_maps_scripts(
-    patient_mapping, fhir_concept_map_gender, fhir_concept_map_identifier
-):
-    (
-        cols,
-        joins,
-        concept_maps,
-        cleaning_scripts,
-        merging_scripts,
-    ) = mapping.find_cols_joins_maps_scripts(patient_mapping)
-
-    assert cols == {
-        SqlColumn("patients", "row_id"),
-        SqlColumn("patients", "gender"),
-        SqlColumn("patients", "dob"),
-        SqlColumn("patients", "dod"),
-        SqlColumn("admissions", "marital_status"),
-        SqlColumn("patients", "expire_flag"),
-    }
-    assert joins == {
-        SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id"))
-    }
-
-    assert list(cleaning_scripts) == [
-        CleaningScript("clean_date"),
-        CleaningScript("map_marital_status"),
-        CleaningScript("binary_to_bool_1"),
-    ]
-    for script, columns in zip(
-        cleaning_scripts,
-        [
-            ["patients.dob", "patients.dod"],
-            ["admissions.marital_status"],
-            ["patients.expire_flag"],
-        ],
-    ):
-        assert script.columns == columns
-
-    assert list(concept_maps) == [
-        ConceptMap(fhir_concept_map_gender),
-        ConceptMap(fhir_concept_map_identifier),
-    ]
-    for cm, columns in zip(concept_maps, [["patients.gender"], ["patients.row_id"]]):
-        assert cm.columns == columns
-
-    assert merging_scripts == [MergingScript("select_first_not_empty")]
-    assert merging_scripts[0].columns == ["id_cm_gender_patients.gender"]
-    assert merging_scripts[0].static_values == ["unknown"]
 
 
 def test_build_squash_rules():
