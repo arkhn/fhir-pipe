@@ -44,7 +44,7 @@ class Analyzer:
         if not attribute_mapping["inputs"]:
             # If there are no inputs for this attribute, it means that it is an intermediary
             # attribute (ie not a leaf). It is here to give us some context information.
-            # For instance, we can use it know if its children attributes represent a Reference.
+            # For instance, we can use it if its children attributes represent a Reference.
             # if attribute_mapping["defintionId"] == "Reference":
             #     pass
             return

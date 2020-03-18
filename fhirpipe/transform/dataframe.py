@@ -87,7 +87,6 @@ def squash_rows(df, squash_rules, parent_cols=[]):
     """
     table, child_rules = squash_rules
 
-    # TODO what if we merge several columns from different tbales?
     new_cols = [col for col in df.columns if col[1][1] == table]
     pivot_cols = parent_cols + new_cols
 
