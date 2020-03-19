@@ -50,14 +50,14 @@ class ReferenceBinder:
                 reference_type = sub["type"]
 
                 # Get the map for the needed type
-                map = self.get_collection_map(reference_type)
+                map_for_type = self.get_collection_map(reference_type)
                 value = identifier["value"]
                 # TODO system should have been automatically filled if needed
                 system = identifier["system"] if "system" in identifier else ""
 
                 # If the identifier is in the map, we can fill the reference
-                if (value, system) in map:
-                    fhir_id = map[(value, system)]
+                if (value, system) in map_for_type:
+                    fhir_id = map_for_type[(value, system)]
                     sub["reference"] = f"{reference_type}/{fhir_id}"
                 else:
                     logging.warning(
@@ -97,7 +97,7 @@ class ReferenceBinder:
         """ When a reference is found, this method stores the useful information about it
         to later perform the binding.
         """
-        self.map_resource_type[resource_mapping["id"]] = resource_mapping["definitionId"]
+        self.map_resource_type[resource_mapping["id"]] = resource_mapping["definition"]["type"]
         self.map_resource_references[resource_mapping["id"]].append(path)
 
     def add_references(self, resource_mapping, paths):

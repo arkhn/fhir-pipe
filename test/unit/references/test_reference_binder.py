@@ -4,7 +4,7 @@ from unittest import mock
 from fhirpipe.references import reference_binder
 
 from test.unit.conftest import mock_config
-from test.unit.references import mock_mongo_client
+from test.unit.references import mock_mongo_client, id_example_pat_1, id_example_pat_2
 
 
 @fixture
@@ -36,9 +36,7 @@ def test_bind_references_for_instance(mongo_mock, binder):
     reference_paths = ["generalPractitioner[0]"]
     binder.bind_references_for_instance(instance, reference_paths)
 
-    actual = mongo_mock()["fhirstore"]["Patient"].find(
-        {"id": "654321"}
-    )[0]
+    actual = mongo_mock()["fhirstore"]["Patient"].find({"id": "654321"})[0]
 
     expected = instance
     expected["generalPractitioner"][0]["reference"] = "Practitioner/ref_id"
@@ -51,16 +49,16 @@ def test_bind_references_for_instance(mongo_mock, binder):
 def test_get_collection_map(_, binder):
     map1 = binder.get_collection_map("Patient")
 
-    assert map1 == {("0001", "system"): "123456", ("0002", "system"): "654321"}
+    assert map1 == {("0001", "system"): id_example_pat_1, ("0002", "system"): id_example_pat_2}
     assert binder.indentifiers_store == {
-        "Patient": {("0001", "system"): "123456", ("0002", "system"): "654321"}
+        "Patient": {("0001", "system"): id_example_pat_1, ("0002", "system"): id_example_pat_2}
     }
 
 
 def test_add_reference(binder):
     resource_mapping = {
         "id": "resource_id",
-        "definitionId": "Patient",
+        "definition": {"type": "Patient"},
         "attributes": [],
     }
     path = "path.to.reference"

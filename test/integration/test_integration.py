@@ -196,7 +196,7 @@ expected_med_req_count = pd.read_sql_query("SELECT COUNT(*) FROM prescriptions",
 expected_diagnostic_report_count = pd.read_sql_query(
     "SELECT COUNT(*) FROM diagnoses_icd", con=engine
 ).at[0, "count"]
-expected_practitioner_count = pd.read_sql_query("SELECT COUNT(*) FROM admissions", con=engine).at[
+expected_admissions_count = pd.read_sql_query("SELECT COUNT(*) FROM admissions", con=engine).at[
     0, "count"
 ]
 id_sample_patient = "30831"
@@ -208,7 +208,7 @@ def assert_result_as_expected(
     episode_of_care_count=expected_episode_of_care_count,
     medication_request_count=expected_med_req_count,
     diagnostic_report_count=expected_diagnostic_report_count,
-    practitioner_count=expected_practitioner_count,
+    admissions_count=expected_admissions_count,
 ):
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
 
@@ -229,7 +229,7 @@ def assert_result_as_expected(
         episode_of_care_count,
         medication_request_count,
         diagnostic_report_count,
-        practitioner_count,
+        admissions_count,
     )
 
     compare_sample_patient(mongo_client)
@@ -242,13 +242,13 @@ def assert_document_counts(
     episode_of_care_count=expected_episode_of_care_count,
     medication_request_count=expected_med_req_count,
     diagnostic_report_count=expected_diagnostic_report_count,
-    practitioner_count=expected_practitioner_count,
+    admissions_count=expected_admissions_count,
 ):
     assert mongo_client["Patient"].count_documents({}) == patients_count
     assert mongo_client["EpisodeOfCare"].count_documents({}) == episode_of_care_count
     assert mongo_client["MedicationRequest"].count_documents({}) == medication_request_count
     assert mongo_client["DiagnosticReport"].count_documents({}) == diagnostic_report_count
-    assert mongo_client["Practitioner"].count_documents({}) == practitioner_count
+    assert mongo_client["Practitioner"].count_documents({}) == admissions_count
 
 
 def compare_sample_patient(mongo_client):
