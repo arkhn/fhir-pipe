@@ -1,4 +1,5 @@
 from flask import Blueprint, request, jsonify
+from jsonschema.exceptions import ValidationError
 
 from fhirpipe.errors import OperationOutcome
 from fhirpipe.run import run as fp_run
@@ -64,7 +65,9 @@ def preview(resource_id, primary_key_value):
 
     try:
         # Connect to DB and run
-        fhir_object = fp_preview(resource_id, [primary_key_value], credentials)
+        fhir_object = fp_preview(resource_id, [primary_key_value], credentials)[0]
+    except ValidationError as e:
+        return str(e)
     except Exception as e:
         # If something went wrong
         raise OperationOutcome(e)
