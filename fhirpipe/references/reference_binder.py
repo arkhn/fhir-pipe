@@ -84,13 +84,12 @@ class ReferenceBinder:
             # TODO don't do this with the mongo client but with fhirstore or API
             db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
             collection = db_client[fhir_type].find(
-                {"identifier": {"$elemMatch": {"value": {"$exists": True}}}},
+                {"identifier": {"$exists": True}},
                 [
                     "id",
                     "identifier.value",
                     "identifier.system",
-                    "identifier.type.coding.0.system",
-                    "identifier.type.coding.0.code",
+                    "identifier.type.coding",
                 ],
             )
 
@@ -140,7 +139,7 @@ class ReferenceBinder:
         """
         value = identifier["value"]
         # TODO system should have been automatically filled if needed
-        system = identifier.get("system", "")
+        system = identifier.get("system")
         identifier_type_coding = identifier["type"]["coding"][0] if "type" in identifier else {}
         identifier_type_system = identifier_type_coding.get("system")
         identifier_type_code = identifier_type_coding.get("code")
