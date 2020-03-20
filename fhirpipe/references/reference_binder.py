@@ -57,23 +57,21 @@ class ReferenceBinder:
             sub_fhir_object = [sub_fhir_object]
 
         for sub in sub_fhir_object:
-            identifier = sub["identifier"]
-            reference_type = sub["type"]
-
             # Get the map for the needed type
+            reference_type = sub["type"]
             map_for_type = self.get_collection_map(reference_type)
-            value = identifier["value"]
-            # TODO system should have been automatically filled if needed
-            system = identifier["system"] if "system" in identifier else ""
+
+            identifier = sub["identifier"]
+            key_tuple = self.extract_key_tuple(identifier)
 
             # If the identifier is in the map, we can fill the reference
-            if (value, system) in map_for_type:
-                fhir_id = map_for_type[(value, system)]
+            if key_tuple in map_for_type:
+                fhir_id = map_for_type[key_tuple]
                 sub["reference"] = f"{reference_type}/{fhir_id}"
             else:
                 logging.warning(
                     f"Could perform reference binding to the resource of type {reference_type} "
-                    f"and identifier {(value, system)}."
+                    f"and identifier {key_tuple}."
                 )
 
     def get_collection_map(self, fhir_type):
@@ -87,16 +85,20 @@ class ReferenceBinder:
             db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
             collection = db_client[fhir_type].find(
                 {"identifier": {"$elemMatch": {"value": {"$exists": True}}}},
-                ["id", "identifier.value", "identifier.system"],
+                [
+                    "id",
+                    "identifier.value",
+                    "identifier.system",
+                    "identifier.type.coding.0.system",
+                    "identifier.type.coding.0.code",
+                ],
             )
 
             identifier_map = {}
             for doc in collection:
                 for identifier in doc["identifier"]:
-                    value = identifier["value"]
-                    # TODO system should have been automatically filled if needed
-                    system = identifier["system"] if "system" in identifier else ""
-                    identifier_map[(value, system)] = doc["id"]
+                    key_tuple = self.extract_key_tuple(identifier)
+                    identifier_map[key_tuple] = doc["id"]
 
             self.indentifiers_store[fhir_type] = identifier_map
 
@@ -130,3 +132,16 @@ class ReferenceBinder:
                 cur_sub_object = cur_sub_object[int(index.group(1))]
 
         return cur_sub_object
+
+    @staticmethod
+    def extract_key_tuple(identifier):
+        """ Build a tuple that contains the essential information from an Identifier.
+        This tuple serves as a map key.
+        """
+        value = identifier["value"]
+        # TODO system should have been automatically filled if needed
+        system = identifier.get("system", "")
+        identifier_type_coding = identifier["type"]["coding"][0] if "type" in identifier else {}
+        identifier_type_system = identifier_type_coding.get("system")
+        identifier_type_code = identifier_type_coding.get("code")
+        return (value, system, identifier_type_system, identifier_type_code)
