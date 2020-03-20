@@ -3,7 +3,6 @@ from unittest import mock
 
 from fhirpipe.analyze import Analyzer
 
-import fhirpipe.analyze.mapping as mapping
 from fhirpipe.analyze.attribute import Attribute
 from fhirpipe.analyze.merging_script import MergingScript
 from fhirpipe.analyze.sql_column import SqlColumn
@@ -57,24 +56,6 @@ def test_analyze_mapping(patient_mapping, fhir_concept_map_gender, fhir_concept_
 
     assert analyzer.analysis.attributes == [
         Attribute(
-            "gender",
-            columns=[SqlColumn("patients", "gender")],
-            static_inputs=["unknown"],
-            merging_script=MergingScript("select_first_not_empty"),
-        ),
-        Attribute(
-            "birthDate",
-            columns=[SqlColumn("patients", "dob")],
-            static_inputs=[],
-            merging_script=None,
-        ),
-        Attribute(
-            "maritalStatus.coding[0].code",
-            columns=[SqlColumn("admissions", "marital_status")],
-            static_inputs=[],
-            merging_script=None,
-        ),
-        Attribute(
             "identifier[0].value",
             columns=[SqlColumn("patients", "row_id")],
             static_inputs=[],
@@ -87,15 +68,39 @@ def test_analyze_mapping(patient_mapping, fhir_concept_map_gender, fhir_concept_
             merging_script=None,
         ),
         Attribute(
+            "generalPractitioner[0].identifier.value",
+            columns=[SqlColumn("icustays", "hadm_id")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
+            "birthDate",
+            columns=[SqlColumn("patients", "dob")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
             "deceasedDateTime",
             columns=[SqlColumn("patients", "dod")],
             static_inputs=[],
             merging_script=None,
         ),
         Attribute(
+            "gender",
+            columns=[SqlColumn("patients", "gender")],
+            static_inputs=["unknown"],
+            merging_script=MergingScript("select_first_not_empty"),
+        ),
+        Attribute(
+            "maritalStatus.coding[0].code",
+            columns=[SqlColumn("admissions", "marital_status")],
+            static_inputs=[],
+            merging_script=None,
+        ),
+        Attribute(
             "generalPractitioner[0].type",
             columns=[],
-            static_inputs=["/Practitioner/"],
+            static_inputs=["Practitioner"],
             merging_script=None,
         ),
     ]
@@ -105,9 +110,11 @@ def test_analyze_mapping(patient_mapping, fhir_concept_map_gender, fhir_concept_
         SqlColumn("patients", "gender"),
         SqlColumn("patients", "dob"),
         SqlColumn("patients", "dod"),
-        SqlColumn("admissions", "marital_status"),
         SqlColumn("patients", "expire_flag"),
+        SqlColumn("admissions", "marital_status"),
+        SqlColumn("icustays", "hadm_id"),
     }
     assert analyzer.analysis.joins == {
-        SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id"))
+        SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id")),
+        SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("icustays", "subject_id")),
     }

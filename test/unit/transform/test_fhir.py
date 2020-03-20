@@ -20,9 +20,9 @@ def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identi
 
     resource_mapping = patient_mapping
 
-    attr_identifier = Attribute("identifier[0].value", columns=SqlColumn("a", "b"))
-    attr_birthDate = Attribute("birthDate", columns=SqlColumn("a", "c"))
-    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=SqlColumn("a", "d"))
+    attr_identifier = Attribute("identifier[0].value", columns=[SqlColumn("a", "b")])
+    attr_birthDate = Attribute("birthDate", columns=[SqlColumn("a", "c")])
+    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=[SqlColumn("a", "d")])
     attr_generalPractitioner = Attribute(
         "generalPractitioner[0].type", static_inputs=["Practitioner"]
     )
@@ -60,9 +60,9 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
 
     resource_mapping = patient_mapping
 
-    attr_identifier = Attribute("identifier[0].value", columns=SqlColumn("a", "b"))
-    attr_birthDate = Attribute("birthDate", columns=SqlColumn("a", "c"))
-    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=SqlColumn("a", "d"))
+    attr_identifier = Attribute("identifier[0].value", columns=[SqlColumn("a", "b")])
+    attr_birthDate = Attribute("birthDate", columns=[SqlColumn("a", "c")])
+    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=[SqlColumn("a", "d")])
     attr_generalPractitioner = Attribute(
         "generalPractitioner[0].type", static_inputs=["Practitioner"]
     )
@@ -147,9 +147,9 @@ def test_build_metadata(mock_datetime, patient_mapping):
 
 
 def test_fetch_values_from_dataframe():
-    attr_identifier = Attribute("identifier[0].value", columns=SqlColumn("a", "b"))
-    attr_birthDate = Attribute("birthDate", columns=SqlColumn("a", "c"))
-    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=SqlColumn("a", "d"))
+    attr_identifier = Attribute("identifier[0].value", columns=[SqlColumn("a", "b")])
+    attr_birthDate = Attribute("birthDate", columns=[SqlColumn("a", "c")])
+    attr_maritalStatus = Attribute("maritalStatus.coding[0].code", columns=[SqlColumn("a", "d")])
 
     attribute = attr_birthDate
 
@@ -165,8 +165,8 @@ def test_fetch_values_from_dataframe():
 
 
 def test_handle_array_attributes():
-    attr1 = Attribute("attr1", columns=SqlColumn("a", "b"))
-    attr2 = Attribute("attr2", columns=SqlColumn("a", "c"))
+    attr1 = Attribute("attr1", columns=[SqlColumn("a", "b")])
+    attr2 = Attribute("attr2", columns=[SqlColumn("a", "c")])
     row = {
         attr1: ("A1", "A2", "A3"),
         attr2: "B",

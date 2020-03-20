@@ -3,6 +3,7 @@ CREATE TABLE caregivers (row_id integer, cgid integer);
 CREATE TABLE admissions (
     row_id integer,
     subject_id integer,
+    hadm_id integer,
     admittime timestamp,
     dischtime timestamp,
     marital_status varchar
@@ -26,6 +27,7 @@ CREATE TABLE patients (
 CREATE TABLE icustays (
     row_id integer,
     subject_id integer,
+    hadm_id integer,
     icustay_id integer,
     intime timestamp,
     outtime timestamp
@@ -50,6 +52,7 @@ FROM
 COPY admissions (
     row_id,
     subject_id,
+    hadm_id,
     admittime,
     dischtime,
     marital_status
@@ -65,7 +68,7 @@ COPY patients (row_id, subject_id, gender, dob, dod, expire_flag)
 FROM
     '/var/lib/postgresql/mockdata/patients.csv' CSV HEADER;
 
-COPY icustays (row_id, subject_id, icustay_id, intime, outtime)
+COPY icustays (row_id, subject_id, hadm_id, icustay_id, intime, outtime)
 FROM
     '/var/lib/postgresql/mockdata/icustays.csv' CSV HEADER;
 

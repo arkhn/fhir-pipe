@@ -23,5 +23,6 @@ def cli_run():
         override=args.override,
         chunksize=args.chunksize,
         bypass_validation=args.bypass_validation,
+        skip_ref_binding=args.skip_ref_binding,
         multiprocessing=args.multiprocessing,
     )
