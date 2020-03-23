@@ -85,7 +85,7 @@
       },
       {
           "id": "ck7ugxjzt01846kz9fi3rchdv",
-          "path": "generalPractitioner",
+          "path": "generalPractitioner[0]",
           "definitionId": "Reference",
           "mergingScript": null,
           "comments": null,
