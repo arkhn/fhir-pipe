@@ -1,3 +1,5 @@
+import re
+
 from .mapping import build_squash_rules
 from .analysis import Analysis
 from .attribute import Attribute
@@ -46,7 +48,9 @@ class Analyzer:
             # attribute (ie not a leaf). It is here to give us some context information.
             # For instance, we can use it if its children attributes represent a Reference.
             if attribute_mapping["definitionId"] == "Reference":
-                self.analysis.reference_paths.append(attribute.path)
+                # Remove index
+                path = re.sub(r"\[\d+\]$", "", attribute.path)
+                self.analysis.reference_paths.add(path)
 
             return
 
