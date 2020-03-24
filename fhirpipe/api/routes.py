@@ -65,14 +65,12 @@ def preview(resource_id, primary_key_value):
 
     try:
         # Connect to DB and run
-        fhir_object = fp_preview(resource_id, [primary_key_value], credentials)[0]
-    except ValidationError as e:
-        return str(e)
+        fhir_objects, errors = fp_preview(resource_id, [primary_key_value], credentials)
     except Exception as e:
         # If something went wrong
         raise OperationOutcome(e)
 
-    return jsonify(fhir_object)
+    return jsonify({"preview": fhir_objects[0], "errors": errors})
 
 
 @api.errorhandler(OperationOutcome)

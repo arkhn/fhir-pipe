@@ -1,6 +1,7 @@
 import time
 import logging
 import multiprocessing as mp
+from jsonschema.exceptions import ValidationError
 
 from fhirstore import NotFoundError
 from fhirpipe import set_global_config, setup_logging
@@ -110,10 +111,14 @@ def preview(resource_id, primary_key_values, credentials):
     fhir_instances = transformer.transform(next(df), resource_mapping, analysis)
 
     # Execute validation
+    errors = []
     for fhir_instance in fhir_instances:
-        fhirstore.validate(fhir_instance)
+        try:
+            fhirstore.validate(fhir_instance)
+        except ValidationError as e:
+            errors.append(str(e))
 
-    return fhir_instances
+    return fhir_instances, errors
 
 
 if __name__ == "__main__":
