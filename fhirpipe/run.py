@@ -1,6 +1,7 @@
 import time
 import logging
 import multiprocessing as mp
+from jsonschema.exceptions import ValidationError
 
 from fhirstore import NotFoundError
 from fhirpipe import set_global_config, setup_logging
@@ -95,6 +96,9 @@ def run(
 def preview(resource_id, primary_key_values, credentials):
     """ Run the ETL only for values where the primary key
     """
+    # The fhirstore will be used to validate resource instances
+    fhirstore = get_fhirstore()
+
     # Get the resources we want to process from the pyrog mapping for a given source
     resource_mapping = get_resource_from_id(resource_id=resource_id)
 
@@ -106,7 +110,15 @@ def preview(resource_id, primary_key_values, credentials):
     df = extractor.extract(resource_mapping, analysis, primary_key_values)
     fhir_instances = transformer.transform(next(df), resource_mapping, analysis)
 
-    return fhir_instances[0]
+    # Execute validation
+    errors = []
+    for fhir_instance in fhir_instances:
+        try:
+            fhirstore.validate(fhir_instance)
+        except ValidationError as e:
+            errors.append(str(e))
+
+    return fhir_instances, errors
 
 
 if __name__ == "__main__":
