@@ -1,5 +1,4 @@
 from flask import Blueprint, request, jsonify
-from jsonschema.exceptions import ValidationError
 
 from fhirpipe.errors import OperationOutcome
 from fhirpipe.run import run as fp_run
