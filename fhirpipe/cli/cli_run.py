@@ -17,9 +17,7 @@ def cli_run():
 
     run(
         mapping=args.mapping,
-        source=args.source,
-        resources=args.resources,
-        labels=args.labels,
+        resource_ids=args.resource_ids,
         override=args.override,
         chunksize=args.chunksize,
         bypass_validation=args.bypass_validation,

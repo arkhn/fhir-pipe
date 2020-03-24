@@ -5,44 +5,6 @@ from test.unit.conftest import mock_config
 import fhirpipe.extract.graphql as gql
 
 
-def test_build_resources_query():
-    # With selected source
-    query = gql.build_resources_query(selected_source="mimic")
-
-    assert (
-        """source: {
-                name: { equals: "mimic" }
-            }"""
-        in query
-    )
-
-    # With selected resources
-    query = gql.build_resources_query(selected_resources=["Patient", "Observation"])
-
-    assert """definitionId: { in: ["Patient", "Observation"] }""" in query
-
-    # With selected source
-    query = gql.build_resources_query(selected_labels=["label"])
-
-    assert 'label: { in: ["label"] }' in query
-
-    # With all arguments
-    query = gql.build_resources_query(
-        selected_source="mimic",
-        selected_resources=["Patient", "Observation"],
-        selected_labels=["label"],
-    )
-
-    assert (
-        """source: {
-                name: { equals: "mimic" }
-            }
-            definitionId: { in: ["Patient", "Observation"] }
-            label: { in: ["label"] }"""
-        in query
-    )
-
-
 @mock.patch("fhirpipe.extract.graphql.fhirpipe.global_config", mock_config)
 def test_get_headers():
     header = gql.get_headers()

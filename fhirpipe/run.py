@@ -21,9 +21,7 @@ from fhirpipe.load.fhirstore import get_fhirstore
 
 def run(
     mapping,
-    source,
-    resources,
-    labels,
+    resource_ids,
     override,
     chunksize,
     bypass_validation,
@@ -37,12 +35,7 @@ def run(
     start_time = time.time()
 
     # Get the resources we want to process from the pyrog mapping for a given source
-    resources = get_mapping(
-        from_file=mapping,
-        selected_source=source,
-        selected_resources=resources,
-        selected_labels=labels,
-    )
+    resources = get_mapping(from_file=mapping, resource_ids=resource_ids)
 
     fhirstore = get_fhirstore()
 
@@ -135,9 +128,7 @@ if __name__ == "__main__":
 
     run(
         mapping=args.mapping,
-        source=args.source,
-        resources=args.resources,
-        labels=args.labels,
+        resource_ids=args.resource_ids,
         override=args.override,
         chunksize=args.chunksize,
         bypass_validation=args.bypass_validation,

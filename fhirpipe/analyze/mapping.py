@@ -2,12 +2,10 @@ import os
 import json
 from collections import defaultdict
 
-from fhirpipe.extract.graphql import build_resources_query, run_graphql_query
+from fhirpipe.extract.graphql import get_resource_from_id
 
 
-def get_mapping(
-    from_file=None, selected_source=None, selected_resources=None, selected_labels=None
-):
+def get_mapping(from_file=None, resource_ids=None):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -18,40 +16,29 @@ def get_mapping(
         from_file: path to the static file to mock
             the pyrog API response.
     """
-    if selected_source is None and from_file is None:
-        raise ValueError("You should provide selected_source or from_file")
+    if resource_ids is None and from_file is None:
+        raise ValueError("You should provide resource_ids or from_file")
 
     if from_file:
-        return get_mapping_from_file(from_file, selected_resources, selected_labels)
+        return get_mapping_from_file(from_file)
 
     else:
-        return get_mapping_from_graphql(selected_source, selected_resources, selected_labels)
+        return get_mapping_from_graphql(resource_ids)
 
 
-def get_mapping_from_file(path, selected_resources, selected_labels):
+def get_mapping_from_file(path):
     if not os.path.isabs(path):
         path = os.path.join(os.getcwd(), path)
 
     with open(path) as json_file:
         mapping = json.load(json_file)
 
-    resources = [
-        r
-        for r in mapping["resources"]
-        if (selected_resources is None or r["definitionId"] in selected_resources)
-        and (selected_labels is None or r["label"] in selected_labels)
-    ]
-
-    return resources
+    return mapping["resources"]
 
 
-def get_mapping_from_graphql(selected_source, selected_resources, selected_labels):
-    # Build the query
-    query = build_resources_query(selected_source, selected_resources, selected_labels)
-    # Run it
-    resources = run_graphql_query(query)
-
-    for resource in resources["data"]["resources"]:
+def get_mapping_from_graphql(resource_ids):
+    for resource_id in resource_ids:
+        resource = get_resource_from_id(resource_id)
         yield resource
 
 

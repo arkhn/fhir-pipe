@@ -118,3 +118,13 @@ def test_analyze_mapping(patient_mapping, fhir_concept_map_gender, fhir_concept_
         SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("admissions", "subject_id")),
         SqlJoin(SqlColumn("patients", "subject_id"), SqlColumn("icustays", "subject_id")),
     }
+
+
+@mock.patch("fhirpipe.analyze.concept_map.fhirpipe.global_config", mock_config)
+@mock.patch("fhirpipe.analyze.concept_map.requests.get", mock_api_get_maps)
+def test_reference_paths(patient_mapping):
+    analyzer = Analyzer()
+
+    analyzer.analyze_mapping(patient_mapping)
+
+    assert analyzer.analysis.reference_paths == {'generalPractitioner'}

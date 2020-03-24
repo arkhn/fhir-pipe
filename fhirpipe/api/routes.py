@@ -13,9 +13,7 @@ CORS(api)
 
 default_params = {
     "mapping": None,
-    "source": None,
-    "resources": None,
-    "labels": None,
+    "resource_ids": None,
     "override": False,
     "chunksize": None,
     "bypass_validation": False,
@@ -28,17 +26,18 @@ default_params = {
 def run():
     body = request.get_json()
 
-    # Merge body with default_params to get parameters to use
-    params = {k: body[k] if k in body else default_params[k] for k in default_params}
-
     # Get credentials if given in request
     if "credentialId" not in body:
         raise OperationOutcome("credentialId is required to run fhirpipe.")
 
+    credential_id = body.pop("credentialId")
     try:
-        credentials = get_credentials(body["credentialId"])
+        credentials = get_credentials(credential_id)
     except OperationOutcome as e:
         raise OperationOutcome(f"Error while fetching credientials for DB: {e}.")
+
+    # Merge body with default_params to get parameters to use
+    params = {**default_params, **body}
 
     try:
         # Connect to DB and run

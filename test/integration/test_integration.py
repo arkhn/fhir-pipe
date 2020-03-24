@@ -26,9 +26,7 @@ def test_run_from_file(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
+        resource_ids=None,
         override=False,
         chunksize=None,
         bypass_validation=False,
@@ -43,9 +41,7 @@ def test_run_from_file(mock_datetime, with_concept_maps):
 def test_run_from_gql():
     run.run(
         mapping=None,
-        source="mimic",
-        resources=None,
-        labels=None,
+        resource_ids=None,
         override=False,
         chunksize=None,
         bypass_validation=False,
@@ -56,32 +52,6 @@ def test_run_from_gql():
 """
 
 
-# Run for a list of resources #
-@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
-def test_run_resource(mock_datetime, with_concept_maps):
-    mock_datetime.now.return_value = mockdatetime()
-    run.run(
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=["Patient", "not_existing_resource"],
-        labels=["pat_label"],
-        override=False,
-        chunksize=None,
-        bypass_validation=False,
-        skip_ref_binding=True,
-        multiprocessing=False,
-    )
-
-    mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
-
-    db_collections = mongo_client.list_collection_names()
-    assert len(db_collections) == 2
-    assert "Patient" in db_collections
-    assert mongo_client["Patient"].count_documents({}) == expected_patients_count
-
-    compare_sample_patient(mongo_client)
-
-
 # Run by batch #
 # When using batch processing, df can be cut at any place and some rows that should
 # be squashed can be in different chunks
@@ -90,7 +60,7 @@ def test_run_batch():
     run.run(
         mapping="test/fixtures/mimic_mapping.json",
         source=None,
-        resources=None,
+        resource_ids=None,
         labels=None,
         override=False,
         chunksize=10,
@@ -107,9 +77,7 @@ def test_run_multiprocessing(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
         mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=None,
-        labels=None,
+        resource_ids=None,
         override=False,
         chunksize=None,
         bypass_validation=False,
@@ -125,10 +93,8 @@ def test_run_multiprocessing(mock_datetime, with_concept_maps):
 def test_run_override(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=["Patient"],
-        labels=None,
+        mapping="test/fixtures/small_mimic_mapping.json",
+        resource_ids=None,
         override=False,
         chunksize=None,
         bypass_validation=False,
@@ -136,10 +102,8 @@ def test_run_override(mock_datetime, with_concept_maps):
         multiprocessing=False,
     )
     run.run(
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=["Patient"],
-        labels=None,
+        mapping="test/fixtures/small_mimic_mapping.json",
+        resource_ids=None,
         override=True,
         chunksize=None,
         bypass_validation=False,
@@ -148,17 +112,15 @@ def test_run_override(mock_datetime, with_concept_maps):
     )
     mongo_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
     assert mongo_client["Patient"].count_documents({}) == expected_patients_count
+    assert mongo_client["Practitioner"].count_documents({}) == expected_admissions_count
 
 
-# Run from mapping file
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_run_ref_binding(mock_datetime, with_concept_maps):
     mock_datetime.now.return_value = mockdatetime()
     run.run(
-        mapping="test/fixtures/mimic_mapping.json",
-        source=None,
-        resources=["Patient", "Practitioner"],
-        labels=None,
+        mapping="test/fixtures/small_mimic_mapping.json",
+        resource_ids=None,
         override=False,
         chunksize=None,
         bypass_validation=False,

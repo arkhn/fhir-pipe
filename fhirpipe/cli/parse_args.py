@@ -12,15 +12,12 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-s", "--source", type=str, default=None, help="Name of the source to process",
-    )
-
-    parser.add_argument(
-        "-r", "--resources", nargs="+", type=str, default=None, help="Resource types to process",
-    )
-
-    parser.add_argument(
-        "-l", "--labels", nargs="+", type=str, default=None, help="Labels of resources to process",
+        "-r",
+        "--resource_ids",
+        nargs="+",
+        type=str,
+        default=None,
+        help="Ids of the resources to process",
     )
 
     parser.add_argument(
