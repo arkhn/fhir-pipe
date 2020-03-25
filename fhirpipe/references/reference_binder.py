@@ -96,7 +96,7 @@ class ReferenceBinder:
             db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
             collection = db_client[fhir_type].find(
                 {"identifier": {"$exists": True}},
-                ["id", "identifier.value", "identifier.system", "identifier.type.coding",],
+                ["id", "identifier.value", "identifier.system", "identifier.type.coding"],
             )
 
             identifier_map = {}
