@@ -110,64 +110,6 @@ query resource($resourceId: ID!) {
 )
 
 
-def build_resources_query(selected_source=None, selected_resources=None, selected_labels=None):
-    """ Builds a graphql query fetching all the resources needed.
-
-    Note that the .replace("'", '"') is needed because the graphql needs to have
-    strings delimited by double quotes.
-    """
-    source_filter = (
-        """source: {
-                name: { equals: "%s" }
-            }"""
-        % selected_source
-        if selected_source
-        else ""
-    )
-    resource_filter = (
-        """definitionId: { in: %s }""" % selected_resources if selected_resources else ""
-    )
-    label_filter = "label: { in: %s }" % selected_labels if selected_labels else ""
-
-    return (
-        """%s
-
-query {
-    resources(filter: {
-        AND: {
-            %s
-            %s
-            %s
-        }
-    })
-    {
-        id
-        primaryKeyOwner
-        primaryKeyTable
-        primaryKeyColumn
-        filters {
-            ...entireFilter
-        }
-        definitionId
-        definition {
-            type
-            kind
-            derivation
-            url
-        }
-        source {
-            id
-        }
-        attributes {
-            ...a
-        }
-    }
-}
-"""
-        % (attr_fragment, source_filter, resource_filter, label_filter)
-    ).replace("'", '"')
-
-
 def get_headers():
     return {
         "content-type": "application/json",
