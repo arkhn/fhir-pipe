@@ -49,7 +49,7 @@ def run(
     loader = Loader(fhirstore, bypass_validation, pool)
 
     # TODO is there a more elegant way to skip_ref_binding?
-    binder = ReferenceBinder(fhirstore, skip_ref_binding)
+    binder = ReferenceBinder(fhirstore, skip_ref_binding, bypass_validation)
 
     for resource_mapping in resources:
         # Analyze

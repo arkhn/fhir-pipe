@@ -7,9 +7,10 @@ from fhirpipe.load.fhirstore import get_mongo_client, get_resource_instances
 
 
 class ReferenceBinder:
-    def __init__(self, fhirstore, skip_ref_binding=False):
+    def __init__(self, fhirstore, skip_ref_binding=False, bypass_validation=False):
         self.fhirstore = fhirstore
         self.skip_ref_binding = skip_ref_binding
+        self.bypass_validation = bypass_validation
 
         # store of the form
         # {
@@ -37,16 +38,24 @@ class ReferenceBinder:
                 self.bind_references_for_instance(instance, reference_paths)
 
     def bind_references_for_instance(self, instance, reference_paths):
+        patch = {}
         for reference_path in reference_paths:
             try:
-                self.bind_reference_for_path(instance, reference_path)
+                sub_fhir_object = self.bind_reference_for_path(instance, reference_path)
             except Exception as e:
                 logging.warning(
                     "Error while binding reference for instance "
                     f"{instance} at path {reference_path}: {e}"
                 )
 
-        self.fhirstore.update(instance["resourceType"], instance["id"], instance)
+            patch[reference_path] = sub_fhir_object
+
+        self.fhirstore.patch(
+            instance["resourceType"],
+            instance["id"],
+            patch,
+            bypass_document_validation=self.bypass_validation,
+        )
 
     def bind_reference_for_path(self, instance, reference_path):
         sub_fhir_object = self.find_sub_fhir_object(instance, reference_path)
@@ -74,6 +83,8 @@ class ReferenceBinder:
                     f"and identifier {key_tuple}."
                 )
 
+        return sub_fhir_object
+
     def get_collection_map(self, fhir_type):
         """ Get a dict {(value, system): fhir_id, ...} for the specified resource type.
         If the type is in identifiers_store, we simply return self.indentifiers_store[fhir_type].
@@ -85,12 +96,7 @@ class ReferenceBinder:
             db_client = get_mongo_client()[fhirpipe.global_config["fhirstore"]["database"]]
             collection = db_client[fhir_type].find(
                 {"identifier": {"$exists": True}},
-                [
-                    "id",
-                    "identifier.value",
-                    "identifier.system",
-                    "identifier.type.coding",
-                ],
+                ["id", "identifier.value", "identifier.system", "identifier.type.coding",],
             )
 
             identifier_map = {}
