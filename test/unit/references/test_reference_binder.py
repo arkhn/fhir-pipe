@@ -70,26 +70,18 @@ def init_mongo():
 @mock.patch("fhirpipe.load.fhirstore.fhirpipe.global_config", mock_config)
 def test_bind_references_for_instance(get_mongo_mock, binder):
     # mock fhirstore update
-    def update_mongo(resource_type, instance_id, resource):
-        get_mongo_mock()["fhirstore"][resource_type].find_one_and_replace(
-            {"id": instance_id}, resource
+    def patch_mongo(resource_type, instance_id, patch, bypass_document_validation):
+        get_mongo_mock()["fhirstore"][resource_type].update_one(
+            {"id": instance_id}, {"$set": patch}
         )
 
-    binder.fhirstore.update.side_effect = update_mongo
+    binder.fhirstore.patch.side_effect = patch_mongo
 
     # mock indentifiers_store
     binder.indentifiers_store = {"Practitioner": {("9467", "sys", None, None): "ref_id"}}
 
-    instance = {
-        "_id": "123456789",
-        "identifier": [{"system": "system", "value": "0002"}],
-        "generalPractitioner": [
-            {"type": "Practitioner", "identifier": {"system": "sys", "value": "9467"}}
-        ],
-        "id": "654321",
-        "resourceType": "Patient",
-    }
-    reference_paths = ["generalPractitioner[0]"]
+    instance = get_mongo_mock()["fhirstore"]["Patient"].find({"id": "654321"})[0]
+    reference_paths = ["generalPractitioner"]
     binder.bind_references_for_instance(instance, reference_paths)
 
     actual = get_mongo_mock()["fhirstore"]["Patient"].find({"id": "654321"})[0]
