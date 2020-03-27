@@ -35,7 +35,9 @@ This route only return a success response if no error occurred in the process.
 
 ### Errors
 
-Throws an `OperationOutcome` error with the error message if any error occurred while running fhirpipe or if credentials where not provided for the source DB in Pyrog. 
+Throws an `OperationOutcome` error with the error message if any error occurred while running fhirpipe or if credentials where not provided for the source DB in Pyrog.
+
+This `OperationOutcome` error returns a response with status code 400 and data containing the error as a string.
 
 ## Preview
 
@@ -58,3 +60,5 @@ The response contains the fhir object asked for and potential validation errors 
 ### Errors
 
 Throws an `OperationOutcome` error with the error message if any error occurred while running fhirpipe or if credentials where not provided for the source DB in Pyrog. 
+
+This `OperationOutcome` error returns a response with status code 400 and data containing the error as a string.
