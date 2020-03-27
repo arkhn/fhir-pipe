@@ -79,6 +79,13 @@ def build_fhir_object(row, path_attributes_map, index=None):
             # is not a leaf and we don't need to do anything.
             continue
 
+        # Handle the list of literals case.
+        # If we had a list of literals in the mapping, then handle_array_attributes
+        # will try to create fhir objects with an empty path (remove_root_path removes
+        # what's before the [...] included).
+        if path == "":
+            return fetch_values_from_dataframe(row, attr)
+
         # Find if there is an index in the path
         split_path = path.split(".")
         position_ind = get_position_first_index(split_path)
@@ -154,7 +161,7 @@ def handle_array_attributes(attributes_in_array, row):
     array = []
     for index in range(length):
         element = build_fhir_object(row, attributes_in_array, index=index)
-        if element is not None:
+        if element is not None and element != {}:
             array.append(element)
 
     return array
@@ -173,7 +180,7 @@ def insert_in_fhir_object(fhir_object, path, value):
     # TODO we return if value is "" because empty strings don't pass validation for some fhir
     # attributes but it would be better to return None in the cleaning scripts if we don't want to
     # add an empty string.
-    elif value is None or value == "":
+    elif value is None or value == "" or value == {}:
         # If value is None, we don't want to do anything so we stop here.
         return
     else:
