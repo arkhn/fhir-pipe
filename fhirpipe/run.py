@@ -46,7 +46,7 @@ def run(
     analyzer = Analyzer()
     extractor = Extractor(credentials, chunksize)
     transformer = Transformer(pool)
-    loader = Loader(fhirstore, bypass_validation, pool)
+    loader = Loader(fhirstore, bypass_validation)
 
     # TODO is there a more elegant way to skip_ref_binding?
     binder = ReferenceBinder(fhirstore, skip_ref_binding, bypass_validation)
