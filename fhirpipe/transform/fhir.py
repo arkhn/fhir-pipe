@@ -12,8 +12,7 @@ def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
 
-def create_resource(chunk, resource_mapping, attributes):
-    res = []
+def create_resource(chunk, resource_mapping, attributes, res):
     for _, row in chunk.iterrows():
         try:
             res.append(create_instance(row, resource_mapping, attributes))
@@ -22,8 +21,6 @@ def create_resource(chunk, resource_mapping, attributes):
             # and we try to generate the next one
             logging.error(f"create_instance failed with: {e}")
             continue
-
-    return res
 
 
 def create_instance(row, resource_mapping, attributes):

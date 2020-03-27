@@ -75,12 +75,7 @@ def run(
             # Transform
             fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
             # Load
-            if not multiprocessing:
-                # With multiprocessing, the transformer returns a list of lists of fhir_instances
-                # (one list per process)
-                fhir_instances = [fhir_instances]
-            for chunk in fhir_instances:
-                loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
+            loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
     binder.bind_references()
 
