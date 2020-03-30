@@ -1777,9 +1777,9 @@
             "id": "static_id",
             "label": "pat_label",
             "primaryKeyOwner": null,
-            "primaryKeyTable": "patients",
+            "primaryKeyTable": null,
             "primaryKeyColumn": null,
-            "definitionId": null,
+            "definitionId": "PractitionerRole",
             "updatedAt": "2020-03-16T11:23:04.247Z",
             "createdAt": "2020-03-16T11:23:04.247Z",
             "source": {
