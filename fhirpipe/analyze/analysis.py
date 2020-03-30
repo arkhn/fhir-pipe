@@ -13,6 +13,7 @@ class Analysis:
         self.primary_key_column: SqlColumn = None
         self.squash_rules = None
         self.reference_paths: Set[str] = set()
+        self.is_static = False
 
     def reset(self):
         self.attributes = []
@@ -21,6 +22,7 @@ class Analysis:
         self.primary_key_column = None
         self.squash_rules = None
         self.reference_paths = set()
+        self.is_static = False
 
     def add_column(self, column):
         self.columns.add(column)

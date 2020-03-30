@@ -4,7 +4,7 @@ from functools import partial
 import logging
 
 from fhirpipe.transform.dataframe import clean_dataframe, squash_rows, merge_dataframe
-from fhirpipe.transform.fhir import create_resource
+from fhirpipe.transform.fhir import create_resource, create_static_instance
 
 
 class Transformer:
@@ -43,3 +43,6 @@ class Transformer:
             create_resource(chunk, resource_mapping, analysis.attributes, fhir_instances)
 
         return fhir_instances
+
+    def transform_static_resource(self, resource_mapping, analysis):
+        return create_static_instance(resource_mapping, analysis.attributes)

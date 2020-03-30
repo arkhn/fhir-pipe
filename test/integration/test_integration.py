@@ -183,6 +183,7 @@ def assert_result_as_expected(
             "MedicationRequest",
             "DiagnosticReport",
             "Practitioner",
+            "PractitionerRole",
         ],
     )
     assert_document_counts(
@@ -196,6 +197,7 @@ def assert_result_as_expected(
 
     compare_sample_patient(mongo_client)
     compare_sample_med_req(mongo_client)
+    compare_practitioner_role(mongo_client)
 
 
 def assert_document_counts(
@@ -211,6 +213,7 @@ def assert_document_counts(
     assert mongo_client["MedicationRequest"].count_documents({}) == medication_request_count
     assert mongo_client["DiagnosticReport"].count_documents({}) == diagnostic_report_count
     assert mongo_client["Practitioner"].count_documents({}) == admissions_count
+    assert mongo_client["PractitionerRole"].count_documents({}) == 1
 
 
 def compare_sample_patient(mongo_client):
@@ -317,5 +320,23 @@ def compare_sample_med_req(mongo_client):
                 "code": "mL",
                 "system": "https://unitsofmeasure.org/",
             },
+        },
+    }
+
+
+def compare_practitioner_role(mongo_client):
+    practitioner_role = mongo_client["PractitionerRole"].find_one({})
+
+    assert practitioner_role == {
+        "_id": practitioner_role["_id"],
+        "id": practitioner_role["id"],
+        "identifier": [{"value": "static_id_value", "system": "static_id_system"}],
+        "resourceType": "PractitionerRole",
+        "meta": {
+            "lastUpdated": lastUpdated,
+            "tag": [
+                {"system": ARKHN_CODE_SYSTEMS.source, "code": "mimicSourceId"},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": "static_id"},
+            ],
         },
     }
