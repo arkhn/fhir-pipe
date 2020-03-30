@@ -148,7 +148,7 @@ class Extractor:
             the result of the sql query run on the specified connection type
                 or an iterator if chunksize is specified
         """
-        query = query.with_labels().statement
+        query = query.statement
         logging.info(f"sql query: {query}")
 
         pd_query = pd.read_sql_query(query, con=self.engine, chunksize=chunksize)
@@ -173,7 +173,9 @@ class Extractor:
         from the analysis.
         """
         table = self.get_table(column)
-        return table.c[column.column]
+        # Note that we label the column manually to avoid collisions and
+        # sqlAlchemy automatic labelling
+        return table.c[column.column].label(column.dataframe_column_name())
 
     def get_table(self, column: SqlColumn) -> Table:
         """ Get the sql alchemy table corresponding to the SqlColumn (custom type)

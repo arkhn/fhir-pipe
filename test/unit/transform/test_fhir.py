@@ -77,7 +77,8 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
     )
     resource_mapping = patient_mapping
 
-    actual = transform.create_resource(rows, resource_mapping, attributes)
+    actual = []
+    transform.create_resource(rows, resource_mapping, attributes, actual)
 
     assert actual == [
         {
