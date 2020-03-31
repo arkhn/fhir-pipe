@@ -52,15 +52,6 @@ def run(
     binder = ReferenceBinder(fhirstore, skip_ref_binding, bypass_validation)
 
     for resource_mapping in resources:
-        # Analyze
-        analysis = analyzer.analyze(resource_mapping)
-
-        # Add references to map if any
-        binder.add_references(resource_mapping, analysis.reference_paths)
-
-        # Extract
-        df = extractor.extract(resource_mapping, analysis)
-
         # If the override option is enabled, delete all previous
         # documents matching the resource's mapping id.
         if override:
@@ -71,11 +62,28 @@ def run(
             except NotFoundError as e:
                 logging.warning(f"error while trying to delete previous documents: {e}")
 
-        for chunk in df:
+        # Analyze
+        analysis = analyzer.analyze(resource_mapping)
+
+        # Add references to map if any
+        binder.add_references(resource_mapping, analysis.reference_paths)
+
+        # Handle static resources
+        if analysis.is_static:
             # Transform
-            fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
+            fhir_instance = transformer.transform_static_resource(resource_mapping, analysis)
             # Load
-            loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
+            loader.load(fhirstore, [fhir_instance], resource_mapping["definition"]["type"])
+
+        else:
+            # Extract
+            df = extractor.extract(resource_mapping, analysis)
+
+            for chunk in df:
+                # Transform
+                fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
+                # Load
+                loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
     binder.bind_references()
 

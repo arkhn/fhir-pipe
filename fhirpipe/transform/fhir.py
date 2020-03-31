@@ -12,6 +12,14 @@ def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
 
+def create_static_instance(resource_mapping, attributes):
+    try:
+        return create_instance({}, resource_mapping, attributes)
+    except Exception as e:
+        # If cannot build the fhir object, a warning has been logged
+        logging.error(f"create_static_instance failed with: {e}")
+
+
 def create_resource(chunk, resource_mapping, attributes, res):
     for _, row in chunk.iterrows():
         try:
