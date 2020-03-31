@@ -54,8 +54,6 @@ def preview(resource_id, primary_key_value):
     resource_mapping = get_resource_from_id(resource_id)
 
     # Get credentials if given in request
-    credentials = None
-
     if not resource_mapping["source"]["credential"]:
         raise OperationOutcome("credentialId is required to run fhirpipe.")
 

@@ -74,17 +74,16 @@ def run(
             fhir_instance = transformer.transform_static_resource(resource_mapping, analysis)
             # Load
             loader.load(fhirstore, [fhir_instance], resource_mapping["definition"]["type"])
-            # Process next resource
-            continue
 
-        # Extract
-        df = extractor.extract(resource_mapping, analysis)
+        else:
+            # Extract
+            df = extractor.extract(resource_mapping, analysis)
 
-        for chunk in df:
-            # Transform
-            fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
-            # Load
-            loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
+            for chunk in df:
+                # Transform
+                fhir_instances = transformer.transform(chunk, resource_mapping, analysis)
+                # Load
+                loader.load(fhirstore, fhir_instances, resource_mapping["definition"]["type"])
 
     binder.bind_references()
 
