@@ -12,8 +12,15 @@ def recursive_defaultdict():
     return defaultdict(recursive_defaultdict)
 
 
-def create_resource(chunk, resource_mapping, attributes):
-    res = []
+def create_static_instance(resource_mapping, attributes):
+    try:
+        return create_instance({}, resource_mapping, attributes)
+    except Exception as e:
+        # If cannot build the fhir object, a warning has been logged
+        logging.error(f"create_static_instance failed with: {e}")
+
+
+def create_resource(chunk, resource_mapping, attributes, res):
     for _, row in chunk.iterrows():
         try:
             res.append(create_instance(row, resource_mapping, attributes))
@@ -22,8 +29,6 @@ def create_resource(chunk, resource_mapping, attributes):
             # and we try to generate the next one
             logging.error(f"create_instance failed with: {e}")
             continue
-
-    return res
 
 
 def create_instance(row, resource_mapping, attributes):
@@ -78,6 +83,13 @@ def build_fhir_object(row, path_attributes_map, index=None):
             # If columns and static_inputs are empty, it means that this attribute
             # is not a leaf and we don't need to do anything.
             continue
+
+        # Handle the list of literals case.
+        # If we had a list of literals in the mapping, then handle_array_attributes
+        # will try to create fhir objects with an empty path (remove_root_path removes
+        # what's before the [...] included).
+        if path == "":
+            return fetch_values_from_dataframe(row, attr)
 
         # Find if there is an index in the path
         split_path = path.split(".")
@@ -154,7 +166,7 @@ def handle_array_attributes(attributes_in_array, row):
     array = []
     for index in range(length):
         element = build_fhir_object(row, attributes_in_array, index=index)
-        if element is not None:
+        if element is not None and element != {}:
             array.append(element)
 
     return array
@@ -173,7 +185,7 @@ def insert_in_fhir_object(fhir_object, path, value):
     # TODO we return if value is "" because empty strings don't pass validation for some fhir
     # attributes but it would be better to return None in the cleaning scripts if we don't want to
     # add an empty string.
-    elif value is None or value == "":
+    elif value is None or value == "" or value == {}:
         # If value is None, we don't want to do anything so we stop here.
         return
     else:

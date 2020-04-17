@@ -1772,6 +1772,78 @@
                     }
                 ]
             }
+        },
+        {
+            "id": "static_id",
+            "label": "pat_label",
+            "primaryKeyOwner": null,
+            "primaryKeyTable": null,
+            "primaryKeyColumn": null,
+            "definitionId": "PractitionerRole",
+            "updatedAt": "2020-03-16T11:23:04.247Z",
+            "createdAt": "2020-03-16T11:23:04.247Z",
+            "source": {
+                "id": "mimicSourceId",
+                "name": "mimic",
+                "version": null,
+                "hasOwner": false,
+                "updatedAt": "2020-03-16T11:23:04.159Z",
+                "createdAt": "2020-03-16T11:23:04.159Z"
+            },
+            "filters": [],
+            "attributes": [
+                {
+                    "id": "ck7udsj7s01386kz9bm0n8xua",
+                    "path": "identifier[0].value",
+                    "definitionId": "string",
+                    "mergingScript": null,
+                    "comments": null,
+                    "updatedAt": "2020-03-16T11:25:09.825Z",
+                    "createdAt": "2020-03-16T11:25:09.825Z",
+                    "inputs": [
+                        {
+                            "id": "ck7udsjcw01406kz9g8hxsow5",
+                            "script": null,
+                            "conceptMapId": null,
+                            "staticValue": "static_id_value",
+                            "updatedAt": "2020-03-16T11:25:09.974Z",
+                            "createdAt": "2020-03-16T11:25:09.974Z",
+                            "sqlValue": null
+                        }
+                    ]
+                },
+                {
+                    "id": "ck7ufgp5f01466kz9rpvqmd8w",
+                    "path": "identifier[0].system",
+                    "definitionId": "CodeableConcept",
+                    "mergingScript": null,
+                    "comments": null,
+                    "updatedAt": "2020-03-16T12:11:56.873Z",
+                    "createdAt": "2020-03-16T12:11:56.873Z",
+                    "inputs": [
+                      {
+                          "id": "ck7udsjcw01406kz9g8hxsow5",
+                          "script": null,
+                          "conceptMapId": null,
+                          "staticValue": "static_id_system",
+                          "updatedAt": "2020-03-16T11:25:09.974Z",
+                          "createdAt": "2020-03-16T11:25:09.974Z",
+                          "sqlValue": null
+                      }
+                  ]
+                }
+            ],
+            "definition": {
+                "baseDefinition": "http://hl7.org/fhir/StructureDefinition/DomainResource",
+                "derivation": "specialization",
+                "id": "PractitionerRole",
+                "kind": "resource",
+                "name": "PractitionerRole",
+                "publisher": "Health Level Seven International (Patient Administration)",
+                "type": "PractitionerRole",
+                "min": 0,
+                "max": "*"
+            }
         }
     ],
     "version": 5

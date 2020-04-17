@@ -15,6 +15,43 @@ class mockdatetime:
 
 
 @mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
+def test_create_static_instance(mock_datetime, fhir_concept_map_identifier):
+    mock_datetime.now.return_value = mockdatetime()
+
+    resource_mapping = {
+        "id": "resource_id",
+        "source": {"id": "source_id"},
+        "definition": {"type": "instance_type", "kind": "resource", "derivation": "resource"},
+    }
+
+    attr_identifier_val = Attribute("identifier[0].value", static_inputs=["static"])
+    attr_identifier_sys = Attribute("identifier[0].system", static_inputs=["identifier_sys"])
+    attr_val = Attribute("path.to.attribute", static_inputs=["attribute_val"])
+
+    attributes = [attr_identifier_val, attr_identifier_sys, attr_val]
+
+    actual = transform.create_static_instance(resource_mapping, attributes)
+
+    assert actual == {
+        "meta": {
+            "lastUpdated": "now",
+            "tag": [
+                {"system": ARKHN_CODE_SYSTEMS.source, "code": resource_mapping["source"]["id"]},
+                {"system": ARKHN_CODE_SYSTEMS.resource, "code": resource_mapping["id"]},
+            ],
+        },
+        "id": actual["id"],
+        "identifier": [{"value": "static", "system": "identifier_sys"}],
+        "path": {
+            "to": {
+                "attribute": "attribute_val",
+            }
+        },
+        "resourceType": "instance_type",
+    }
+
+
+@mock.patch("fhirpipe.transform.fhir.datetime", autospec=True)
 def test_create_instance(mock_datetime, patient_mapping, fhir_concept_map_identifier):
     mock_datetime.now.return_value = mockdatetime()
 
@@ -77,7 +114,8 @@ def test_create_resource(mock_datetime, patient_mapping, fhir_concept_map_identi
     )
     resource_mapping = patient_mapping
 
-    actual = transform.create_resource(rows, resource_mapping, attributes)
+    actual = []
+    transform.create_resource(rows, resource_mapping, attributes, actual)
 
     assert actual == [
         {

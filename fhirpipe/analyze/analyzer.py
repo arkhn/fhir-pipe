@@ -17,21 +17,24 @@ class Analyzer:
     def analyze(self, resource_mapping):
         self.analysis.reset()
 
-        # Get primary key table
-        self.get_primary_key(resource_mapping)
-
         # Analyze the mapping
         self.analyze_mapping(resource_mapping)
 
-        # Add primary key to columns to fetch if needed
-        self.analysis.add_column(self.analysis.primary_key_column)
+        if not self.analysis.columns:
+            self.analysis.is_static = True
+        else:
+            # Get primary key table
+            self.get_primary_key(resource_mapping)
 
-        # Build squash rules
-        self.analysis.squash_rules = build_squash_rules(
-            self.analysis.columns,
-            self.analysis.joins,
-            self.analysis.primary_key_column.table_name(),
-        )
+            # Add primary key to columns to fetch if needed
+            self.analysis.add_column(self.analysis.primary_key_column)
+
+            # Build squash rules
+            self.analysis.squash_rules = build_squash_rules(
+                self.analysis.columns,
+                self.analysis.joins,
+                self.analysis.primary_key_column.table_name(),
+            )
 
         return self.analysis
 

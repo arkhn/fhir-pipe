@@ -1,9 +1,10 @@
 import numpy as np
+from multiprocessing import Manager
 from functools import partial
 import logging
 
 from fhirpipe.transform.dataframe import clean_dataframe, squash_rows, merge_dataframe
-from fhirpipe.transform.fhir import create_resource
+from fhirpipe.transform.fhir import create_resource, create_static_instance
 
 
 class Transformer:
@@ -27,15 +28,21 @@ class Transformer:
         chunk = merge_dataframe(chunk, analysis.attributes, analysis.primary_key_column)
 
         if self.pool:
-            fhir_instances = self.pool.map(
+            fhir_instances = Manager().list()
+            self.pool.map(
                 partial(
                     create_resource,
                     resource_mapping=resource_mapping,
                     attributes=analysis.attributes,
+                    res=fhir_instances,
                 ),
                 np.array_split(chunk, self.pool._processes),
             )
         else:
-            fhir_instances = create_resource(chunk, resource_mapping, analysis.attributes)
+            fhir_instances = []
+            create_resource(chunk, resource_mapping, analysis.attributes, fhir_instances)
 
         return fhir_instances
+
+    def transform_static_resource(self, resource_mapping, analysis):
+        return create_static_instance(resource_mapping, analysis.attributes)
