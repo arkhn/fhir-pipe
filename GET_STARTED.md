@@ -65,7 +65,9 @@ docker-compose up --build mimic
 docker-compose up mongo
 ```
 
-Check that the container ports defined in `config.yml` match with those specified in `docker-compose.yml`
+Check that the container ports defined in `config.yml` match with those specified in `docker-compose.yml`.
+
+You'll also need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
 
 ```
 vi config.yml
@@ -82,19 +84,20 @@ python setup.py install
 
 ## 3. Launch the pipe
 
-And to run to whole pipe
+### 3-A API
+
+The prefered way of using fhirpipe is to use the API.
+See [API.md](./api/API.md) for the API documentation.
+
+### 3-A CLI
+
+But fhirpipe also has a CLI.
 
 ```
-fhirpipe-run --project=Mimic
+fhirpipe-run --resource_ids <resource-id-1> ...
 ```
 
-> You can use the option `--mock-pyrog-mapping=path/to/response.json` to fetch the mapping rules directly from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api. In this case, you need to provide a token in `config.yml` for the graphql access. Contact us at [contact@arkhn.org](mailto:contact@arkhn.org?subject=Ask%20access%20to%20GraphQL%20api) to get one.
-
-You can also run the pipe on a single FHIR resource:
-
-```
-fhirpipe-run-resource --project=Mimic --resource=Patient
-```
+> You can use the option `--mapping=path/to/response.json` to fetch the mapping rules directly from a static file instead of the [pyrog](https://github.com/arkhn/pyrog) api.
 
 Et voilà!
 
