@@ -20,9 +20,16 @@ class Transformer:
         # Apply cleaning scripts and concept map on chunk
         chunk = clean_dataframe(chunk, analysis.attributes, analysis.primary_key_column)
 
+        # We need to remove None values because pandas removes rows with
+        # these on groupby
+        chunk.replace(to_replace=[None], value="None", inplace=True)
+
         # Apply join rule to merge some lines from the same resource
         logging.info("Squashing rows...")
         chunk = squash_rows(chunk, analysis.squash_rules)
+
+        # Put None values back
+        chunk.replace(to_replace={"None": None}, inplace=True)
 
         # Apply merging scripts on chunk
         chunk = merge_dataframe(chunk, analysis.attributes, analysis.primary_key_column)
