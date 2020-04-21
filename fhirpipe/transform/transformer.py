@@ -15,7 +15,7 @@ class Transformer:
         logging.info("Transforming resource: %s", resource_mapping["definitionId"])
 
         # Change not string value to strings (to be validated by jsonSchema for resource)
-        chunk = chunk.applymap(lambda value: str(value) if value is not None else None)
+        chunk = chunk.applymap(str)
 
         # Apply cleaning scripts and concept map on chunk
         chunk = clean_dataframe(chunk, analysis.attributes, analysis.primary_key_column)
@@ -23,6 +23,10 @@ class Transformer:
         # Apply join rule to merge some lines from the same resource
         logging.info("Squashing rows...")
         chunk = squash_rows(chunk, analysis.squash_rules)
+
+        # I need to do this after the squashing because pandas removes rows with
+        # None values on groupby
+        chunk.replace(to_replace=["None"], value=None, inplace=True)
 
         # Apply merging scripts on chunk
         chunk = merge_dataframe(chunk, analysis.attributes, analysis.primary_key_column)
