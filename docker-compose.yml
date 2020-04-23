@@ -18,6 +18,7 @@ services:
       context: .
     volumes:
       - ./test:/app/test
+      - ./config_docker.yml:/app/config.yml
     ports:
       - 3000:3000
     depends_on:

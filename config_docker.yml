@@ -22,7 +22,8 @@ fhirstore:
 
 graphql:
   server: "http://pyrog-server:4000"
-  token: "<token>"
+  login: "<account@pyrog.com>"
+  password: "<password>"
 
 fhir-api:
   url: http://fhir:2000

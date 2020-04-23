@@ -5,10 +5,14 @@ import fhirpipe.analyze.mapping as mapping
 from fhirpipe.analyze.sql_column import SqlColumn
 from fhirpipe.analyze.sql_join import SqlJoin
 
+from test.unit.conftest import mock_config
 
+
+@mock.patch("fhirpipe.extract.graphql.PyrogClient")
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_file")
 @mock.patch("fhirpipe.analyze.mapping.get_mapping_from_graphql")
-def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file):
+@mock.patch("fhirpipe.extract.graphql.fhirpipe.global_config", mock_config)
+def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file, mock_pyrog_client):
 
     # When providing file
     mapping.get_mapping(from_file="file")
@@ -20,8 +24,8 @@ def test_get_mapping(mock_get_mapping_from_graphql, mock_get_mapping_from_file):
     mock_get_mapping_from_file.reset_mock()
 
     # When providing resource ids
-    mapping.get_mapping(resource_ids=["sel"])
-    mock_get_mapping_from_graphql.assert_called_once_with(["sel"])
+    mapping.get_mapping(resource_ids=["sel"], pyrog_client=mock_pyrog_client())
+    mock_get_mapping_from_graphql.assert_called_once_with(["sel"], mock_pyrog_client())
     mock_get_mapping_from_graphql.reset_mock()
 
     # When providing none
@@ -70,19 +74,25 @@ def mock_run_graphql_query(graphql_query, variables=None):
     }
 
 
-@mock.patch("fhirpipe.extract.graphql.run_graphql_query")
-def test_get_mapping_from_graphql(mock_run_graphql_query):
-    # Mock run_graphql_query
-    mock_run_graphql_query.side_effect = [
-        {"data": {"resource": {"id": 1, "content": "content1"}}},
-        {"data": {"resource": {"id": 2, "content": "content2"}}},
+@mock.patch("fhirpipe.extract.graphql.fhirpipe.global_config", mock_config)
+@mock.patch("fhirpipe.extract.graphql.PyrogClient")
+@mock.patch("fhirpipe.extract.graphql.PyrogClient.run_graphql_query")
+def test_get_mapping_from_graphql(mock_run_graphql_query, mock_pyrog_client):
+    # Mock pyrog_client
+    pyrog_client = mock_pyrog_client()
+
+    pyrog_client.get_resource_from_id.side_effect = [
+        {"id": 1, "content": "content1"},
+        {"id": 2, "content": "content2"},
     ]
 
-    resources = mapping.get_mapping_from_graphql(["resource_id_1", "resource_id_2"])
+    resources = mapping.get_mapping_from_graphql(
+        ["resource_id_1", "resource_id_2"], pyrog_client=pyrog_client
+    )
     # Need to consume the generator for the assert_called_once_with to work
     resources = list(resources)
 
-    assert mock_run_graphql_query.call_count == 2
+    assert pyrog_client.get_resource_from_id.call_count == 2
 
     assert resources == [
         {"id": 1, "content": "content1"},

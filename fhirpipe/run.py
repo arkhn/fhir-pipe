@@ -15,7 +15,7 @@ from fhirpipe.load import Loader
 from fhirpipe.references import ReferenceBinder
 
 from fhirpipe.analyze.mapping import get_mapping
-from fhirpipe.extract.graphql import get_resource_from_id
+from fhirpipe.extract.graphql import PyrogClient
 from fhirpipe.load.fhirstore import get_fhirstore
 
 
@@ -28,6 +28,7 @@ def run(
     skip_ref_binding,
     multiprocessing,
     credentials=None,
+    pyrog_client: PyrogClient = None,
 ):
     """
     """
@@ -35,7 +36,7 @@ def run(
     start_time = time.time()
 
     # Get the resources we want to process from the pyrog mapping for a given source
-    resources = get_mapping(from_file=mapping, resource_ids=resource_ids)
+    resources = get_mapping(from_file=mapping, resource_ids=resource_ids, pyrog_client=pyrog_client)
 
     fhirstore = get_fhirstore()
 
@@ -94,14 +95,14 @@ def run(
     logging.info(f"Done in {time.time() - start_time}.")
 
 
-def preview(resource_id, primary_key_values, credentials):
+def preview(resource_id, primary_key_values, credentials, pyrog_client: PyrogClient):
     """ Run the ETL only for values where the primary key
     """
     # The fhirstore will be used to validate resource instances
     fhirstore = get_fhirstore()
 
     # Get the resources we want to process from the pyrog mapping for a given source
-    resource_mapping = get_resource_from_id(resource_id=resource_id)
+    resource_mapping = pyrog_client.get_resource_from_id(resource_id=resource_id)
 
     analyzer = Analyzer()
     extractor = Extractor(credentials)

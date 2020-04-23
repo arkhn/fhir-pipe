@@ -3,7 +3,7 @@ from flask import Flask
 from flask_cors import CORS
 
 from fhirpipe import set_global_config, setup_logging
-from fhirpipe.api.routes import api
+from fhirpipe.api.routes import api, get_pyrog_client
 
 
 def create_app():
@@ -14,6 +14,9 @@ def create_app():
 
     app = Flask(__name__)
     app.register_blueprint(api)
+
+    with app.app_context():
+        get_pyrog_client()
 
     CORS(app)
 
