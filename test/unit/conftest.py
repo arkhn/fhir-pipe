@@ -94,7 +94,7 @@ def patient_mapping():
 
 mock_config = {
     "fhirstore": {"database": "fhirstore"},
-    "graphql": {"token": "gql_token", "server": "gql_server"},
+    "graphql": {"password": "pwd", "login": "login", "server": "gql_server"},
     "source": {
         "model": "POSTGRES",
         "host": "localhost",

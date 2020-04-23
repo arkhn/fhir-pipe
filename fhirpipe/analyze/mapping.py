@@ -2,10 +2,8 @@ import os
 import json
 from collections import defaultdict
 
-from fhirpipe.extract.graphql import get_resource_from_id
 
-
-def get_mapping(from_file=None, resource_ids=None):
+def get_mapping(from_file=None, resource_ids=None, pyrog_client=None):
     """
     Get all available resources from a pyrog mapping.
     The mapping may either come from a static file or from
@@ -23,7 +21,7 @@ def get_mapping(from_file=None, resource_ids=None):
         return get_mapping_from_file(from_file)
 
     else:
-        return get_mapping_from_graphql(resource_ids)
+        return get_mapping_from_graphql(resource_ids, pyrog_client)
 
 
 def get_mapping_from_file(path):
@@ -36,9 +34,9 @@ def get_mapping_from_file(path):
     return mapping["resources"]
 
 
-def get_mapping_from_graphql(resource_ids):
+def get_mapping_from_graphql(resource_ids, pyrog_client):
     for resource_id in resource_ids:
-        resource = get_resource_from_id(resource_id)
+        resource = pyrog_client.get_resource_from_id(resource_id)
         yield resource
 
 

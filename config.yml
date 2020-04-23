@@ -15,11 +15,11 @@ fhirstore:
 
 graphql:
   server: "https://graphql.pyrog.staging.arkhn.org/"
-  token: "<token>"
+  login: "<account@pyrog.com>"
+  password: "<password>"
 
 fhir-api:
   url: "https://fhir.staging.arkhn.org/api"
 
 logging:
   filename: fhirpipe.log
-
